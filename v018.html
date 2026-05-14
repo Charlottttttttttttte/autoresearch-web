@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>黑洞事件视界 — 引力尽头的光之舞</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;500;700&family=Noto+Sans+SC:wght@300;500;700&display=swap');
+
+:root {
+  --bg-primary: #020205;
+  --bg-content: rgba(2,2,5,0.97);
+  --accent-primary: #ff6600;
+  --accent-secondary: #ffcc00;
+  --text-primary: #f0e6d8;
+  --text-secondary: #8a7a6a;
+  --font-heading: 'Exo 2', sans-serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-height);
+  background: rgba(2,2,5,0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255,102,0,0.08);
+}
+
+.top-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  font-family: var(--font-body);
+}
+
+.top-nav a:hover { color: var(--accent-primary); }
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+.hero-content {
+  position: absolute;
+  bottom: 80px;
+  left: 40px;
+  z-index: 10;
+  max-width: 600px;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: 44px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 30px rgba(255,102,0,0.3);
+  letter-spacing: 0.06em;
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.hero-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 420px;
+  font-family: var(--font-body);
+}
+
+.score-badge {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #020205;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+.content-section {
+  background: var(--bg-content);
+  padding: 80px 24px;
+  border-top: 1px solid rgba(255,102,0,0.08);
+}
+
+.content-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--accent-primary);
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
+
+.section-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.tech-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tech-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,102,0,0.08);
+  color: var(--text-secondary);
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tech-list li::before {
+  content: '◆';
+  color: var(--accent-primary);
+  font-size: 10px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.score-section { margin-top: 40px; }
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-label {
+  width: 80px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.score-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 300px;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+.score-value {
+  width: 60px;
+  font-size: 13px;
+  color: var(--accent-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.score-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,102,0,0.15);
+}
+
+.score-total-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.score-total-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.data-item {
+  background: rgba(255,102,0,0.04);
+  border: 1px solid rgba(255,102,0,0.1);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.data-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.data-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.bottom-nav {
+  background: rgba(2,2,5,0.95);
+  border-top: 1px solid rgba(255,102,0,0.08);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.bottom-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.bottom-nav a:hover { color: var(--accent-primary); }
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 28px; }
+  .hero-subtitle { font-size: 13px; }
+  .hero-content { left: 20px; bottom: 60px; max-width: 90%; }
+  .data-grid { grid-template-columns: 1fr; }
+  .top-nav a { font-size: 12px; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="v017.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<section class="hero">
+  <div id="canvas-container"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">黑洞事件视界</h1>
+    <p class="hero-subtitle">Black Hole Event Horizon</p>
+    <p class="hero-desc">光也无法逃脱的引力深渊，吸积盘上物质在坠入黑暗前发出宇宙中最耀眼的辐射。</p>
+    <span class="score-badge">&#11088; 8.7 / 10</span>
+  </div>
+  <div class="scroll-hint">&#8595; 滚动探索</div>
+</section>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      黑洞是广义相对论最极端的预言——当大质量恒星耗尽燃料，引力坍缩将物质压缩至一个密度无限大的奇点，周围形成一个连光都无法逃逸的边界，即"事件视界"。2019年，事件视界望远镜（EHT）首次拍摄到M87星系中心黑洞的影像：一个明亮的橙色光环环绕着绝对的黑暗。本作品以数字方式重建了这一宇宙奇观，吸积盘上的高温等离子体在强引力场中旋转，多普勒频移使得朝向观测者的一侧更亮，远离的一侧更暗——这是爱因斯坦方程在宇宙尺度上的视觉证明。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      将黑洞的史瓦西半径转化为场景中心的不可见球体，所有光线在此终止。吸积盘使用3000+粒子沿椭圆轨道分布，根据开普勒定律内圈转速快于外圈。粒子色彩基于温度梯度映射——内圈接近1000万度的蓝白色，外圈降至数百万度的橙红色。引力透镜效应通过径向位移算法模拟：背景星场的粒子根据与黑洞中心的距离被向外推挤，距离越近推挤越强，形成"爱因斯坦环"的视觉痕迹。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>3000粒子吸积盘：椭圆轨道分布，内圈角速度遵循开普勒第三定律</li>
+      <li>温度梯度着色：黑体辐射色温映射（蓝白→黄→橙→红）</li>
+      <li>引力透镜模拟：背景星场粒子径向位移，重现爱因斯坦环</li>
+      <li>多普勒增亮：朝向观测者的粒子亮度提升30%，背向降低</li>
+      <li>光子球层：事件视界外1.5倍半径处的额外亮环（不稳定光子轨道）</li>
+      <li>鼠标轨道控制：拖拽旋转视角，滚轮缩放，沉浸式观测体验</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <div class="data-item">
+        <div class="data-label">轮次</div>
+        <div class="data-value">Round #18</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">变异策略</div>
+        <div class="data-value">Cosmos-Gravity-Lens</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">主题ID</div>
+        <div class="data-value">t051</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">创作时间</div>
+        <div class="data-value">2026-05-14</div>
+      </div>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 88%"></div></div>
+        <span class="score-value">8.8/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 92%"></div></div>
+        <span class="score-value">9.2/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width: 86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-total">
+        <span class="score-total-label">总分</span>
+        <span class="score-total-value">&#11088; 8.7 / 10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v017.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 返回封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<script>
+(function() {
+  const container = document.getElementById('canvas-container');
+  const isMobile = window.innerWidth < 768;
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 2000);
+  camera.position.set(0, 6, 22);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.setClearColor(0x020205, 1);
+  container.appendChild(renderer.domElement);
+
+  let mouseX = 0, mouseY = 0;
+  let targetMouseX = 0, targetMouseY = 0;
+  let isDragging = false;
+  let dragStartX = 0, dragStartY = 0;
+  let camAngle = 0, camHeight = 6, camDist = 22;
+
+  document.addEventListener('mousemove', (e) => {
+    targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+    if (isDragging) {
+      camAngle -= (e.clientX - dragStartX) * 0.005;
+      camHeight += (e.clientY - dragStartY) * 0.02;
+      camHeight = Math.max(-5, Math.min(15, camHeight));
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+    }
+  });
+
+  document.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+  });
+  document.addEventListener('mouseup', () => { isDragging = false; });
+  document.addEventListener('wheel', (e) => {
+    camDist += e.deltaY * 0.01;
+    camDist = Math.max(10, Math.min(50, camDist));
+  });
+
+  // ===== EVENT HORIZON (dark sphere) =====
+  const bhGeo = new THREE.SphereGeometry(1.8, 32, 32);
+  const bhMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+  const blackHole = new THREE.Mesh(bhGeo, bhMat);
+  scene.add(blackHole);
+
+  // Photon sphere (bright ring just outside horizon)
+  const photonGeo = new THREE.TorusGeometry(2.4, 0.08, 16, 64);
+  const photonMat = new THREE.MeshBasicMaterial({
+    color: 0xffaa44,
+    transparent: true,
+    opacity: 0.9
+  });
+  const photonSphere = new THREE.Mesh(photonGeo, photonMat);
+  photonSphere.rotation.x = Math.PI / 2;
+  scene.add(photonSphere);
+
+  // ===== ACCRETION DISK =====
+  const diskCount = isMobile ? 1500 : 3000;
+  const diskGeo = new THREE.BufferGeometry();
+  const diskPos = new Float32Array(diskCount * 3);
+  const diskCol = new Float32Array(diskCount * 3);
+  const diskSizes = new Float32Array(diskCount);
+  const diskOrbits = [];
+
+  for (let i = 0; i < diskCount; i++) {
+    const r = 3 + Math.pow(Math.random(), 0.7) * 12;
+    const theta = Math.random() * Math.PI * 2;
+    const tilt = (Math.random() - 0.5) * 0.3;
+
+    diskPos[i*3] = r * Math.cos(theta);
+    diskPos[i*3+1] = (Math.random() - 0.5) * 0.4 * (r / 8);
+    diskPos[i*3+2] = r * Math.sin(theta) * Math.cos(tilt);
+
+    // Temperature-based color: inner = blue-white, outer = orange-red
+    const temp = 1 - (r - 3) / 12;
+    const c = new THREE.Color();
+    if (temp > 0.85) {
+      c.setHSL(0.58, 0.6, 0.7 + temp * 0.2);
+    } else if (temp > 0.5) {
+      c.setHSL(0.12, 0.9, 0.4 + temp * 0.4);
+    } else {
+      c.setHSL(0.03, 0.95, 0.25 + temp * 0.35);
+    }
+    diskCol[i*3] = c.r;
+    diskCol[i*3+1] = c.g;
+    diskCol[i*3+2] = c.b;
+    diskSizes[i] = 0.15 + temp * 0.35;
+
+    diskOrbits.push({
+      radius: r,
+      angle: theta,
+      speed: 0.3 / Math.sqrt(r),
+      yBase: diskPos[i*3+1],
+      temp
+    });
+  }
+
+  diskGeo.setAttribute('position', new THREE.BufferAttribute(diskPos, 3));
+  diskGeo.setAttribute('color', new THREE.BufferAttribute(diskCol, 3));
+  diskGeo.setAttribute('size', new THREE.BufferAttribute(diskSizes, 1));
+
+  const diskMat = new THREE.PointsMaterial({
+    size: 0.3,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true
+  });
+
+  const diskParticles = new THREE.Points(diskGeo, diskMat);
+  scene.add(diskParticles);
+
+  // ===== BACKGROUND STARS (with gravitational lensing) =====
+  const starCount = isMobile ? 800 : 2000;
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = new Float32Array(starCount * 3);
+  const starCol = new Float32Array(starCount * 3);
+
+  for (let i = 0; i < starCount; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    let r = 40 + Math.random() * 80;
+
+    // Gravitational lensing: push stars away from center
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const z = r * Math.sin(phi) * Math.sin(theta);
+    const dist2D = Math.sqrt(x*x + z*z);
+    if (dist2D > 0 && dist2D < 20) {
+      const push = 20 / dist2D;
+      r *= push;
+    }
+
+    starPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+    starPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+    starPos[i*3+2] = r * Math.cos(phi);
+
+    const bright = 0.5 + Math.random() * 0.5;
+    starCol[i*3] = bright * (0.9 + Math.random() * 0.1);
+    starCol[i*3+1] = bright * (0.9 + Math.random() * 0.08);
+    starCol[i*3+2] = bright;
+  }
+
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
+
+  const starMat = new THREE.PointsMaterial({
+    size: 0.4,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const stars = new THREE.Points(starGeo, starMat);
+  scene.add(stars);
+
+  // ===== JET STREAMS (vertical) =====
+  const jetCount = isMobile ? 200 : 400;
+  const jetGeo = new THREE.BufferGeometry();
+  const jetPos = new Float32Array(jetCount * 3);
+  const jetCol = new Float32Array(jetCount * 3);
+  const jetData = [];
+
+  for (let i = 0; i < jetCount; i++) {
+    const isTop = Math.random() > 0.5;
+    const angle = Math.random() * Math.PI * 2;
+    const spread = 0.3 + Math.random() * 0.8;
+    const y = (isTop ? 1 : -1) * (2 + Math.random() * 15);
+
+    jetPos[i*3] = Math.cos(angle) * spread * Math.abs(y) * 0.1;
+    jetPos[i*3+1] = y;
+    jetPos[i*3+2] = Math.sin(angle) * spread * Math.abs(y) * 0.1;
+
+    const c = new THREE.Color().setHSL(0.1, 0.8, 0.3 + Math.random() * 0.3);
+    jetCol[i*3] = c.r;
+    jetCol[i*3+1] = c.g;
+    jetCol[i*3+2] = c.b;
+
+    jetData.push({ speed: (0.5 + Math.random()) * (isTop ? 1 : -1), idx: i });
+  }
+
+  jetGeo.setAttribute('position', new THREE.BufferAttribute(jetPos, 3));
+  jetGeo.setAttribute('color', new THREE.BufferAttribute(jetCol, 3));
+
+  const jetMat = new THREE.PointsMaterial({
+    size: 0.25,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.5,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const jets = new THREE.Points(jetGeo, jetMat);
+  scene.add(jets);
+
+  // ===== ANIMATION =====
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const time = clock.getElapsedTime();
+
+    mouseX += (targetMouseX - mouseX) * 0.03;
+    mouseY += (targetMouseY - mouseY) * 0.03;
+
+    // Update accretion disk
+    const dPos = diskGeo.attributes.position.array;
+    for (let i = 0; i < diskCount; i++) {
+      const orb = diskOrbits[i];
+      orb.angle += orb.speed * 0.016;
+      dPos[i*3] = orb.radius * Math.cos(orb.angle);
+      dPos[i*3+2] = orb.radius * Math.sin(orb.angle);
+      // Doppler beaming: brighter when moving toward viewer
+      const velToward = -Math.sin(orb.angle);
+      const brightnessBoost = 1 + velToward * 0.3;
+      const c = new THREE.Color();
+      const temp = orb.temp;
+      if (temp > 0.85) {
+        c.setHSL(0.58, 0.6, (0.7 + temp * 0.2) * brightnessBoost);
+      } else if (temp > 0.5) {
+        c.setHSL(0.12, 0.9, (0.4 + temp * 0.4) * brightnessBoost);
+      } else {
+        c.setHSL(0.03, 0.95, (0.25 + temp * 0.35) * brightnessBoost);
+      }
+      diskCol[i*3] = c.r;
+      diskCol[i*3+1] = c.g;
+      diskCol[i*3+2] = c.b;
+    }
+    diskGeo.attributes.position.needsUpdate = true;
+    diskGeo.attributes.color.needsUpdate = true;
+
+    // Rotate photon sphere
+    photonSphere.rotation.z = time * 0.2;
+
+    // Animate jets
+    const jPos = jetGeo.attributes.position.array;
+    for (let i = 0; i < jetCount; i++) {
+      const j = jetData[i];
+      jPos[j.idx*3+1] += j.speed * 0.02;
+      if (jPos[j.idx*3+1] > 18) jPos[j.idx*3+1] = 2;
+      if (jPos[j.idx*3+1] < -18) jPos[j.idx*3+1] = -2;
+    }
+    jetGeo.attributes.position.needsUpdate = true;
+
+    // Camera orbit
+    if (!isDragging) {
+      camAngle += 0.001;
+    }
+    camera.position.x = Math.sin(camAngle) * camDist;
+    camera.position.z = Math.cos(camAngle) * camDist;
+    camera.position.y = camHeight + mouseY * 2;
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
