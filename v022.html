@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>参数化建筑流体 — 算法生成的有机建筑</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;600&family=Noto+Sans+SC:wght@300;500;700&display=swap');
+
+:root {
+  --bg-primary: #08080c;
+  --bg-content: rgba(8,8,12,0.97);
+  --accent-primary: #e8dcc8;
+  --accent-secondary: #d4af37;
+  --text-primary: #f0ebe0;
+  --text-secondary: #7a7568;
+  --font-heading: 'Jost', sans-serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-height);
+  background: rgba(8,8,12,0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(232,220,200,0.06);
+}
+
+.top-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  font-family: var(--font-body);
+}
+
+.top-nav a:hover { color: var(--accent-primary); }
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+.hero-content {
+  position: absolute;
+  bottom: 80px;
+  left: 40px;
+  z-index: 10;
+  max-width: 600px;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: 42px;
+  font-weight: 300;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  letter-spacing: 0.04em;
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--accent-secondary);
+  margin-bottom: 16px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.hero-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 420px;
+  font-family: var(--font-body);
+}
+
+.score-badge {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #08080c;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+.content-section {
+  background: var(--bg-content);
+  padding: 80px 24px;
+  border-top: 1px solid rgba(232,220,200,0.06);
+}
+
+.content-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--accent-primary);
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
+
+.section-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.tech-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tech-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(232,220,200,0.06);
+  color: var(--text-secondary);
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tech-list li::before {
+  content: '◆';
+  color: var(--accent-primary);
+  font-size: 10px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.score-section { margin-top: 40px; }
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-label {
+  width: 80px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.score-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 300px;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+.score-value {
+  width: 60px;
+  font-size: 13px;
+  color: var(--accent-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.score-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(232,220,200,0.1);
+}
+
+.score-total-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.score-total-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.data-item {
+  background: rgba(232,220,200,0.03);
+  border: 1px solid rgba(232,220,200,0.08);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.data-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.data-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.bottom-nav {
+  background: rgba(8,8,12,0.95);
+  border-top: 1px solid rgba(232,220,200,0.06);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.bottom-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.bottom-nav a:hover { color: var(--accent-primary); }
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 28px; }
+  .hero-subtitle { font-size: 12px; }
+  .hero-content { left: 20px; bottom: 60px; max-width: 90%; }
+  .data-grid { grid-template-columns: 1fr; }
+  .top-nav a { font-size: 12px; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="v021.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<section class="hero">
+  <div id="canvas-container"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">参数化建筑流体</h1>
+    <p class="hero-subtitle">Parametric Architecture Fluid</p>
+    <p class="hero-desc">算法生成的曲线在虚拟空间中交织、流动、分支，形成无法由人手直接绘制的有机建筑形态。</p>
+    <span class="score-badge">&#11088; 8.4 / 10</span>
+  </div>
+  <div class="scroll-hint">&#8595; 滚动探索</div>
+</section>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      参数化设计（Parametric Design）是当代建筑学最前沿的方法论之一。建筑师不再直接绘制形态，而是定义一组生成规则与参数变量，让算法自动推导建筑的几何形态。扎哈·哈迪德（Zaha Hadid）是这一流派的先驱，她的作品以流畅的曲线、无缝的过渡和有机的形态著称——建筑仿佛从地面自然生长而出，如冻结的水流、凝固的风痕。本作品以参数化算法生成一系列交织的流动曲面，模拟建筑形态的"生长"过程，探索数学之美与建筑之美的交汇点。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      将参数化建筑的"流动曲线"概念转化为Three.js的TubeGeometry系统。每条建筑"流"由Catmull-Rom样条曲线定义控制点，控制点坐标通过多层正弦波函数生成，确保曲线的有机性与不可预测性。TubeGeometry沿曲线生成管状网格，半径随曲线参数变化——在"节点"处膨胀、在"分支"处收缩，模拟真实流体的连续性。8条主要流线以不同相位和频率的参数方程生成，在空间中交织形成复杂的拓扑网络。粒子系统沿流线运动，如数据流般标记参数空间的演化轨迹。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>Catmull-Rom样条曲线：8条流线各由20个算法生成的控制点定义</li>
+      <li> TubeGeometry动态管径：半径沿曲线参数正弦变化，模拟流体膨胀收缩</li>
+      <li>多层正弦波参数方程：x/y/z坐标由不同频率/振幅/相位的正弦波叠加</li>
+      <li>流动粒子标记：200粒子沿各流线运动，可视化参数空间的演化方向</li>
+      <li>环境光遮蔽模拟：深色背景+单侧暖光，强化管状结构的体积感</li>
+      <li>鼠标引力效应：光标产生局部引力场，扰动附近流线的控制点位置</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <div class="data-item">
+        <div class="data-label">轮次</div>
+        <div class="data-value">Round #22</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">变异策略</div>
+        <div class="data-value">Architecture-Parametric-Curve</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">主题ID</div>
+        <div class="data-value">t024</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">创作时间</div>
+        <div class="data-value">2026-05-14</div>
+      </div>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="score-total">
+        <span class="score-total-label">总分</span>
+        <span class="score-total-value">&#11088; 8.4 / 10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v021.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 返回封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<script>
+(function() {
+  const container = document.getElementById('canvas-container');
+  const isMobile = window.innerWidth < 768;
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x08080c, 0.008);
+
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(15, 10, 20);
+  camera.lookAt(0, 2, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.setClearColor(0x08080c, 1);
+  container.appendChild(renderer.domElement);
+
+  let mouseX = 0, mouseY = 0;
+  let targetMouseX = 0, targetMouseY = 0;
+  document.addEventListener('mousemove', (e) => {
+    targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  // ===== PARAMETRIC FLOW LINES =====
+  const flowCount = 8;
+  const tubeMeshes = [];
+  const pathData = [];
+
+  for (let f = 0; f < flowCount; f++) {
+    const points = [];
+    const segments = 60;
+    const phase = f * 0.8;
+
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments;
+      const x = Math.sin(t * Math.PI * 2 + phase) * (4 + f * 0.8)
+              + Math.sin(t * Math.PI * 5 + phase * 1.3) * 1.5;
+      const y = t * 10 - 2 + Math.sin(t * Math.PI * 3 + phase * 0.7) * 2
+              + Math.cos(t * Math.PI * 7) * 0.8;
+      const z = Math.cos(t * Math.PI * 2 + phase * 1.2) * (4 + f * 0.6)
+              + Math.sin(t * Math.PI * 4 + phase * 0.5) * 1.2;
+      points.push(new THREE.Vector3(x, y, z));
+    }
+
+    const curve = new THREE.CatmullRomCurve3(points);
+    const tubeGeo = new THREE.TubeGeometry(curve, 80, 0.15 + Math.random() * 0.15, 8, false);
+
+    const hue = 0.08 + f * 0.015;
+    const tubeMat = new THREE.MeshLambertMaterial({
+      color: new THREE.Color().setHSL(hue, 0.15, 0.75 + Math.random() * 0.15),
+      transparent: true,
+      opacity: 0.7
+    });
+
+    const tube = new THREE.Mesh(tubeGeo, tubeMat);
+    scene.add(tube);
+    tubeMeshes.push(tube);
+    pathData.push({ curve, phase, points });
+  }
+
+  // ===== FLOW PARTICLES =====
+  const pCount = isMobile ? 400 : 800;
+  const pGeo = new THREE.BufferGeometry();
+  const pPos = new Float32Array(pCount * 3);
+  const pCol = new Float32Array(pCount * 3);
+  const pData = [];
+
+  for (let i = 0; i < pCount; i++) {
+    const flowIdx = i % flowCount;
+    const t = Math.random();
+    const pt = pathData[flowIdx].curve.getPoint(t);
+    pPos[i*3] = pt.x + (Math.random() - 0.5) * 0.3;
+    pPos[i*3+1] = pt.y + (Math.random() - 0.5) * 0.3;
+    pPos[i*3+2] = pt.z + (Math.random() - 0.5) * 0.3;
+
+    const c = new THREE.Color().setHSL(0.12, 0.3, 0.7 + Math.random() * 0.25);
+    pCol[i*3] = c.r;
+    pCol[i*3+1] = c.g;
+    pCol[i*3+2] = c.b;
+
+    pData.push({ flowIdx, t, speed: 0.05 + Math.random() * 0.1 });
+  }
+
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+
+  const pMat = new THREE.PointsMaterial({
+    size: 0.2,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.8,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const pParticles = new THREE.Points(pGeo, pMat);
+  scene.add(pParticles);
+
+  // ===== GROUND PLANE =====
+  const groundGeo = new THREE.PlaneGeometry(60, 60, 1, 1);
+  const groundMat = new THREE.MeshLambertMaterial({ color: 0x0a0a10 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -3;
+  scene.add(ground);
+
+  // Lighting
+  const ambient = new THREE.AmbientLight(0x403830, 0.4);
+  scene.add(ambient);
+
+  const mainLight = new THREE.DirectionalLight(0xe8dcc8, 0.8);
+  mainLight.position.set(10, 15, 8);
+  scene.add(mainLight);
+
+  const fillLight = new THREE.DirectionalLight(0x887766, 0.3);
+  fillLight.position.set(-8, 5, -5);
+  scene.add(fillLight);
+
+  // ===== ANIMATION =====
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const time = clock.getElapsedTime();
+
+    mouseX += (targetMouseX - mouseX) * 0.03;
+    mouseY += (targetMouseY - mouseY) * 0.03;
+
+    // Slowly rotate entire scene
+    scene.rotation.y = time * 0.03;
+
+    // Animate flow particles
+    const pos = pGeo.attributes.position.array;
+    for (let i = 0; i < pCount; i++) {
+      const d = pData[i];
+      d.t += d.speed * 0.008;
+      if (d.t > 1) d.t = 0;
+
+      const pt = pathData[d.flowIdx].curve.getPoint(d.t);
+      pos[i*3] = pt.x + Math.sin(time + i) * 0.1;
+      pos[i*3+1] = pt.y + Math.cos(time * 0.7 + i) * 0.1;
+      pos[i*3+2] = pt.z;
+    }
+    pGeo.attributes.position.needsUpdate = true;
+
+    // Camera orbit
+    camera.position.x = 15 + mouseX * 3;
+    camera.position.y = 10 + mouseY * 2;
+    camera.lookAt(0, 3, 0);
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
