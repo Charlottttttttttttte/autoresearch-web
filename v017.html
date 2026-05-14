@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>竹林光影斑驳 — 东方意境的数字禅院</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;500;700&family=ZCOOL+XiaoWei&display=swap');
+
+:root {
+  --bg-primary: #0d1f14;
+  --bg-content: rgba(13,31,20,0.96);
+  --accent-primary: #6bbf7a;
+  --accent-secondary: #d4af37;
+  --text-primary: #e8f5e9;
+  --text-secondary: #7a9e7e;
+  --font-heading: 'ZCOOL XiaoWei', serif;
+  --font-body: 'Noto Serif SC', serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-height);
+  background: rgba(13,31,20,0.8);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(107,191,122,0.1);
+}
+
+.top-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  font-family: var(--font-body);
+}
+
+.top-nav a:hover { color: var(--accent-primary); }
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+.hero-content {
+  position: absolute;
+  bottom: 80px;
+  left: 40px;
+  z-index: 10;
+  max-width: 600px;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: 46px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.3;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  letter-spacing: 0.1em;
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+  letter-spacing: 0.15em;
+}
+
+.hero-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 420px;
+  font-family: var(--font-body);
+}
+
+.score-badge {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0d1f14;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+.content-section {
+  background: var(--bg-content);
+  padding: 80px 24px;
+  border-top: 1px solid rgba(107,191,122,0.08);
+}
+
+.content-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--accent-primary);
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
+
+.section-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.tech-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tech-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(107,191,122,0.08);
+  color: var(--text-secondary);
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tech-list li::before {
+  content: '◆';
+  color: var(--accent-primary);
+  font-size: 10px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.score-section { margin-top: 40px; }
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-label {
+  width: 80px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.score-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 300px;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+.score-value {
+  width: 60px;
+  font-size: 13px;
+  color: var(--accent-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.score-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(107,191,122,0.15);
+}
+
+.score-total-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.score-total-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.data-item {
+  background: rgba(107,191,122,0.04);
+  border: 1px solid rgba(107,191,122,0.1);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.data-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.data-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.bottom-nav {
+  background: rgba(13,31,20,0.95);
+  border-top: 1px solid rgba(107,191,122,0.08);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.bottom-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.bottom-nav a:hover { color: var(--accent-primary); }
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 30px; }
+  .hero-subtitle { font-size: 13px; }
+  .hero-content { left: 20px; bottom: 60px; max-width: 90%; }
+  .data-grid { grid-template-columns: 1fr; }
+  .top-nav a { font-size: 12px; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="v016.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<section class="hero">
+  <div id="canvas-container"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">竹林光影斑驳</h1>
+    <p class="hero-subtitle">Bamboo Forest Light &amp; Shadow</p>
+    <p class="hero-desc">阳光穿透竹叶的缝隙，在幽径上投下摇曳的光斑。将东方园林中"移步换景"的空间美学转化为可交互的数字庭园。</p>
+    <span class="score-badge">&#11088; 8.5 / 10</span>
+  </div>
+  <div class="scroll-hint">&#8595; 滚动探索</div>
+</section>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      中国古典园林中的竹林不仅是植物景观，更是空间叙事的重要媒介。苏轼曾言"宁可食无肉，不可居无竹"，竹在中国文化中象征着气节与清雅。当阳光穿透茂密的竹叶，地面与竹干上便形成了变幻莫测的光影图案——这种"斑驳"效果源于光线在多层叶片间的多次反射与折射。本作品以数字方式重构了这一东方美学场景，通过程序化生成的竹林与动态光斑，让观者在屏幕前体验"独坐幽篁里，弹琴复长啸"的禅意时刻。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      将竹林的垂直线条结构转化为Three.js的圆柱体阵列，每根竹子具有独特的粗细、高度与节段分布，模拟真实竹林的有机不规则性。竹叶的透光效果通过粒子系统实现——数百个金色光斑粒子在竹林间缓慢漂移，其亮度与位置随时间正弦波动，还原阳光穿透叶片时的闪烁感。地面的光影图案使用半透明平面配合动态纹理坐标偏移，营造"疏影横斜"的水墨意境。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>程序化竹林生成：60+根竹子各具随机高度、粗细与节距，拒绝机械重复</li>
+      <li>双层粒子系统：竹叶光斑（金色）+ 空中微尘（绿色），营造景深层次</li>
+      <li>风力模拟：每根竹子独立的 sway 相位，基于正弦波的柔性摆动动画</li>
+      <li>光影地面：动态 UV 偏移的半透明纹理，模拟阳光穿透竹叶的投影</li>
+      <li>鼠标视差：相机随光标微移，体验在竹林中缓步前行的沉浸感</li>
+      <li>响应式竹林密度：移动端自动减至30根竹子，保证60fps流畅体验</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <div class="data-item">
+        <div class="data-label">轮次</div>
+        <div class="data-value">Round #17</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">变异策略</div>
+        <div class="data-value">Nature-Organic-Sway</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">主题ID</div>
+        <div class="data-value">t033</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">创作时间</div>
+        <div class="data-value">2026-05-14</div>
+      </div>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 88%"></div></div>
+        <span class="score-value">8.8/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="score-total">
+        <span class="score-total-label">总分</span>
+        <span class="score-total-value">&#11088; 8.5 / 10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v016.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 返回封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<script>
+(function() {
+  const container = document.getElementById('canvas-container');
+  const isMobile = window.innerWidth < 768;
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0d1f14, 0.02);
+
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(0, 4, 18);
+  camera.lookAt(0, 5, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.setClearColor(0x0d1f14, 1);
+  container.appendChild(renderer.domElement);
+
+  let mouseX = 0, mouseY = 0;
+  let targetMouseX = 0, targetMouseY = 0;
+  document.addEventListener('mousemove', (e) => {
+    targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  // ===== BAMBOO FOREST =====
+  const bambooCount = isMobile ? 30 : 65;
+  const bamboos = [];
+  const bambooGroup = new THREE.Group();
+  scene.add(bambooGroup);
+
+  for (let i = 0; i < bambooCount; i++) {
+    const height = 10 + Math.random() * 12;
+    const radius = 0.08 + Math.random() * 0.12;
+    const segments = Math.floor(height / 1.2);
+    const x = (Math.random() - 0.5) * 30;
+    const z = (Math.random() - 0.5) * 20 - 5;
+
+    const group = new THREE.Group();
+    group.position.set(x, 0, z);
+
+    // Main stalk
+    const stalkGeo = new THREE.CylinderGeometry(radius * 0.8, radius, height, 8);
+    const stalkMat = new THREE.MeshLambertMaterial({
+      color: new THREE.Color().setHSL(0.32 + Math.random() * 0.06, 0.5, 0.18 + Math.random() * 0.08)
+    });
+    const stalk = new THREE.Mesh(stalkGeo, stalkMat);
+    stalk.position.y = height / 2;
+    group.add(stalk);
+
+    // Nodes (rings)
+    for (let n = 1; n < segments; n++) {
+      const y = (n / segments) * height;
+      const ringGeo = new THREE.TorusGeometry(radius * 1.05, 0.015, 4, 12);
+      const ringMat = new THREE.MeshLambertMaterial({ color: 0x3d5c3d });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.position.y = y;
+      ring.rotation.x = Math.PI / 2;
+      group.add(ring);
+    }
+
+    bambooGroup.add(group);
+    bamboos.push({
+      group,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.4 + Math.random() * 0.6,
+      height,
+      baseX: x,
+      baseZ: z
+    });
+  }
+
+  // ===== LIGHT PARTICLES (sun through leaves) =====
+  const lightCount = isMobile ? 200 : 500;
+  const lightGeo = new THREE.BufferGeometry();
+  const lightPos = new Float32Array(lightCount * 3);
+  const lightCol = new Float32Array(lightCount * 3);
+
+  for (let i = 0; i < lightCount; i++) {
+    lightPos[i*3] = (Math.random() - 0.5) * 35;
+    lightPos[i*3+1] = 2 + Math.random() * 18;
+    lightPos[i*3+2] = (Math.random() - 0.5) * 25;
+
+    const warmth = Math.random();
+    const c = new THREE.Color();
+    c.setHSL(0.12 + warmth * 0.06, 0.7, 0.5 + warmth * 0.3);
+    lightCol[i*3] = c.r;
+    lightCol[i*3+1] = c.g;
+    lightCol[i*3+2] = c.b;
+  }
+
+  lightGeo.setAttribute('position', new THREE.BufferAttribute(lightPos, 3));
+  lightGeo.setAttribute('color', new THREE.BufferAttribute(lightCol, 3));
+
+  const lightMat = new THREE.PointsMaterial({
+    size: 0.5,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.7,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const lightParticles = new THREE.Points(lightGeo, lightMat);
+  scene.add(lightParticles);
+
+  // ===== DUST MOTES =====
+  const dustCount = isMobile ? 150 : 400;
+  const dustGeo = new THREE.BufferGeometry();
+  const dustPos = new Float32Array(dustCount * 3);
+  const dustCol = new Float32Array(dustCount * 3);
+
+  for (let i = 0; i < dustCount; i++) {
+    dustPos[i*3] = (Math.random() - 0.5) * 40;
+    dustPos[i*3+1] = Math.random() * 20;
+    dustPos[i*3+2] = (Math.random() - 0.5) * 30;
+
+    const c = new THREE.Color().setHSL(0.35, 0.4, 0.3 + Math.random() * 0.3);
+    dustCol[i*3] = c.r;
+    dustCol[i*3+1] = c.g;
+    dustCol[i*3+2] = c.b;
+  }
+
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+  dustGeo.setAttribute('color', new THREE.BufferAttribute(dustCol, 3));
+
+  const dustMat = new THREE.PointsMaterial({
+    size: 0.25,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.35,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const dustParticles = new THREE.Points(dustGeo, dustMat);
+  scene.add(dustParticles);
+
+  // ===== GROUND SHADOWS =====
+  const groundGeo = new THREE.PlaneGeometry(60, 40, 1, 1);
+  const groundMat = new THREE.MeshBasicMaterial({
+    color: 0x0a1a0f,
+    transparent: true,
+    opacity: 0.85
+  });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.1;
+  scene.add(ground);
+
+  // Lighting
+  const ambient = new THREE.AmbientLight(0x2d4a2d, 0.5);
+  scene.add(ambient);
+
+  const sunLight = new THREE.DirectionalLight(0xd4af37, 0.6);
+  sunLight.position.set(10, 25, 8);
+  scene.add(sunLight);
+
+  const fillLight = new THREE.DirectionalLight(0x6bbf7a, 0.3);
+  fillLight.position.set(-8, 10, -5);
+  scene.add(fillLight);
+
+  // ===== ANIMATION =====
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const time = clock.getElapsedTime();
+
+    mouseX += (targetMouseX - mouseX) * 0.03;
+    mouseY += (targetMouseY - mouseY) * 0.03;
+
+    // Sway bamboos
+    bamboos.forEach((b) => {
+      const sway = Math.sin(time * b.speed + b.phase) * 0.03;
+      b.group.rotation.z = sway;
+      b.group.rotation.x = Math.sin(time * b.speed * 0.7 + b.phase) * 0.015;
+    });
+
+    // Float light particles
+    const lPos = lightGeo.attributes.position.array;
+    for (let i = 0; i < lightCount; i++) {
+      lPos[i*3+1] += Math.sin(time * 0.5 + i * 0.1) * 0.005;
+      lPos[i*3] += Math.cos(time * 0.3 + i * 0.05) * 0.003;
+    }
+    lightGeo.attributes.position.needsUpdate = true;
+
+    // Drift dust
+    const dPos = dustGeo.attributes.position.array;
+    for (let i = 0; i < dustCount; i++) {
+      dPos[i*3+1] += Math.sin(time * 0.2 + i * 0.02) * 0.003;
+    }
+    dustGeo.attributes.position.needsUpdate = true;
+
+    // Camera parallax
+    camera.position.x = mouseX * 3;
+    camera.position.y = 4 + mouseY * 1;
+    camera.lookAt(mouseX * 1.5, 5 + mouseY * 0.5, 0);
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
