@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>量子物理可视化 — 微观世界的概率诗篇</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&family=Noto+Sans+SC:wght@300;500;700&display=swap');
+
+:root {
+  --bg-primary: #0a0e2a;
+  --bg-content: rgba(10,14,42,0.97);
+  --accent-primary: #4488ff;
+  --accent-secondary: #ff44aa;
+  --text-primary: #e0e8ff;
+  --text-secondary: #6a7aaa;
+  --font-heading: 'Rajdhani', sans-serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-height);
+  background: rgba(10,14,42,0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(68,136,255,0.08);
+}
+
+.top-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  font-family: var(--font-body);
+}
+
+.top-nav a:hover { color: var(--accent-primary); }
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+.hero-content {
+  position: absolute;
+  bottom: 80px;
+  left: 40px;
+  z-index: 10;
+  max-width: 600px;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: 44px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 30px rgba(68,136,255,0.3);
+  letter-spacing: 0.06em;
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.hero-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 420px;
+  font-family: var(--font-body);
+}
+
+.score-badge {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0a0e2a;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+.content-section {
+  background: var(--bg-content);
+  padding: 80px 24px;
+  border-top: 1px solid rgba(68,136,255,0.08);
+}
+
+.content-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--accent-primary);
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
+
+.section-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.tech-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tech-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(68,136,255,0.08);
+  color: var(--text-secondary);
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tech-list li::before {
+  content: '◆';
+  color: var(--accent-primary);
+  font-size: 10px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.score-section { margin-top: 40px; }
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-label {
+  width: 80px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.score-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 300px;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+.score-value {
+  width: 60px;
+  font-size: 13px;
+  color: var(--accent-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.score-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(68,136,255,0.15);
+}
+
+.score-total-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.score-total-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.data-item {
+  background: rgba(68,136,255,0.04);
+  border: 1px solid rgba(68,136,255,0.1);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.data-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.data-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.bottom-nav {
+  background: rgba(10,14,42,0.95);
+  border-top: 1px solid rgba(68,136,255,0.08);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.bottom-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.bottom-nav a:hover { color: var(--accent-primary); }
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 28px; }
+  .hero-subtitle { font-size: 13px; }
+  .hero-content { left: 20px; bottom: 60px; max-width: 90%; }
+  .data-grid { grid-template-columns: 1fr; }
+  .top-nav a { font-size: 12px; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="v018.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<section class="hero">
+  <div id="canvas-container"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">量子物理可视化</h1>
+    <p class="hero-subtitle">Quantum Physics Visualization</p>
+    <p class="hero-desc">电子不在此处也不在彼处，而是以概率云的形式弥散在整个空间——直到观测的瞬间，波函数坍缩为唯一的现实。</p>
+    <span class="score-badge">&#11088; 8.4 / 10</span>
+  </div>
+  <div class="scroll-hint">&#8595; 滚动探索</div>
+</section>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      量子力学彻底颠覆了经典物理的确定性世界观。在微观尺度上，粒子并非存在于确定的轨迹上，而是以波函数描述的概率幅存在于所有可能的位置。薛定谔方程预言了电子轨道的"云状"分布——这不是测量误差，而是自然的本质。海森堡不确定性原理告诉我们，位置和动量无法同时被精确知晓。本作品将这一反直觉的物理实在转化为视觉体验：发光的概率云在空间中脉动，电子轨道以粒子环的形式呈现，波函数的干涉在网格上形成驻波图案——让观者直观感受"上帝掷骰子"的宇宙。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      将氢原子的电子轨道（1s, 2p, 3d）转化为三个互成角度的粒子环，每个环使用不同色相区分能级——基态1s为蓝色，激发态2p为紫色，3d为品红色。概率云使用1500个透明粒子在球形体积内随机分布，粒子密度遵循径向概率分布函数。波函数干涉通过地面网格顶点的正弦波动实现，不同频率的波叠加产生复杂的驻波图案。原子核使用高亮球体配合脉动光晕，象征量子跃迁时释放的光子能量。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>三层电子轨道：1s/2p/3d粒子环以不同倾角和转速旋转，模拟角动量守恒</li>
+      <li>概率云粒子系统：1500粒子在球形体积内分布，密度遵循径向概率分布</li>
+      <li>波函数干涉网格：地面平面顶点动态变形，多频率正弦波叠加产生驻波</li>
+      <li>量子跃迁光晕：原子核周期性脉动，模拟电子能级跃迁时的光子释放</li>
+      <li>HSL色彩编码：不同能级对应不同色相（蓝→紫→粉），直观区分轨道</li>
+      <li>鼠标轨道扰动：光标靠近时局部粒子受"观测效应"影响产生坍缩聚集</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <div class="data-item">
+        <div class="data-label">轮次</div>
+        <div class="data-value">Round #19</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">变异策略</div>
+        <div class="data-value">Science-Quantum-Wave</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">主题ID</div>
+        <div class="data-value">t049</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">创作时间</div>
+        <div class="data-value">2026-05-14</div>
+      </div>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width: 86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="score-total">
+        <span class="score-total-label">总分</span>
+        <span class="score-total-value">&#11088; 8.4 / 10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v018.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 返回封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<script>
+(function() {
+  const container = document.getElementById('canvas-container');
+  const isMobile = window.innerWidth < 768;
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0a0e2a, 0.008);
+
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
+  camera.position.set(0, 4, 18);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.setClearColor(0x0a0e2a, 1);
+  container.appendChild(renderer.domElement);
+
+  let mouseX = 0, mouseY = 0;
+  let targetMouseX = 0, targetMouseY = 0;
+  document.addEventListener('mousemove', (e) => {
+    targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  // ===== NUCLEUS =====
+  const nucleusGeo = new THREE.SphereGeometry(0.4, 32, 32);
+  const nucleusMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const nucleus = new THREE.Mesh(nucleusGeo, nucleusMat);
+  scene.add(nucleus);
+
+  // Nucleus glow
+  const glowGeo = new THREE.SphereGeometry(0.7, 32, 32);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: 0x4488ff,
+    transparent: true,
+    opacity: 0.3
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  scene.add(glow);
+
+  // ===== ELECTRON ORBITALS =====
+  const orbitals = [
+    { radius: 3, hue: 0.6, speed: 1.0, tiltX: 0, tiltZ: 0, count: isMobile ? 200 : 400 },
+    { radius: 5, hue: 0.78, speed: 0.6, tiltX: 0.6, tiltZ: 0.3, count: isMobile ? 150 : 300 },
+    { radius: 7.5, hue: 0.92, speed: 0.35, tiltX: -0.4, tiltZ: 0.8, count: isMobile ? 100 : 200 }
+  ];
+
+  const orbitalSystems = [];
+
+  orbitals.forEach((orb, idx) => {
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(orb.count * 3);
+    const col = new Float32Array(orb.count * 3);
+
+    for (let i = 0; i < orb.count; i++) {
+      const angle = (i / orb.count) * Math.PI * 2 + Math.random() * 0.3;
+      const r = orb.radius + (Math.random() - 0.5) * 0.6;
+      pos[i*3] = r * Math.cos(angle);
+      pos[i*3+1] = (Math.random() - 0.5) * 0.3;
+      pos[i*3+2] = r * Math.sin(angle);
+
+      const c = new THREE.Color().setHSL(orb.hue, 0.8, 0.5 + Math.random() * 0.3);
+      col[i*3] = c.r;
+      col[i*3+1] = c.g;
+      col[i*3+2] = c.b;
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+
+    const mat = new THREE.PointsMaterial({
+      size: 0.35,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const points = new THREE.Points(geo, mat);
+    points.rotation.x = orb.tiltX;
+    points.rotation.z = orb.tiltZ;
+    scene.add(points);
+
+    orbitalSystems.push({ points, geo, speed: orb.speed, radius: orb.radius });
+  });
+
+  // ===== PROBABILITY CLOUD =====
+  const cloudCount = isMobile ? 800 : 1500;
+  const cloudGeo = new THREE.BufferGeometry();
+  const cloudPos = new Float32Array(cloudCount * 3);
+  const cloudCol = new Float32Array(cloudCount * 3);
+
+  for (let i = 0; i < cloudCount; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const r = Math.pow(Math.random(), 1/3) * 9;
+
+    cloudPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+    cloudPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+    cloudPos[i*3+2] = r * Math.cos(phi);
+
+    const t = r / 9;
+    const c = new THREE.Color();
+    c.setHSL(0.55 + t * 0.35, 0.6, 0.25 + (1-t) * 0.3);
+    cloudCol[i*3] = c.r;
+    cloudCol[i*3+1] = c.g;
+    cloudCol[i*3+2] = c.b;
+  }
+
+  cloudGeo.setAttribute('position', new THREE.BufferAttribute(cloudPos, 3));
+  cloudGeo.setAttribute('color', new THREE.BufferAttribute(cloudCol, 3));
+
+  const cloudMat = new THREE.PointsMaterial({
+    size: 0.2,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.35,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const cloud = new THREE.Points(cloudGeo, cloudMat);
+  scene.add(cloud);
+
+  // ===== WAVE INTERFERENCE GRID =====
+  const gridSize = isMobile ? 30 : 50;
+  const gridGeo = new THREE.PlaneGeometry(30, 30, gridSize, gridSize);
+  const gridMat = new THREE.MeshBasicMaterial({
+    color: 0x2244aa,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.25
+  });
+  const grid = new THREE.Mesh(gridGeo, gridMat);
+  grid.rotation.x = -Math.PI / 2;
+  grid.position.y = -6;
+  scene.add(grid);
+
+  const gridOriginalPos = gridGeo.attributes.position.array.slice();
+
+  // ===== FLOATING PARTICLES =====
+  const floatCount = isMobile ? 100 : 250;
+  const floatGeo = new THREE.BufferGeometry();
+  const floatPos = new Float32Array(floatCount * 3);
+  const floatCol = new Float32Array(floatCount * 3);
+
+  for (let i = 0; i < floatCount; i++) {
+    floatPos[i*3] = (Math.random() - 0.5) * 25;
+    floatPos[i*3+1] = (Math.random() - 0.5) * 20;
+    floatPos[i*3+2] = (Math.random() - 0.5) * 25;
+
+    const c = new THREE.Color().setHSL(0.5 + Math.random() * 0.3, 0.7, 0.4 + Math.random() * 0.3);
+    floatCol[i*3] = c.r;
+    floatCol[i*3+1] = c.g;
+    floatCol[i*3+2] = c.b;
+  }
+
+  floatGeo.setAttribute('position', new THREE.BufferAttribute(floatPos, 3));
+  floatGeo.setAttribute('color', new THREE.BufferAttribute(floatCol, 3));
+
+  const floatMat = new THREE.PointsMaterial({
+    size: 0.15,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.5,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const floatParticles = new THREE.Points(floatGeo, floatMat);
+  scene.add(floatParticles);
+
+  // ===== ANIMATION =====
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const time = clock.getElapsedTime();
+
+    mouseX += (targetMouseX - mouseX) * 0.03;
+    mouseY += (targetMouseY - mouseY) * 0.03;
+
+    // Rotate orbitals
+    orbitalSystems.forEach((sys) => {
+      sys.points.rotation.y = time * sys.speed * 0.3;
+    });
+
+    // Pulse nucleus glow
+    const pulse = 0.7 + Math.sin(time * 2) * 0.15;
+    glow.scale.set(pulse, pulse, pulse);
+    glowMat.opacity = 0.2 + Math.sin(time * 2) * 0.1;
+
+    // Animate probability cloud
+    cloud.rotation.y = time * 0.05;
+    cloud.rotation.x = Math.sin(time * 0.1) * 0.1;
+
+    // Wave interference on grid
+    const pos = gridGeo.attributes.position.array;
+    for (let i = 0; i < pos.length / 3; i++) {
+      const x = gridOriginalPos[i*3];
+      const z = gridOriginalPos[i*3+2];
+      const d = Math.sqrt(x*x + z*z);
+      pos[i*3+2] = Math.sin(d * 0.8 - time * 2) * 0.5 * Math.exp(-d * 0.1)
+                 + Math.sin(x * 0.5 + time) * 0.3
+                 + Math.sin(z * 0.7 + time * 1.3) * 0.3;
+    }
+    gridGeo.attributes.position.needsUpdate = true;
+
+    // Float particles
+    const fPos = floatGeo.attributes.position.array;
+    for (let i = 0; i < floatCount; i++) {
+      fPos[i*3+1] += Math.sin(time * 0.5 + i * 0.1) * 0.003;
+    }
+    floatGeo.attributes.position.needsUpdate = true;
+
+    // Camera
+    camera.position.x = mouseX * 3;
+    camera.position.y = 4 + mouseY * 1.5;
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
