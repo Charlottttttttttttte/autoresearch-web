@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>洛可可数字沙龙 — AutoResearch</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+:root {
+  --bg-primary: #1a1018;
+  --bg-content: rgba(26,16,24,0.94);
+  --accent-primary: #ff9eb5;
+  --accent-secondary: #d4af37;
+  --text-primary: #ffffff;
+  --text-secondary: #b8a0a8;
+  --font-heading: 'Noto Serif SC', serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+#canvas-container {
+  position: fixed; top:0; left:0; width:100%; height:100vh; z-index:1;
+}
+.top-nav {
+  position: fixed; top:0; left:0; right:0; height: var(--nav-height);
+  background: rgba(26,16,24,0.75); backdrop-filter: blur(12px);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 24px; z-index: 1000;
+  border-bottom: 1px solid rgba(255,158,181,0.08);
+}
+.top-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 0.5px;
+}
+.top-nav a:hover { color: var(--accent-primary); }
+.hero-overlay {
+  position: relative; z-index: 10; height: 100vh;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 0 80px 60px; pointer-events: none;
+}
+.hero-title {
+  font-family: var(--font-heading); font-size: 64px; font-weight: 700;
+  color: var(--text-primary); text-shadow: 0 0 40px rgba(255,158,181,0.3);
+  margin-bottom: 12px; letter-spacing: 4px;
+}
+.hero-subtitle {
+  font-size: 18px; color: var(--accent-secondary); font-weight: 300;
+  margin-bottom: 20px; letter-spacing: 2px;
+}
+.hero-score {
+  display: inline-block; background: rgba(255,158,181,0.15);
+  border: 1px solid rgba(255,158,181,0.3); border-radius: 20px;
+  padding: 6px 18px; font-size: 14px; color: var(--accent-primary);
+  backdrop-filter: blur(8px); pointer-events: auto;
+}
+.content-section {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 80px 24px;
+}
+.content-container {
+  max-width: var(--content-max-width); margin: 0 auto;
+}
+.section-title {
+  font-family: var(--font-heading); font-size: 28px;
+  color: var(--accent-primary); margin-bottom: 24px; letter-spacing: 2px;
+}
+.section-body {
+  font-size: 16px; line-height: 1.9; color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+.tech-list {
+  list-style: none; padding: 0;
+}
+.tech-list li {
+  padding: 12px 0; border-bottom: 1px solid rgba(255,158,181,0.1);
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 15px; color: var(--text-secondary); line-height: 1.7;
+}
+.tech-list li::before {
+  content: '◆'; color: var(--accent-primary); font-size: 10px;
+  margin-top: 6px; flex-shrink: 0;
+}
+.data-grid {
+  display: grid; grid-template-columns: 140px 1fr; gap: 12px 24px;
+  font-size: 15px; color: var(--text-secondary);
+}
+.data-grid .label { color: var(--text-primary); font-weight: 700; }
+.score-section { margin-top: 40px; }
+.score-item {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+}
+.score-label { width: 100px; font-size: 14px; color: var(--text-secondary); }
+.score-bar {
+  flex: 1; height: 8px; background: rgba(255,255,255,0.06);
+  border-radius: 4px; overflow: hidden; max-width: 280px;
+}
+.score-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+}
+.score-value { width: 60px; text-align: right; font-size: 14px; color: var(--accent-primary); font-weight: 700; }
+.total-score {
+  display: flex; align-items: center; gap: 16px; margin-top: 24px;
+  padding-top: 24px; border-top: 1px solid rgba(255,158,181,0.2);
+}
+.total-label { width: 100px; font-size: 16px; color: var(--text-primary); font-weight: 700; }
+.total-value { font-size: 24px; color: var(--accent-primary); font-weight: 700; }
+.bottom-nav {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 40px 24px;
+  border-top: 1px solid rgba(255,158,181,0.1);
+  display: flex; justify-content: center; gap: 40px;
+}
+.bottom-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 1px;
+}
+.bottom-nav a:hover { color: var(--accent-primary); }
+@media (max-width: 768px) {
+  .hero-overlay { padding: 0 0 60px 24px; }
+  .hero-title { font-size: 36px; }
+  .hero-subtitle { font-size: 14px; }
+  .score-item { flex-wrap: wrap; }
+  .score-bar { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="v033.html">← 上一作品</a>
+  <a href="index.html">🏠 封面</a>
+  <a href="v035.html">下一作品 →</a>
+</nav>
+
+<div id="canvas-container"></div>
+
+<div class="hero-overlay">
+  <h1 class="hero-title">洛可可数字沙龙</h1>
+  <p class="hero-subtitle">Rococo Digital Salon · 粉色黄金的数字梦境</p>
+  <span class="hero-score">⭐ 8.3/10</span>
+</div>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      洛可可是18世紀歐洲最精緻、最奢華的藝術風格。它以柔和的粉彩色調、繁複的貝殼曲線、金箔裝飾和輕盈的優雅感著稱，誕生於法國貴族沙龍的閒適氛圍中。這種風格追求感官的愉悅而非道德的教化，每一條曲線都訴說著對美的無盡迷戀。本作品將這一古典美學數字化：貝殼般的曲線化為飄浮的幾何體，金箔的閃爍化為粒子的微光，粉色的柔和化為霧中的光暈。在數字沙龍中，時間凝固在午後三點的優雅瞬間。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      將洛可可核心元素轉化為網頁技術：貝殼曲線與卷草紋 → Three.js TubeGeometry 與 EllipseCurve 的組合；粉彩色調 → 粉紅、象牙白、薄荷綠的漸變粒子系統；金箔裝飾 → 金色發光粒子的閃爍與飄動；繁複細節 → 多層次的小型幾何裝飾元素的群聚；輕盈感 → 極慢速的浮動與旋轉動畫；沙龍空間 → 圓形劇場式的環形佈局。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>Three.js 貝殼曲線幾何體，使用 CatmullRomCurve3 生成優雅的連續曲線管道</li>
+      <li>粉彩粒子雲：1500+ 粒子以粉紅、象牙、薄荷三色飄浮，模擬洛可可的柔和色調</li>
+      <li>金箔閃爍系統：金色粒子隨機閃爍與緩慢飄動，模擬金箔裝飾的光澤變化</li>
+      <li>環形劇場佈局：裝飾元素沿同心圓排列，營造沙龍空間的圍合感</li>
+      <li>多層次霧效：淺粉色指數霧柔化遠景，增強夢幻與朦朧氛圍</li>
+      <li>鼠標互動：輕微的視角偏移，仿佛漫步於沙龍中環顧四周</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <span class="label">轮次</span><span>Round #34</span>
+      <span class="label">策略</span><span>Rococo-Pastel-Gold</span>
+      <span class="label">主题ID</span><span>t006</span>
+      <span class="label">创作时间</span><span>2026-05-14</span>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width:82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:83%"></div></div>
+        <span class="score-value">8.3/10</span>
+      </div>
+      <div class="total-score">
+        <span class="total-label">总分</span>
+        <span class="total-value">⭐ 8.3/10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v033.html">← 上一作品</a>
+  <a href="index.html">🏠 返回封面</a>
+  <a href="v035.html">下一作品 →</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a1018);
+  scene.fog = new THREE.FogExp2(0x1a1018, 0.018);
+
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.set(0, 8, 20);
+  camera.lookAt(0, 2, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  // Lights - warm and soft
+  const ambientLight = new THREE.AmbientLight(0xffc8d8, 0.4);
+  scene.add(ambientLight);
+
+  const pinkLight = new THREE.PointLight(0xff9eb5, 1.2, 40);
+  pinkLight.position.set(5, 10, 5);
+  scene.add(pinkLight);
+
+  const goldLight = new THREE.PointLight(0xd4af37, 0.8, 35);
+  goldLight.position.set(-5, 8, -5);
+  scene.add(goldLight);
+
+  const mintLight = new THREE.PointLight(0xa8e6cf, 0.6, 30);
+  mintLight.position.set(0, 5, 10);
+  scene.add(mintLight);
+
+  // Shell curves
+  const shells = [];
+  for (let i = 0; i < 12; i++) {
+    const points = [];
+    for (let j = 0; j <= 20; j++) {
+      const t = j / 20;
+      const angle = t * Math.PI * 2;
+      const r = 1 + Math.sin(angle * 3) * 0.3;
+      points.push(new THREE.Vector3(
+        Math.cos(angle) * r,
+        Math.sin(angle) * r * 0.5,
+        Math.sin(angle * 2) * 0.5
+      ));
+    }
+    const curve = new THREE.CatmullRomCurve3(points);
+    const geo = new THREE.TubeGeometry(curve, 64, 0.1, 8, true);
+    const mat = new THREE.MeshLambertMaterial({
+      color: Math.random() > 0.5 ? 0xff9eb5 : 0xd4af37,
+      transparent: true,
+      opacity: 0.6
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(
+      (Math.random() - 0.5) * 15,
+      Math.random() * 6,
+      (Math.random() - 0.5) * 10
+    );
+    mesh.rotation.set(
+      Math.random() * Math.PI,
+      Math.random() * Math.PI,
+      Math.random() * Math.PI
+    );
+    mesh.userData = {
+      rotSpeed: { x: Math.random() * 0.005, y: Math.random() * 0.008, z: Math.random() * 0.003 },
+      floatSpeed: Math.random() * 0.003 + 0.001,
+      floatOffset: Math.random() * Math.PI * 2
+    };
+    shells.push(mesh);
+    scene.add(mesh);
+  }
+
+  // Gold particles
+  const goldCount = 300;
+  const goldGeo = new THREE.BufferGeometry();
+  const goldPos = new Float32Array(goldCount * 3);
+  const goldPhases = [];
+  for (let i = 0; i < goldCount; i++) {
+    goldPos[i*3] = (Math.random() - 0.5) * 25;
+    goldPos[i*3+1] = Math.random() * 15;
+    goldPos[i*3+2] = (Math.random() - 0.5) * 15;
+    goldPhases.push(Math.random() * Math.PI * 2);
+  }
+  goldGeo.setAttribute('position', new THREE.BufferAttribute(goldPos, 3));
+  const goldMat = new THREE.PointsMaterial({
+    color: 0xd4af37, size: 0.15, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending
+  });
+  const goldParticles = new THREE.Points(goldGeo, goldMat);
+  scene.add(goldParticles);
+
+  // Pastel particles
+  const pastelColors = [0xff9eb5, 0xffd1dc, 0xa8e6cf, 0xfff0f5];
+  const pCount = 1200;
+  const pGeo = new THREE.BufferGeometry();
+  const pPos = new Float32Array(pCount * 3);
+  const pCol = new Float32Array(pCount * 3);
+  const pVel = [];
+  for (let i = 0; i < pCount; i++) {
+    pPos[i*3] = (Math.random() - 0.5) * 30;
+    pPos[i*3+1] = Math.random() * 15;
+    pPos[i*3+2] = (Math.random() - 0.5) * 20;
+    const c = new THREE.Color(pastelColors[Math.floor(Math.random() * pastelColors.length)]);
+    pCol[i*3] = c.r; pCol[i*3+1] = c.g; pCol[i*3+2] = c.b;
+    pVel.push({
+      x: (Math.random() - 0.5) * 0.01,
+      y: Math.random() * 0.005,
+      z: (Math.random() - 0.5) * 0.01
+    });
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+  const pMat = new THREE.PointsMaterial({
+    size: 0.2, vertexColors: true, transparent: true, opacity: 0.5,
+    blending: THREE.AdditiveBlending
+  });
+  const pastelParticles = new THREE.Points(pGeo, pMat);
+  scene.add(pastelParticles);
+
+  // Decorative rings
+  const rings = [];
+  for (let i = 0; i < 5; i++) {
+    const radius = 3 + i * 2;
+    const geo = new THREE.TorusGeometry(radius, 0.05, 8, 64);
+    const mat = new THREE.MeshBasicMaterial({
+      color: i % 2 === 0 ? 0xff9eb5 : 0xd4af37,
+      transparent: true,
+      opacity: 0.3
+    });
+    const ring = new THREE.Mesh(geo, mat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0;
+    ring.userData = { rotSpeed: 0.002 * (i % 2 === 0 ? 1 : -1) };
+    rings.push(ring);
+    scene.add(ring);
+  }
+
+  // Mouse
+  const mouse = new THREE.Vector2();
+  document.addEventListener('mousemove', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
+
+  // Animation
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    // Shells
+    shells.forEach(s => {
+      s.rotation.x += s.userData.rotSpeed.x;
+      s.rotation.y += s.userData.rotSpeed.y;
+      s.rotation.z += s.userData.rotSpeed.z;
+      s.position.y += Math.sin(t * s.userData.floatSpeed + s.userData.floatOffset) * 0.003;
+    });
+
+    // Gold particles
+    const gPos = goldParticles.geometry.attributes.position.array;
+    for (let i = 0; i < goldCount; i++) {
+      gPos[i*3+1] += Math.sin(t * 0.5 + goldPhases[i]) * 0.01;
+    }
+    goldParticles.geometry.attributes.position.needsUpdate = true;
+    goldParticles.material.opacity = 0.4 + Math.sin(t * 2) * 0.3;
+
+    // Pastel particles
+    const pp = pastelParticles.geometry.attributes.position.array;
+    for (let i = 0; i < pCount; i++) {
+      pp[i*3] += pVel[i].x;
+      pp[i*3+1] += pVel[i].y;
+      pp[i*3+2] += pVel[i].z;
+      if (pp[i*3+1] > 15) pp[i*3+1] = 0;
+    }
+    pastelParticles.geometry.attributes.position.needsUpdate = true;
+    pastelParticles.rotation.y = t * 0.005;
+
+    // Rings
+    rings.forEach(r => {
+      r.rotation.z += r.userData.rotSpeed;
+    });
+
+    // Camera
+    camera.position.x = Math.sin(t * 0.08) * 5 + mouse.x * 3;
+    camera.position.z = 20 + Math.cos(t * 0.08) * 3;
+    camera.position.y = 8 + mouse.y * 2;
+    camera.lookAt(0, 2, 0);
+
+    // Lights
+    pinkLight.position.x = 5 + Math.sin(t * 0.3) * 3;
+    goldLight.position.z = -5 + Math.cos(t * 0.2) * 3;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
