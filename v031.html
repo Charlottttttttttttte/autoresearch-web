@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光纤数据传输 — AutoResearch</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+:root {
+  --bg-primary: #000510;
+  --bg-content: rgba(0,5,16,0.94);
+  --accent-primary: #00d4ff;
+  --accent-secondary: #0099cc;
+  --text-primary: #ffffff;
+  --text-secondary: #6688aa;
+  --font-heading: 'Noto Serif SC', serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+#canvas-container {
+  position: fixed; top:0; left:0; width:100%; height:100vh; z-index:1;
+}
+.top-nav {
+  position: fixed; top:0; left:0; right:0; height: var(--nav-height);
+  background: rgba(0,5,16,0.75); backdrop-filter: blur(12px);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 24px; z-index: 1000;
+  border-bottom: 1px solid rgba(0,212,255,0.08);
+}
+.top-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 0.5px;
+}
+.top-nav a:hover { color: var(--accent-primary); }
+.hero-overlay {
+  position: relative; z-index: 10; height: 100vh;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 0 80px 60px; pointer-events: none;
+}
+.hero-title {
+  font-family: var(--font-heading); font-size: 64px; font-weight: 700;
+  color: var(--text-primary); text-shadow: 0 0 40px rgba(0,212,255,0.4);
+  margin-bottom: 12px; letter-spacing: 4px;
+}
+.hero-subtitle {
+  font-size: 18px; color: var(--accent-primary); font-weight: 300;
+  margin-bottom: 20px; letter-spacing: 2px;
+}
+.hero-score {
+  display: inline-block; background: rgba(0,212,255,0.15);
+  border: 1px solid rgba(0,212,255,0.3); border-radius: 20px;
+  padding: 6px 18px; font-size: 14px; color: var(--accent-primary);
+  backdrop-filter: blur(8px); pointer-events: auto;
+}
+.content-section {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 80px 24px;
+}
+.content-container {
+  max-width: var(--content-max-width); margin: 0 auto;
+}
+.section-title {
+  font-family: var(--font-heading); font-size: 28px;
+  color: var(--accent-primary); margin-bottom: 24px; letter-spacing: 2px;
+}
+.section-body {
+  font-size: 16px; line-height: 1.9; color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+.tech-list {
+  list-style: none; padding: 0;
+}
+.tech-list li {
+  padding: 12px 0; border-bottom: 1px solid rgba(0,212,255,0.1);
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 15px; color: var(--text-secondary); line-height: 1.7;
+}
+.tech-list li::before {
+  content: '◆'; color: var(--accent-primary); font-size: 10px;
+  margin-top: 6px; flex-shrink: 0;
+}
+.data-grid {
+  display: grid; grid-template-columns: 140px 1fr; gap: 12px 24px;
+  font-size: 15px; color: var(--text-secondary);
+}
+.data-grid .label { color: var(--text-primary); font-weight: 700; }
+.score-section { margin-top: 40px; }
+.score-item {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+}
+.score-label { width: 100px; font-size: 14px; color: var(--text-secondary); }
+.score-bar {
+  flex: 1; height: 8px; background: rgba(255,255,255,0.06);
+  border-radius: 4px; overflow: hidden; max-width: 280px;
+}
+.score-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+}
+.score-value { width: 60px; text-align: right; font-size: 14px; color: var(--accent-primary); font-weight: 700; }
+.total-score {
+  display: flex; align-items: center; gap: 16px; margin-top: 24px;
+  padding-top: 24px; border-top: 1px solid rgba(0,212,255,0.2);
+}
+.total-label { width: 100px; font-size: 16px; color: var(--text-primary); font-weight: 700; }
+.total-value { font-size: 24px; color: var(--accent-primary); font-weight: 700; }
+.bottom-nav {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 40px 24px;
+  border-top: 1px solid rgba(0,212,255,0.1);
+  display: flex; justify-content: center; gap: 40px;
+}
+.bottom-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 1px;
+}
+.bottom-nav a:hover { color: var(--accent-primary); }
+@media (max-width: 768px) {
+  .hero-overlay { padding: 0 0 60px 24px; }
+  .hero-title { font-size: 36px; }
+  .hero-subtitle { font-size: 14px; }
+  .score-item { flex-wrap: wrap; }
+  .score-bar { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="v030.html">← 上一作品</a>
+  <a href="index.html">🏠 封面</a>
+  <a href="v032.html">下一作品 →</a>
+</nav>
+
+<div id="canvas-container"></div>
+
+<div class="hero-overlay">
+  <h1 class="hero-title">光纤数据传输</h1>
+  <p class="hero-subtitle">Fiber Optic Data Transmission · 光速穿行的信息之河</p>
+  <span class="hero-score">⭐ 8.5/10</span>
+</div>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      光纤是当代信息文明的血管。在比头发丝还细的石英玻璃丝中，激光脉冲以每秒三十万公里的速度奔流，承载着人类几乎所有的数字通信——从跨洋视频通话到金融交易，从科学数据到社交媒体。这些光脉冲肉眼不可见，但如果我们能窥见它们，将看到一幅壮观的景象：无数条发光的河流在黑暗中交织，蓝色、青色、白色的光点在透明管道中飞速穿行，偶尔在节点处碰撞、分叉、汇聚。本作品以艺术化的方式可视化这一隐秘而壮丽的微观世界。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      將光纖通信的核心概念轉化為網頁技術：石英玻璃光纖 → Three.js 半透明圓柱體管道，模擬玻璃的折射與透光性；激光脈衝 → 高亮度發光粒子，在管道內以高速直線運動；光纖節點/交換機 → 發光球體，脈衝到達時產生亮度爆發；多波長复用 → 不同顏色的光脈衝在同一管道中交錯穿行；數據包丟失與重傳 → 隨機閃爍與路徑切換動畫；全反射原理 → 管道內壁的發光邊界效果。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>Three.js 半透明管道網絡，使用 MeshPhysicalMaterial 模擬玻璃折射與全反射</li>
+      <li>高速光脈衝粒子系統，每個脈衝以不同速率在管道中穿行</li>
+      <li>多波長色彩編碼：藍、青、綠、白四色光脈衝代表不同數據通道</li>
+      <li>節點交換系統：脈衝到達球體節點時觸發亮度爆發與方向重分配</li>
+      <li>深度霧效與發光疊加，營造光纖內部深邃的空間縱深感</li>
+      <li>管道網絡的視差滾動，鼠標移動產生多層次深度位移</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <span class="label">轮次</span><span>Round #31</span>
+      <span class="label">策略</span><span>Fiber-Optic-Light-Pulse</span>
+      <span class="label">主题ID</span><span>t057</span>
+      <span class="label">创作时间</span><span>2026-05-14</span>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:88%"></div></div>
+        <span class="score-value">8.8/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width:83%"></div></div>
+        <span class="score-value">8.3/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:83%"></div></div>
+        <span class="score-value">8.3/10</span>
+      </div>
+      <div class="total-score">
+        <span class="total-label">总分</span>
+        <span class="total-value">⭐ 8.5/10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v030.html">← 上一作品</a>
+  <a href="index.html">🏠 返回封面</a>
+  <a href="v032.html">下一作品 →</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000510, 0.015);
+
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 200);
+  camera.position.set(0, 5, 30);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.3;
+  container.appendChild(renderer.domElement);
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0x001133, 0.3);
+  scene.add(ambientLight);
+
+  const blueLight = new THREE.PointLight(0x00d4ff, 1.5, 60);
+  blueLight.position.set(10, 10, 10);
+  scene.add(blueLight);
+
+  const cyanLight = new THREE.PointLight(0x00ffcc, 1.0, 50);
+  cyanLight.position.set(-10, 5, -5);
+  scene.add(cyanLight);
+
+  // Fiber pipe material
+  const pipeMat = new THREE.MeshPhysicalMaterial({
+    color: 0x001a33,
+    transparent: true,
+    opacity: 0.15,
+    roughness: 0.0,
+    metalness: 0.0,
+    transmission: 0.9,
+    thickness: 1.0,
+    side: THREE.DoubleSide
+  });
+
+  const pipeGlowMat = new THREE.MeshBasicMaterial({
+    color: 0x004466,
+    transparent: true,
+    opacity: 0.2,
+    side: THREE.DoubleSide
+  });
+
+  // Create pipe network
+  const nodes = [];
+  const pipes = [];
+
+  // Node positions
+  const nodePositions = [
+    [0, 0, 0], [8, 3, -5], [-8, -2, -8], [5, -5, 5],
+    [-5, 5, -3], [12, 0, 2], [-12, 3, 0], [0, 8, -10],
+    [3, -8, -5], [-3, 2, 8], [10, -4, -8], [-10, -5, 5]
+  ];
+
+  nodePositions.forEach(pos => {
+    const geo = new THREE.SphereGeometry(0.4, 16, 16);
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x00d4ff, transparent: true, opacity: 0.6
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(...pos);
+    mesh.userData = { baseOpacity: 0.6, pulsePhase: Math.random() * Math.PI * 2 };
+    nodes.push(mesh);
+    scene.add(mesh);
+
+    // Glow
+    const glowGeo = new THREE.SphereGeometry(0.8, 16, 16);
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: 0x00d4ff, transparent: true, opacity: 0.1
+    });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    glow.position.set(...pos);
+    nodes.push(glow);
+    scene.add(glow);
+  });
+
+  // Connect nodes with pipes
+  const connections = [
+    [0,1], [0,2], [0,3], [0,4], [1,5], [2,6], [4,7],
+    [3,8], [0,9], [1,10], [2,11], [5,7], [6,9], [8,11]
+  ];
+
+  connections.forEach(([a, b]) => {
+    const start = new THREE.Vector3(...nodePositions[a]);
+    const end = new THREE.Vector3(...nodePositions[b]);
+    const dist = start.distanceTo(end);
+    const mid = start.clone().add(end).multiplyScalar(0.5);
+
+    const pipeGeo = new THREE.CylinderGeometry(0.15, 0.15, dist, 8);
+    const pipe = new THREE.Mesh(pipeGeo, pipeMat.clone());
+    pipe.position.copy(mid);
+    pipe.lookAt(end);
+    pipe.rotateX(Math.PI / 2);
+    scene.add(pipe);
+
+    // Inner glow pipe
+    const glowPipeGeo = new THREE.CylinderGeometry(0.08, 0.08, dist, 8);
+    const glowPipe = new THREE.Mesh(glowPipeGeo, pipeGlowMat.clone());
+    glowPipe.position.copy(mid);
+    glowPipe.lookAt(end);
+    glowPipe.rotateX(Math.PI / 2);
+    scene.add(glowPipe);
+
+    pipes.push({ start, end, dist, mesh: pipe, glowMesh: glowPipe });
+  });
+
+  // Light pulses
+  const pulseColors = [0x00d4ff, 0x00ffcc, 0x44ff44, 0xffffff];
+  const pulses = [];
+
+  function createPulse() {
+    const conn = pipes[Math.floor(Math.random() * pipes.length)];
+    const color = pulseColors[Math.floor(Math.random() * pulseColors.length)];
+    const geo = new THREE.SphereGeometry(0.12, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({ color: color });
+    const mesh = new THREE.Mesh(geo, mat);
+
+    // Glow
+    const glowGeo = new THREE.SphereGeometry(0.3, 8, 8);
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: color, transparent: true, opacity: 0.3
+    });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    mesh.add(glow);
+
+    mesh.position.copy(conn.start);
+    scene.add(mesh);
+
+    pulses.push({
+      mesh,
+      start: conn.start,
+      end: conn.end,
+      progress: 0,
+      speed: Math.random() * 0.3 + 0.2,
+      color: color
+    });
+  }
+
+  // Create initial pulses
+  for (let i = 0; i < 20; i++) createPulse();
+
+  // Ambient floating particles
+  const pCount = 500;
+  const pGeo = new THREE.BufferGeometry();
+  const pPos = new Float32Array(pCount * 3);
+  const pVel = [];
+  for (let i = 0; i < pCount; i++) {
+    pPos[i*3] = (Math.random() - 0.5) * 40;
+    pPos[i*3+1] = (Math.random() - 0.5) * 30;
+    pPos[i*3+2] = (Math.random() - 0.5) * 30;
+    pVel.push({
+      x: (Math.random() - 0.5) * 0.02,
+      y: (Math.random() - 0.5) * 0.02,
+      z: (Math.random() - 0.5) * 0.02
+    });
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  const pMat = new THREE.PointsMaterial({
+    color: 0x00d4ff, size: 0.1, transparent: true, opacity: 0.4,
+    blending: THREE.AdditiveBlending
+  });
+  const particles = new THREE.Points(pGeo, pMat);
+  scene.add(particles);
+
+  // Mouse
+  const mouse = new THREE.Vector2();
+  document.addEventListener('mousemove', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
+
+  // Animation
+  const clock = new THREE.Clock();
+  let lastPulse = 0;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    const dt = Math.min(clock.getDelta(), 0.05);
+
+    // Spawn new pulses
+    lastPulse += dt;
+    if (lastPulse > 0.3) {
+      createPulse();
+      lastPulse = 0;
+    }
+
+    // Update pulses
+    for (let i = pulses.length - 1; i >= 0; i--) {
+      const p = pulses[i];
+      p.progress += p.speed * dt;
+      if (p.progress >= 1) {
+        scene.remove(p.mesh);
+        pulses.splice(i, 1);
+        continue;
+      }
+      p.mesh.position.lerpVectors(p.start, p.end, p.progress);
+      const glow = p.mesh.children[0];
+      if (glow) glow.material.opacity = 0.3 * (1 - Math.abs(p.progress - 0.5) * 2);
+    }
+
+    // Node pulse
+    nodes.forEach(n => {
+      if (n.userData.pulsePhase !== undefined) {
+        n.material.opacity = n.userData.baseOpacity + Math.sin(t * 2 + n.userData.pulsePhase) * 0.2;
+      }
+    });
+
+    // Ambient particles
+    const positions = particles.geometry.attributes.position.array;
+    for (let i = 0; i < pCount; i++) {
+      positions[i*3] += pVel[i].x;
+      positions[i*3+1] += pVel[i].y;
+      positions[i*3+2] += pVel[i].z;
+      if (Math.abs(positions[i*3]) > 20) pVel[i].x *= -1;
+      if (Math.abs(positions[i*3+1]) > 15) pVel[i].y *= -1;
+      if (Math.abs(positions[i*3+2]) > 15) pVel[i].z *= -1;
+    }
+    particles.geometry.attributes.position.needsUpdate = true;
+    particles.rotation.y = t * 0.01;
+
+    // Camera parallax
+    camera.position.x += (mouse.x * 5 - camera.position.x) * 0.02;
+    camera.position.y = 5 + mouse.y * 3;
+    camera.lookAt(0, 0, 0);
+
+    // Lights orbit
+    blueLight.position.x = Math.sin(t * 0.3) * 15;
+    blueLight.position.z = Math.cos(t * 0.3) * 15;
+    cyanLight.position.x = Math.sin(t * 0.2 + 2) * 12;
+    cyanLight.position.z = Math.cos(t * 0.2 + 2) * 12;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
