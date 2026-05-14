@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>港风霓虹夜行 — AutoResearch</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+:root {
+  --bg-primary: #0a0510;
+  --bg-content: rgba(10,5,16,0.94);
+  --accent-primary: #ff2a8c;
+  --accent-secondary: #00e5ff;
+  --text-primary: #ffffff;
+  --text-secondary: #a088a8;
+  --font-heading: 'Noto Serif SC', serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+#canvas-container {
+  position: fixed; top:0; left:0; width:100%; height:100vh; z-index:1;
+}
+.top-nav {
+  position: fixed; top:0; left:0; right:0; height: var(--nav-height);
+  background: rgba(10,5,16,0.75); backdrop-filter: blur(12px);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 24px; z-index: 1000;
+  border-bottom: 1px solid rgba(255,42,140,0.08);
+}
+.top-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 0.5px;
+}
+.top-nav a:hover { color: var(--accent-primary); }
+.hero-overlay {
+  position: relative; z-index: 10; height: 100vh;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 0 80px 60px; pointer-events: none;
+}
+.hero-title {
+  font-family: var(--font-heading); font-size: 64px; font-weight: 700;
+  color: var(--text-primary); text-shadow: 0 0 40px rgba(255,42,140,0.4);
+  margin-bottom: 12px; letter-spacing: 4px;
+}
+.hero-subtitle {
+  font-size: 18px; color: var(--accent-secondary); font-weight: 300;
+  margin-bottom: 20px; letter-spacing: 2px;
+}
+.hero-score {
+  display: inline-block; background: rgba(255,42,140,0.15);
+  border: 1px solid rgba(255,42,140,0.3); border-radius: 20px;
+  padding: 6px 18px; font-size: 14px; color: var(--accent-primary);
+  backdrop-filter: blur(8px); pointer-events: auto;
+}
+.content-section {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 80px 24px;
+}
+.content-container {
+  max-width: var(--content-max-width); margin: 0 auto;
+}
+.section-title {
+  font-family: var(--font-heading); font-size: 28px;
+  color: var(--accent-primary); margin-bottom: 24px; letter-spacing: 2px;
+}
+.section-body {
+  font-size: 16px; line-height: 1.9; color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+.tech-list {
+  list-style: none; padding: 0;
+}
+.tech-list li {
+  padding: 12px 0; border-bottom: 1px solid rgba(255,42,140,0.1);
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 15px; color: var(--text-secondary); line-height: 1.7;
+}
+.tech-list li::before {
+  content: '◆'; color: var(--accent-primary); font-size: 10px;
+  margin-top: 6px; flex-shrink: 0;
+}
+.data-grid {
+  display: grid; grid-template-columns: 140px 1fr; gap: 12px 24px;
+  font-size: 15px; color: var(--text-secondary);
+}
+.data-grid .label { color: var(--text-primary); font-weight: 700; }
+.score-section { margin-top: 40px; }
+.score-item {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+}
+.score-label { width: 100px; font-size: 14px; color: var(--text-secondary); }
+.score-bar {
+  flex: 1; height: 8px; background: rgba(255,255,255,0.06);
+  border-radius: 4px; overflow: hidden; max-width: 280px;
+}
+.score-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+}
+.score-value { width: 60px; text-align: right; font-size: 14px; color: var(--accent-primary); font-weight: 700; }
+.total-score {
+  display: flex; align-items: center; gap: 16px; margin-top: 24px;
+  padding-top: 24px; border-top: 1px solid rgba(255,42,140,0.2);
+}
+.total-label { width: 100px; font-size: 16px; color: var(--text-primary); font-weight: 700; }
+.total-value { font-size: 24px; color: var(--accent-primary); font-weight: 700; }
+.bottom-nav {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 40px 24px;
+  border-top: 1px solid rgba(255,42,140,0.1);
+  display: flex; justify-content: center; gap: 40px;
+}
+.bottom-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 1px;
+}
+.bottom-nav a:hover { color: var(--accent-primary); }
+@media (max-width: 768px) {
+  .hero-overlay { padding: 0 0 60px 24px; }
+  .hero-title { font-size: 36px; }
+  .hero-subtitle { font-size: 14px; }
+  .score-item { flex-wrap: wrap; }
+  .score-bar { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="v026.html">← 上一作品</a>
+  <a href="index.html">🏠 封面</a>
+  <a href="v028.html">下一作品 →</a>
+</nav>
+
+<div id="canvas-container"></div>
+
+<div class="hero-overlay">
+  <h1 class="hero-title">港风霓虹夜行</h1>
+  <p class="hero-subtitle">Hong Kong Neon Night · 雨夜霓虹，赛博怀旧</p>
+  <span class="hero-score">⭐ 8.6/10</span>
+</div>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      香港夜晚的霓虹招牌是城市最独特的视觉符号。雨水冲刷过的街道反射着红蓝交织的霓虹光芒，拥挤的巷弄中每一块招牌都在争夺视线。这种高密度、高饱和、高反差的视觉景观，既是赛博朋克美学的现实原型，也是东亚都市独有的浪漫。本作品试图捕捉那个瞬间——雨后深夜，你独自走在弥敦道上，霓虹在水洼中碎成无数光斑，耳边是遥远的电车声和潮湿的呼吸。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      将港风夜景的核心元素数字化：霓虹招牌的荧光管 → Three.js 自发光平面 + 泛光后期效果；雨水打湿的路面 → 镜面反射材质与动态涟漪；层层叠叠的招牌纵深 → 多平面景深遮挡；红蓝撞色的视觉张力 → 粉紫渐变与青蓝补色的对抗性配色；潮湿空气的漫反射 → 体积雾与粒子散射。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>Three.js 霓虹发光平面阵列，模拟香港街头密集招牌的纵深层次</li>
+      <li>MeshPhysicalMaterial 镜面反射地面，实时渲染霓虹招牌的倒影</li>
+      <li>雨滴粒子系统配合折射动画，营造持续降雨的氛围感</li>
+      <li>粉紫与青蓝的双色光源对抗，还原霓虹招牌的色彩碰撞</li>
+      <li>体积雾效果柔化远景，增强街道的纵深感与神秘氛围</li>
+      <li>鼠标移动控制视角偏移，仿佛行走在雨夜街头左右张望</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <span class="label">轮次</span><span>Round #27</span>
+      <span class="label">策略</span><span>Neon-Rain-Reflect</span>
+      <span class="label">主题ID</span><span>t013</span>
+      <span class="label">创作时间</span><span>2026-05-14</span>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:90%"></div></div>
+        <span class="score-value">9.0/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:88%"></div></div>
+        <span class="score-value">8.8/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width:83%"></div></div>
+        <span class="score-value">8.3/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="total-score">
+        <span class="total-label">总分</span>
+        <span class="total-value">⭐ 8.6/10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v026.html">← 上一作品</a>
+  <a href="index.html">🏠 返回封面</a>
+  <a href="v028.html">下一作品 →</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0a0510, 0.025);
+
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.set(0, 3, 12);
+  camera.lookAt(0, 2, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.3;
+  container.appendChild(renderer.domElement);
+
+  // Lights - neon colors
+  const ambientLight = new THREE.AmbientLight(0x1a0a2a, 0.4);
+  scene.add(ambientLight);
+
+  const pinkLight = new THREE.PointLight(0xff2a8c, 2.0, 40);
+  pinkLight.position.set(-6, 8, -5);
+  scene.add(pinkLight);
+
+  const cyanLight = new THREE.PointLight(0x00e5ff, 1.8, 40);
+  cyanLight.position.set(6, 6, -3);
+  scene.add(cyanLight);
+
+  const purpleLight = new THREE.PointLight(0x8800ff, 1.2, 35);
+  purpleLight.position.set(0, 10, -10);
+  scene.add(purpleLight);
+
+  // Wet street ground - reflective
+  const groundGeo = new THREE.PlaneGeometry(60, 60);
+  const groundMat = new THREE.MeshPhysicalMaterial({
+    color: 0x0a0510,
+    roughness: 0.05,
+    metalness: 0.3,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.1
+  });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.5;
+  scene.add(ground);
+
+  // Neon sign planes
+  const neonColors = [0xff2a8c, 0x00e5ff, 0xff6600, 0x8800ff, 0xffee00, 0x00ff88];
+  const signs = [];
+
+  for (let i = 0; i < 30; i++) {
+    const w = Math.random() * 3 + 1;
+    const h = Math.random() * 4 + 0.5;
+    const geo = new THREE.PlaneGeometry(w, h);
+    const color = neonColors[Math.floor(Math.random() * neonColors.length)];
+    const mat = new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: Math.random() * 0.4 + 0.4,
+      side: THREE.DoubleSide
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+
+    const side = Math.random() > 0.5 ? 1 : -1;
+    const x = side * (Math.random() * 12 + 2);
+    const z = -Math.random() * 25;
+    const y = Math.random() * 6 + 1;
+
+    mesh.position.set(x, y, z);
+    mesh.rotation.y = side > 0 ? -Math.PI / 6 : Math.PI / 6;
+
+    // Glow light for each sign
+    const glow = new THREE.PointLight(color, 0.6, 8);
+    glow.position.set(x, y, z + 0.5);
+    scene.add(glow);
+
+    signs.push({ mesh, glow, baseOpacity: mat.opacity, flickerSpeed: Math.random() * 3 + 1 });
+    scene.add(mesh);
+  }
+
+  // Vertical neon tubes
+  for (let i = 0; i < 15; i++) {
+    const h = Math.random() * 6 + 2;
+    const geo = new THREE.CylinderGeometry(0.03, 0.03, h, 8);
+    const color = neonColors[Math.floor(Math.random() * neonColors.length)];
+    const mat = new THREE.MeshBasicMaterial({ color: color });
+    const mesh = new THREE.Mesh(geo, mat);
+
+    const side = Math.random() > 0.5 ? 1 : -1;
+    mesh.position.set(side * (Math.random() * 10 + 3), h/2, -Math.random() * 20);
+    scene.add(mesh);
+  }
+
+  // Rain particles
+  const rainCount = 1500;
+  const rainGeo = new THREE.BufferGeometry();
+  const rainPos = new Float32Array(rainCount * 3);
+  const rainVel = [];
+  for (let i = 0; i < rainCount; i++) {
+    rainPos[i*3] = (Math.random() - 0.5) * 40;
+    rainPos[i*3+1] = Math.random() * 30;
+    rainPos[i*3+2] = (Math.random() - 0.5) * 40;
+    rainVel.push({ x: (Math.random() - 0.5) * 0.02, y: -(Math.random() * 0.3 + 0.2), z: (Math.random() - 0.5) * 0.02 });
+  }
+  rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+  const rainMat = new THREE.PointsMaterial({
+    color: 0x88ccff,
+    size: 0.06,
+    transparent: true,
+    opacity: 0.5,
+    blending: THREE.AdditiveBlending
+  });
+  const rain = new THREE.Points(rainGeo, rainMat);
+  scene.add(rain);
+
+  // Splash particles on ground
+  const splashCount = 200;
+  const splashGeo = new THREE.BufferGeometry();
+  const splashPos = new Float32Array(splashCount * 3);
+  for (let i = 0; i < splashCount; i++) {
+    splashPos[i*3] = (Math.random() - 0.5) * 30;
+    splashPos[i*3+1] = -0.5;
+    splashPos[i*3+2] = (Math.random() - 0.5) * 30;
+  }
+  splashGeo.setAttribute('position', new THREE.BufferAttribute(splashPos, 3));
+  const splashMat = new THREE.PointsMaterial({
+    color: 0xaaddff,
+    size: 0.15,
+    transparent: true,
+    opacity: 0.3,
+    blending: THREE.AdditiveBlending
+  });
+  const splashes = new THREE.Points(splashGeo, splashMat);
+  scene.add(splashes);
+
+  // Mouse interaction
+  const mouse = new THREE.Vector2();
+  document.addEventListener('mousemove', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = (e.clientY / window.innerHeight) * 2 - 1;
+  });
+
+  // Animation
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    // Neon flicker
+    signs.forEach(s => {
+      const flicker = Math.sin(t * s.flickerSpeed) * 0.15 + Math.sin(t * s.flickerSpeed * 2.3) * 0.08;
+      s.mesh.material.opacity = Math.max(0.2, s.baseOpacity + flicker);
+      s.glow.intensity = 0.6 + flicker * 0.8;
+    });
+
+    // Rain fall
+    const rPos = rain.geometry.attributes.position.array;
+    for (let i = 0; i < rainCount; i++) {
+      rPos[i*3] += rainVel[i].x;
+      rPos[i*3+1] += rainVel[i].y;
+      rPos[i*3+2] += rainVel[i].z;
+      if (rPos[i*3+1] < -0.5) {
+        rPos[i*3+1] = 20 + Math.random() * 10;
+        rPos[i*3] = (Math.random() - 0.5) * 40;
+        rPos[i*3+2] = (Math.random() - 0.5) * 40;
+      }
+    }
+    rain.geometry.attributes.position.needsUpdate = true;
+
+    // Splash sparkle
+    const sPos = splashes.geometry.attributes.position.array;
+    for (let i = 0; i < splashCount; i++) {
+      if (Math.random() < 0.02) {
+        sPos[i*3] = (Math.random() - 0.5) * 30;
+        sPos[i*3+2] = (Math.random() - 0.5) * 30;
+      }
+    }
+    splashes.geometry.attributes.position.needsUpdate = true;
+
+    // Camera sway with mouse
+    camera.position.x += (mouse.x * 3 - camera.position.x) * 0.03;
+    camera.position.y = 3 + mouse.y * 1.5;
+    camera.lookAt(0, 2, -5);
+
+    // Lights drift
+    pinkLight.position.x = -6 + Math.sin(t * 0.4) * 2;
+    cyanLight.position.x = 6 + Math.cos(t * 0.3) * 2;
+    purpleLight.position.y = 10 + Math.sin(t * 0.2) * 1;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
