@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>解构主义破碎 — AutoResearch TOP5</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&family=Noto+Serif+SC:wght@300;400;600;700&display=swap');
+:root {
+  --bg: #0a0a0a;
+  --text: #f0f0f0;
+  --text-dim: rgba(240,240,240,0.5);
+  --text-faint: rgba(240,240,240,0.2);
+  --glass-bg: rgba(10,10,10,0.65);
+  --glass-border: rgba(255,255,255,0.08);
+  --accent: #ff2244;
+  --accent-dim: rgba(255,34,68,0.3);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif SC', 'Georgia', serif;
+  overflow-x: hidden;
+}
+
+/* Nav */
+.nav-top, .nav-bottom {
+  position: fixed; left: 0; width: 100%; z-index: 100;
+  display: flex; justify-content: center; align-items: center; gap: 24px;
+  padding: 14px 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem; letter-spacing: 0.1em;
+}
+.nav-top { top: 0; }
+.nav-bottom { bottom: 0; border-bottom: none; border-top: 1px solid var(--glass-border); }
+.nav-top a, .nav-bottom a {
+  color: var(--text-dim); text-decoration: none;
+  transition: color 0.3s ease; padding: 4px 12px;
+}
+.nav-top a:hover, .nav-bottom a:hover { color: var(--accent); }
+.nav-top a.active, .nav-bottom a.active { color: var(--accent); }
+
+/* Hero */
+.hero-section {
+  position: relative; width: 100%; height: 100vh;
+  overflow: hidden;
+}
+#canvas-container {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%; z-index: 1;
+}
+.hero-overlay {
+  position: absolute; z-index: 10; pointer-events: none;
+  bottom: 10%; left: 8%;
+}
+.hero-overlay h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 700; line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+.hero-overlay h1 span { display: block; }
+.hero-overlay h1 span:nth-child(1) { color: #fff; }
+.hero-overlay h1 span:nth-child(2) { color: var(--accent); transform: translateX(16px); }
+.hero-overlay h1 span:nth-child(3) { color: rgba(255,255,255,0.25); transform: translateX(-8px); }
+.hero-score {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.2rem; color: var(--accent);
+  margin-top: 16px; letter-spacing: 0.1em;
+}
+.hero-desc {
+  font-size: 0.9rem; color: var(--text-dim);
+  margin-top: 8px; letter-spacing: 0.05em;
+}
+.hero-hint {
+  position: absolute; bottom: 8%; right: 8%; z-index: 10;
+  pointer-events: none; text-align: right;
+}
+.hero-hint span {
+  display: block; font-size: 0.7rem;
+  color: var(--text-faint); letter-spacing: 0.15em;
+  margin-bottom: 4px;
+}
+
+/* Content */
+.content-section {
+  position: relative; z-index: 20;
+  background: rgba(10,10,10,0.95);
+  padding: 80px 20px 120px;
+}
+.content-wrap {
+  max-width: 720px; margin: 0 auto;
+}
+.content-block {
+  margin-bottom: 60px;
+}
+.content-block h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.content-block h2::before {
+  content: ''; display: block;
+  width: 24px; height: 2px;
+  background: var(--accent);
+}
+.content-block p {
+  font-size: 1rem; line-height: 1.9;
+  color: var(--text-dim);
+  text-align: justify;
+}
+.content-block ul {
+  list-style: none; padding: 0;
+}
+.content-block ul li {
+  font-size: 0.95rem; line-height: 2;
+  color: var(--text-dim);
+  padding-left: 20px; position: relative;
+}
+.content-block ul li::before {
+  content: '›'; position: absolute; left: 0;
+  color: var(--accent); font-size: 1.2rem;
+}
+
+/* Score bars */
+.score-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 480px) { .score-grid { grid-template-columns: 1fr; } }
+.score-item {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.score-label {
+  font-size: 0.8rem; color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+.score-bar-wrap {
+  height: 4px; background: rgba(255,255,255,0.06);
+  border-radius: 2px; overflow: hidden;
+}
+.score-bar {
+  height: 100%; background: var(--accent);
+  border-radius: 2px; transition: width 1s ease;
+}
+.score-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem; color: var(--text);
+  text-align: right;
+}
+
+/* Meta */
+.meta-line {
+  font-size: 0.85rem; color: var(--text-faint);
+  letter-spacing: 0.05em; line-height: 2;
+}
+.meta-line strong {
+  color: var(--text-dim); font-weight: 400;
+}
+
+/* Keywords */
+.keywords {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 16px;
+}
+.keyword {
+  font-size: 0.75rem; padding: 4px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 100px; color: var(--text-faint);
+  letter-spacing: 0.05em;
+}
+</style>
+</head>
+<body>
+
+<nav class="nav-top">
+  <a href="v005.html">← 上一作品</a>
+  <a href="index.html">封面</a>
+  <a href="v002.html">下一作品 →</a>
+</nav>
+
+<div class="hero-section">
+  <div id="canvas-container"></div>
+  <div class="hero-overlay">
+    <h1><span>DECON</span><span>STRUCT</span><span>URE</span></h1>
+    <div class="hero-score">8.5 / 10 — Round 8</div>
+    <div class="hero-desc">受控混乱 · 破碎美学</div>
+  </div>
+  <div class="hero-hint">
+    <span>移动鼠标驱散碎片</span>
+    <span>点击触发爆炸重组</span>
+  </div>
+</div>
+
+<div class="content-section">
+  <div class="content-wrap">
+
+    <div class="content-block">
+      <h2>设计灵感</h2>
+      <p>解构主义（Deconstructivism）是20世纪80年代兴起于建筑界的一场美学革命，代表人物包括扎哈·哈迪德与弗兰克·盖里。它的核心在于打破传统的对称与秩序，将建筑形态拆解、倾斜、重组，在看似混乱的碎片中暗含精密的结构逻辑。倾斜的锐角、非对称的构图、冲突的材质对比，都是解构主义的标志性语言。</p>
+      <p style="margin-top:12px;">我们将这一理念转译到网页中：用Three.js生成数十个随机分布的几何碎片——立方体、四面体、八面体、圆锥与圆柱——以红黑金属质感呈现。碎片在空间中缓慢漂移，当鼠标靠近时产生排斥逃逸，点击则触发爆炸重组的戏剧性动画。暗红色点光源与冷蓝色辅助光的交替闪烁，进一步强化了冲突与张力。</p>
+      <div class="keywords">
+        <span class="keyword">倾斜角度</span>
+        <span class="keyword">碎片拼接</span>
+        <span class="keyword">非对称</span>
+        <span class="keyword">混乱秩序</span>
+        <span class="keyword">锐角</span>
+        <span class="keyword">冲突</span>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h2>技术亮点</h2>
+      <ul>
+        <li><strong>多几何体碎片系统</strong> — 随机混合5种基础几何体，赋予不同金属度与粗糙度材质</li>
+        <li><strong>鼠标射线排斥</strong> — 使用Raycaster将鼠标位置映射到三维空间，计算距离并施加排斥力</li>
+        <li><strong>爆炸/重组状态机</strong> — 点击切换两种状态：爆炸时施加随机冲量并高速旋转，重组时lerp回原始位置</li>
+        <li><strong>动态连接线</strong> — 30条随机端点线段，顶点位置随时间正弦波动，模拟数据流</li>
+        <li><strong>Additive粒子</strong> — 250个红色粒子使用AdditiveBlending，与暗色背景形成高对比光效</li>
+        <li><strong>双色点光源动画</strong> — 红/蓝PointLight强度随时间正弦变化，营造警灯般的紧张氛围</li>
+      </ul>
+    </div>
+
+    <div class="content-block">
+      <h2>评分详情</h2>
+      <div class="score-grid">
+        <div class="score-item">
+          <div class="score-label">视觉设计 Visual</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:90%"></div></div>
+          <div class="score-value">9.0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">3D效果 3D Effects</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:90%"></div></div>
+          <div class="score-value">9.0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">动态表现 Motion</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:85%"></div></div>
+          <div class="score-value">8.5</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">交互设计 Interaction</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:85%"></div></div>
+          <div class="score-value">8.5</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">代码质量 Code Quality</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:75%"></div></div>
+          <div class="score-value">7.5</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h2>实验数据</h2>
+      <div class="meta-line"><strong>实验轮次：</strong>Round 8（第8轮）</div>
+      <div class="meta-line"><strong>突变策略：</strong>Mutation-t023 — 解构主义风格定向突变</div>
+      <div class="meta-line"><strong>创作时长：</strong>约45分钟</div>
+      <div class="meta-line"><strong>最终得分：</strong>8.5 / 10（TOP1）</div>
+      <div class="meta-line"><strong>通过状态：</strong>✅ 通过（Pass）</div>
+    </div>
+
+  </div>
+</div>
+
+<nav class="nav-bottom">
+  <a href="v005.html">← 上一作品</a>
+  <a href="index.html">封面</a>
+  <a href="v002.html">下一作品 →</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// === 解构主义破碎 Three.js（简化版）===
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0a0a, 0.01);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 35);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0a0a0a, 1);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+const ambientLight = new THREE.AmbientLight(0x222222, 0.5);
+scene.add(ambientLight);
+const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
+mainLight.position.set(10, 10, 10); scene.add(mainLight);
+const redLight = new THREE.PointLight(0xff2244, 0.6, 50);
+redLight.position.set(-10, -5, 10); scene.add(redLight);
+const blueLight = new THREE.PointLight(0x2244ff, 0.4, 40);
+blueLight.position.set(10, 5, -10); scene.add(blueLight);
+
+// 碎片系统
+const fragmentGroup = new THREE.Group(); scene.add(fragmentGroup);
+const fragments = [];
+const geometries = [
+  new THREE.BoxGeometry(1,1,1), new THREE.TetrahedronGeometry(0.8),
+  new THREE.OctahedronGeometry(0.7), new THREE.ConeGeometry(0.5,1.2,4),
+  new THREE.CylinderGeometry(0.3,0.5,1,5)
+];
+const materials = [
+  new THREE.MeshStandardMaterial({color:0xffffff,metalness:0.8,roughness:0.2}),
+  new THREE.MeshStandardMaterial({color:0x333333,metalness:0.6,roughness:0.4}),
+  new THREE.MeshStandardMaterial({color:0xff2244,metalness:0.5,roughness:0.3,emissive:0xff2244,emissiveIntensity:0.2}),
+  new THREE.MeshStandardMaterial({color:0x888888,metalness:0.9,roughness:0.1}),
+  new THREE.MeshStandardMaterial({color:0x111111,metalness:0.3,roughness:0.8})
+];
+for (let i = 0; i < 60; i++) {
+  const geo = geometries[Math.floor(Math.random()*geometries.length)];
+  const mat = materials[Math.floor(Math.random()*materials.length)].clone();
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set((Math.random()-0.5)*30,(Math.random()-0.5)*20,(Math.random()-0.5)*15);
+  mesh.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);
+  const scale = 0.5 + Math.random()*1.5; mesh.scale.setScalar(scale);
+  mesh.userData = {
+    originalPos: mesh.position.clone(),
+    velocity: new THREE.Vector3((Math.random()-0.5)*0.02,(Math.random()-0.5)*0.02,(Math.random()-0.5)*0.02),
+    rotationSpeed: new THREE.Vector3((Math.random()-0.5)*0.02,(Math.random()-0.5)*0.02,(Math.random()-0.5)*0.02),
+    isExploded: false, explodeForce: new THREE.Vector3(), phase: Math.random()*Math.PI*2
+  };
+  fragmentGroup.add(mesh); fragments.push(mesh);
+}
+
+// 连接线
+const lines = [];
+for (let i = 0; i < 30; i++) {
+  const points = [
+    new THREE.Vector3((Math.random()-0.5)*40,(Math.random()-0.5)*25,(Math.random()-0.5)*10),
+    new THREE.Vector3((Math.random()-0.5)*40,(Math.random()-0.5)*25,(Math.random()-0.5)*10)
+  ];
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+  const lineMat = new THREE.LineBasicMaterial({color: i%3===0?0xff2244:0x444444, transparent:true, opacity:0.2+Math.random()*0.3});
+  const line = new THREE.Line(lineGeo, lineMat);
+  line.userData = { originalPoints: points.map(p=>p.clone()), phase: Math.random()*Math.PI*2 };
+  scene.add(line); lines.push(line);
+}
+
+// 粒子
+const particleCount = 250;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(particleCount*3);
+for (let i = 0; i < particleCount; i++) {
+  pPos[i*3]=(Math.random()-0.5)*40; pPos[i*3+1]=(Math.random()-0.5)*25; pPos[i*3+2]=(Math.random()-0.5)*15;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({color:0xff2244,size:0.2,transparent:true,opacity:0.4,blending:THREE.AdditiveBlending});
+const particles = new THREE.Points(pGeo, pMat); scene.add(particles);
+
+// 交互
+const mouse = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+let isExploded = false;
+window.addEventListener('mousemove', e=>{
+  mouse.x=(e.clientX/window.innerWidth)*2-1;
+  mouse.y=-(e.clientY/window.innerHeight)*2+1;
+});
+window.addEventListener('click',()=>{
+  isExploded=!isExploded;
+  fragments.forEach(f=>{
+    f.userData.isExploded=isExploded;
+    if(isExploded) f.userData.explodeForce.set((Math.random()-0.5)*0.5,(Math.random()-0.5)*0.5,(Math.random()-0.5)*0.5);
+  });
+});
+
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const time = clock.getElapsedTime();
+  fragments.forEach(fragment=>{
+    const d = fragment.userData;
+    if(d.isExploded) {
+      fragment.position.add(d.explodeForce);
+      fragment.rotation.x += d.rotationSpeed.x*5;
+      fragment.rotation.y += d.rotationSpeed.y*5;
+      fragment.rotation.z += d.rotationSpeed.z*5;
+      d.explodeForce.multiplyScalar(0.98);
+    } else {
+      const drift = new THREE.Vector3(Math.sin(time*0.5+d.phase)*0.5,Math.cos(time*0.3+d.phase)*0.3,Math.sin(time*0.4+d.phase)*0.2);
+      const target = d.originalPos.clone().add(drift);
+      fragment.position.lerp(target,0.02);
+      fragment.rotation.x += d.rotationSpeed.x;
+      fragment.rotation.y += d.rotationSpeed.y;
+      fragment.rotation.z += d.rotationSpeed.z;
+    }
+    raycaster.setFromCamera(mouse,camera);
+    const mouseWorld = raycaster.ray.direction.clone().multiplyScalar(20).add(camera.position);
+    const dist = fragment.position.distanceTo(mouseWorld);
+    if(dist<8) {
+      const repel = fragment.position.clone().sub(mouseWorld).normalize().multiplyScalar(0.05*(8-dist));
+      fragment.position.add(repel);
+    }
+  });
+  lines.forEach((line,i)=>{
+    const pos = line.geometry.attributes.position.array;
+    const orig = line.userData.originalPoints;
+    for(let j=0;j<2;j++){
+      pos[j*3]=orig[j].x+Math.sin(time+line.userData.phase+j)*2;
+      pos[j*3+1]=orig[j].y+Math.cos(time*0.8+line.userData.phase+j)*2;
+      pos[j*3+2]=orig[j].z+Math.sin(time*0.6+line.userData.phase+j)*1;
+    }
+    line.geometry.attributes.position.needsUpdate=true;
+    line.material.opacity=0.2+Math.sin(time+i)*0.15;
+  });
+  const pArr = particles.geometry.attributes.position.array;
+  for(let i=0;i<particleCount;i++){
+    pArr[i*3+1]+=Math.sin(time*2+i*0.1)*0.02;
+    if(isExploded){ pArr[i*3]+=(Math.random()-0.5)*0.1; pArr[i*3+2]+=(Math.random()-0.5)*0.1; }
+  }
+  particles.geometry.attributes.position.needsUpdate=true;
+  redLight.intensity=0.6+Math.sin(time*2)*0.3;
+  blueLight.intensity=0.4+Math.cos(time*1.5)*0.2;
+  renderer.render(scene,camera);
+}
+animate();
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+</script>
+</body>
+</html>

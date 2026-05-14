@@ -3,414 +3,401 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>水墨动态书法 — 气韵生动</title>
+<title>哥特式光影教堂 — AutoResearch TOP5</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Serif+SC:wght@300;400;600;700&display=swap');
+:root {
+  --bg: #050508;
+  --text: #e0d5c5;
+  --text-dim: rgba(224,213,197,0.55);
+  --text-faint: rgba(224,213,197,0.2);
+  --glass-bg: rgba(5,5,8,0.65);
+  --glass-border: rgba(212,175,55,0.1);
+  --accent: #d4af37;
+  --accent-dim: rgba(212,175,55,0.3);
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
-  background: #0a0a0a;
-  overflow: hidden;
-  font-family: 'Noto Serif SC', serif;
-  color: #e8e8e8;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif SC', 'Georgia', serif;
+  overflow-x: hidden;
 }
-#canvas-container {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  z-index: 1;
+.nav-top, .nav-bottom {
+  position: fixed; left: 0; width: 100%; z-index: 100;
+  display: flex; justify-content: center; align-items: center; gap: 24px;
+  padding: 14px 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem; letter-spacing: 0.1em;
 }
-.overlay {
-  position: fixed;
-  z-index: 10;
-  pointer-events: none;
+.nav-top { top: 0; }
+.nav-bottom { bottom: 0; border-bottom: none; border-top: 1px solid var(--glass-border); }
+.nav-top a, .nav-bottom a {
+  color: var(--text-dim); text-decoration: none;
+  transition: color 0.3s ease; padding: 4px 12px;
 }
-.title {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.nav-top a:hover, .nav-bottom a:hover { color: var(--accent); }
+
+.hero-section { position: relative; width: 100%; height: 100vh; overflow: hidden; }
+#canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+.hero-overlay {
+  position: absolute; z-index: 10; pointer-events: none;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
   text-align: center;
 }
-.title h1 {
-  font-size: 5rem;
-  font-weight: 300;
-  letter-spacing: 0.5em;
-  color: rgba(255,255,255,0.9);
-  text-shadow: 0 0 80px rgba(255,255,255,0.1);
-  opacity: 0;
-  animation: inkReveal 3s ease 1s forwards;
+.hero-overlay h1 {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.8rem, 4.5vw, 3rem);
+  font-weight: 400; letter-spacing: 0.4em;
+  color: rgba(224,213,197,0.9);
+  text-shadow: 0 0 60px rgba(212,175,55,0.2);
+  opacity: 0; animation: divineReveal 2s ease 1s forwards;
 }
-.title .subtitle {
-  font-size: 1rem;
-  color: rgba(255,255,255,0.3);
-  margin-top: 24px;
-  letter-spacing: 0.8em;
-  opacity: 0;
-  animation: inkReveal 3s ease 2s forwards;
+.hero-overlay .subtitle {
+  font-size: 0.9rem; color: rgba(224,213,197,0.35);
+  margin-top: 16px; letter-spacing: 0.5em;
+  opacity: 0; animation: divineReveal 2s ease 1.8s forwards;
 }
-@keyframes inkReveal {
-  0% { opacity: 0; filter: blur(20px); transform: scale(1.1); }
-  100% { opacity: 1; filter: blur(0px); transform: scale(1); }
+.hero-score {
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem; color: var(--accent);
+  margin-top: 20px; letter-spacing: 0.15em;
+  opacity: 0; animation: divineReveal 2s ease 2.2s forwards;
 }
-.info {
-  bottom: 8%;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
+.hero-desc {
+  font-size: 0.85rem; color: var(--text-dim);
+  margin-top: 8px; letter-spacing: 0.05em;
+  opacity: 0; animation: divineReveal 2s ease 2.4s forwards;
 }
-.info span {
-  display: block;
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.2);
-  letter-spacing: 0.2em;
+@keyframes divineReveal {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero-hint {
+  position: absolute; bottom: 8%; left: 50%;
+  transform: translateX(-50%); z-index: 10;
+  pointer-events: none; text-align: center;
+}
+.hero-hint span {
+  display: block; font-size: 0.7rem;
+  color: var(--text-faint); letter-spacing: 0.2em;
   margin-bottom: 6px;
 }
-.seal {
-  position: fixed;
-  bottom: 8%;
-  right: 8%;
-  width: 60px;
-  height: 60px;
-  border: 2px solid rgba(180,40,40,0.6);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  color: rgba(180,40,40,0.7);
-  pointer-events: none;
-  z-index: 10;
-  opacity: 0;
-  animation: inkReveal 2s ease 3s forwards;
+
+.content-section {
+  position: relative; z-index: 20;
+  background: rgba(5,5,8,0.95);
+  padding: 80px 20px 120px;
+}
+.content-wrap { max-width: 720px; margin: 0 auto; }
+.content-block { margin-bottom: 60px; }
+.content-block h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.content-block h2::before {
+  content: ''; display: block; width: 24px; height: 2px; background: var(--accent);
+}
+.content-block p {
+  font-size: 1rem; line-height: 1.9; color: var(--text-dim); text-align: justify;
+}
+.content-block ul { list-style: none; padding: 0; }
+.content-block ul li {
+  font-size: 0.95rem; line-height: 2; color: var(--text-dim);
+  padding-left: 20px; position: relative;
+}
+.content-block ul li::before {
+  content: '›'; position: absolute; left: 0;
+  color: var(--accent); font-size: 1.2rem;
+}
+.score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 480px) { .score-grid { grid-template-columns: 1fr; } }
+.score-item { display: flex; flex-direction: column; gap: 6px; }
+.score-label { font-size: 0.8rem; color: var(--text-dim); letter-spacing: 0.05em; }
+.score-bar-wrap { height: 4px; background: rgba(212,175,55,0.08); border-radius: 2px; overflow: hidden; }
+.score-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 1s ease; }
+.score-value { font-family: 'Cinzel', serif; font-size: 0.85rem; color: var(--text); text-align: right; }
+.meta-line { font-size: 0.85rem; color: var(--text-faint); letter-spacing: 0.05em; line-height: 2; }
+.meta-line strong { color: var(--text-dim); font-weight: 400; }
+.keywords { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.keyword {
+  font-size: 0.75rem; padding: 4px 12px;
+  border: 1px solid var(--glass-border); border-radius: 100px;
+  color: var(--text-faint); letter-spacing: 0.05em;
 }
 </style>
 </head>
 <body>
-<div id="canvas-container"></div>
-<div class="overlay title">
-  <h1>气韵</h1>
-  <div class="subtitle">墨舞云端</div>
+
+<nav class="nav-top">
+  <a href="v002.html">← 上一作品</a>
+  <a href="index.html">封面</a>
+  <a href="v004.html">下一作品 →</a>
+</nav>
+
+<div class="hero-section">
+  <div id="canvas-container"></div>
+  <div class="hero-overlay">
+    <h1>LUX AETERNA</h1>
+    <div class="subtitle">永恒之光</div>
+    <div class="hero-score">8.3 / 10 — Round 4</div>
+    <div class="hero-desc">彩色玻璃 · 神圣光柱 · 庄严圣殿</div>
+  </div>
+  <div class="hero-hint">
+    <span>移动鼠标改变光束角度</span>
+    <span>点击召唤神圣光辉</span>
+  </div>
 </div>
-<div class="overlay info">
-  <span>拖动鼠标书写墨迹</span>
-  <span>点击晕染扩散</span>
+
+<div class="content-section">
+  <div class="content-wrap">
+
+    <div class="content-block">
+      <h2>设计灵感</h2>
+      <p>哥特式建筑（Gothic Architecture）诞生于12世纪的法国，以其高耸入云的尖塔、飞扶壁和彩色玻璃窗（Stained Glass Rose Window）闻名于世。巴黎圣母院、科隆大教堂、米兰大教堂都是这一风格的巅峰之作。彩色玻璃不仅是装饰，更是"穷人的圣经"——阳光穿透红、橙、黄、绿、蓝、紫六色玻璃，在昏暗的中世纪教堂内投下神圣的光斑，让不识字的信徒也能感受神性的降临。</p>
+      <p style="margin-top:12px;">在网页转译中，我们构建了 procedurally generated 的哥特式教堂内部：深色圆柱支撑高耸的尖拱，五扇圆形玫瑰窗以红、橙、黄、绿、蓝五色 glow，300个彩色光束粒子从窗户倾泻而下，模拟"God Rays"的神圣效果。地面上的尘埃粒子在光束中缓缓飘浮，鼠标移动改变主光源角度，点击则触发"祈祷"动画——全场光芒骤增，仿佛圣光降临。</p>
+      <div class="keywords">
+        <span class="keyword">彩色玻璃</span>
+        <span class="keyword">尖拱</span>
+        <span class="keyword">垂直线条</span>
+        <span class="keyword">神圣光柱</span>
+        <span class="keyword">玫瑰窗</span>
+        <span class="keyword">庄严</span>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h2>技术亮点</h2>
+      <ul>
+        <li><strong>程序化教堂建筑</strong> — CylinderGeometry生成立柱，ConeGeometry生成柱头，CatmullRomCurve3+TubeGeometry生成尖拱</li>
+        <li><strong>彩色玻璃窗系统</strong> — RingGeometry窗框 + CircleGeometry玻璃，glass材质使用AdditiveBlending与emissive自发光</li>
+        <li><strong>God Ray粒子系统</strong> — 300个BufferGeometry粒子继承对应窗户颜色，从窗户向地面飘落，出界后重置</li>
+        <li><strong>祈祷交互动画</strong> — 点击后3秒内，DirectionalLight强度从0.8跃升至2.3，粒子透明度与尺寸同步放大</li>
+        <li><strong>多色PointLight阵列</strong> — 6盏不同颜色的PointLight对应6扇窗户，各自以不同相位正弦脉动</li>
+        <li><strong>相机缓动漫游</strong> — 相机位置随时间缓慢正弦移动，lookAt始终锁定教堂中心，营造沉浸感</li>
+      </ul>
+    </div>
+
+    <div class="content-block">
+      <h2>评分详情</h2>
+      <div class="score-grid">
+        <div class="score-item">
+          <div class="score-label">视觉设计 Visual</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:85%"></div></div>
+          <div class="score-value">8.5</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">3D效果 3D Effects</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:85%"></div></div>
+          <div class="score-value">8.5</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">动态表现 Motion</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div>
+          <div class="score-value">8.0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">交互设计 Interaction</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div>
+          <div class="score-value">8.0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">代码质量 Code Quality</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div>
+          <div class="score-value">8.0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h2>实验数据</h2>
+      <div class="meta-line"><strong>实验轮次：</strong>Round 4（第4轮）</div>
+      <div class="meta-line"><strong>突变策略：</strong>Mutation-t029 — 哥特式光影教堂风格定向突变</div>
+      <div class="meta-line"><strong>创作时长：</strong>约55分钟</div>
+      <div class="meta-line"><strong>最终得分：</strong>8.3 / 10（TOP3）</div>
+      <div class="meta-line"><strong>通过状态：</strong>✅ 通过（Pass）</div>
+    </div>
+
+  </div>
 </div>
-<div class="seal">墨</div>
+
+<nav class="nav-bottom">
+  <a href="v002.html">← 上一作品</a>
+  <a href="index.html">封面</a>
+  <a href="v004.html">下一作品 →</a>
+</nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// === 水墨动态书法 Three.js 场景 ===
+// === 哥特式光影教堂 Three.js（简化版）===
 const scene = new THREE.Scene();
-
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 50;
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x0a0a0a, 1);
+scene.fog = new THREE.FogExp2(0x050508, 0.008);
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0,2,25);
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setClearColor(0x050508,1);
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-// === 水墨着色器材质 ===
-const inkVertexShader = `
-  varying vec2 vUv;
-  varying float vAlpha;
-  attribute float alpha;
-  attribute float size;
-  void main() {
-    vUv = uv;
-    vAlpha = alpha;
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = size * (300.0 / -mvPosition.z);
-    gl_Position = projectionMatrix * mvPosition;
-  }
-`;
+const ambientLight = new THREE.AmbientLight(0x1a1530,0.3); scene.add(ambientLight);
+const sunLight = new THREE.DirectionalLight(0xffddaa,0.8);
+sunLight.position.set(10,20,10); scene.add(sunLight);
+const stainedColors = [0xff3333,0xff8800,0xffdd00,0x33ff66,0x3388ff,0x8833ff];
+const windowLights = [];
+for(let i=0;i<6;i++){
+  const l=new THREE.PointLight(stainedColors[i],0.4,40);
+  l.position.set(-15+i*6,8,-5); scene.add(l); windowLights.push(l);
+}
+const groundLight = new THREE.PointLight(0xffddaa,0.3,30);
+groundLight.position.set(0,-5,5); scene.add(groundLight);
 
-const inkFragmentShader = `
-  varying vec2 vUv;
-  varying float vAlpha;
-  uniform float uTime;
-  uniform float uSpread;
-  
-  float noise(vec2 p) {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-  }
-  
-  void main() {
-    float dist = length(vUv - vec2(0.5));
-    float inkEdge = smoothstep(0.5, 0.2, dist);
-    float noiseVal = noise(vUv * 10.0 + uTime * 0.1) * 0.3;
-    float spreadFactor = 1.0 - uSpread * 0.3;
-    float alpha = inkEdge * vAlpha * (0.7 + noiseVal) * spreadFactor;
-    
-    // 水墨灰度层次
-    float gray = 0.1 + noiseVal * 0.4;
-    vec3 color = vec3(gray);
-    
-    gl_FragColor = vec4(color, alpha);
-  }
-`;
+const cathedralGroup = new THREE.Group(); scene.add(cathedralGroup);
+const floorMat = new THREE.MeshStandardMaterial({color:0x1a1a2e,metalness:0.1,roughness:0.9,transparent:true,opacity:0.8});
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(60,80,20,20),floorMat);
+floor.rotation.x=-Math.PI/2; floor.position.y=-8; cathedralGroup.add(floor);
 
-// === 墨迹笔触系统 ===
-const maxStrokes = 800;
-const strokeGeometry = new THREE.BufferGeometry();
-const strokePositions = new Float32Array(maxStrokes * 3);
-const strokeAlphas = new Float32Array(maxStrokes);
-const strokeSizes = new Float32Array(maxStrokes);
-const strokeAges = new Float32Array(maxStrokes);
-
-for (let i = 0; i < maxStrokes; i++) {
-  strokePositions[i*3] = 0;
-  strokePositions[i*3+1] = 0;
-  strokePositions[i*3+2] = 0;
-  strokeAlphas[i] = 0;
-  strokeSizes[i] = 0;
-  strokeAges[i] = 0;
+function createColumn(x,z,h){
+  const geo=new THREE.CylinderGeometry(0.6,0.8,h,8);
+  const mat=new THREE.MeshStandardMaterial({color:0x2a2538,metalness:0.3,roughness:0.7});
+  const col=new THREE.Mesh(geo,mat); col.position.set(x,-8+h/2,z);
+  const cap=new THREE.Mesh(new THREE.ConeGeometry(1,1.5,8),mat);
+  cap.position.set(x,-8+h+0.75,z); cathedralGroup.add(cap);
+  return col;
+}
+for(let i=-2;i<=2;i++){
+  cathedralGroup.add(createColumn(i*8,-10,18));
+  cathedralGroup.add(createColumn(i*8,5,18));
 }
 
-strokeGeometry.setAttribute('position', new THREE.BufferAttribute(strokePositions, 3));
-strokeGeometry.setAttribute('alpha', new THREE.BufferAttribute(strokeAlphas, 1));
-strokeGeometry.setAttribute('size', new THREE.BufferAttribute(strokeSizes, 1));
-
-const inkMaterial = new THREE.ShaderMaterial({
-  vertexShader: inkVertexShader,
-  fragmentShader: inkFragmentShader,
-  uniforms: {
-    uTime: { value: 0 },
-    uSpread: { value: 0 }
-  },
-  transparent: true,
-  blending: THREE.NormalBlending,
-  depthWrite: false
-});
-
-const strokePoints = new THREE.Points(strokeGeometry, inkMaterial);
-scene.add(strokePoints);
-
-let strokeIndex = 0;
-let isDrawing = false;
-
-function addInkPoint(x, y, size, alpha) {
-  strokePositions[strokeIndex*3] = x;
-  strokePositions[strokeIndex*3+1] = y;
-  strokePositions[strokeIndex*3+2] = 0;
-  strokeAlphas[strokeIndex] = alpha;
-  strokeSizes[strokeIndex] = size;
-  strokeAges[strokeIndex] = 0;
-  strokeIndex = (strokeIndex + 1) % maxStrokes;
+function createArch(x,z,w,h){
+  const curve=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-w/2,0,0),new THREE.Vector3(-w/3,h*0.7,0),
+    new THREE.Vector3(0,h,0),new THREE.Vector3(w/3,h*0.7,0),new THREE.Vector3(w/2,0,0)
+  ]);
+  const geo=new THREE.TubeGeometry(curve,20,0.4,6,false);
+  const mat=new THREE.MeshStandardMaterial({color:0x3a3548,metalness:0.4,roughness:0.6});
+  const arch=new THREE.Mesh(geo,mat); arch.position.set(x,10,z); return arch;
+}
+for(let i=-2;i<2;i++){
+  cathedralGroup.add(createArch(i*8+4,-10,8,6));
+  cathedralGroup.add(createArch(i*8+4,5,8,6));
 }
 
-// === 背景水墨晕染纹理 ===
-const bgGeometry = new THREE.PlaneGeometry(100, 80, 32, 32);
-const bgMaterial = new THREE.ShaderMaterial({
-  uniforms: {
-    uTime: { value: 0 },
-    uMouse: { value: new THREE.Vector2(0, 0) }
-  },
-  vertexShader: `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform float uTime;
-    uniform vec2 uMouse;
-    varying vec2 vUv;
-    
-    float fbm(vec2 p) {
-      float sum = 0.0;
-      float amp = 1.0;
-      float freq = 1.0;
-      for(int i = 0; i < 5; i++) {
-        sum += amp * sin(p.x * freq + uTime * 0.1) * cos(p.y * freq + uTime * 0.15);
-        amp *= 0.5;
-        freq *= 2.0;
-      }
-      return sum;
-    }
-    
-    void main() {
-      vec2 uv = vUv;
-      float n = fbm(uv * 3.0 + uTime * 0.05);
-      float n2 = fbm(uv * 5.0 - uTime * 0.03);
-      
-      // 水墨纹理
-      float ink = smoothstep(-0.3, 0.5, n) * 0.15;
-      float ink2 = smoothstep(-0.2, 0.6, n2) * 0.08;
-      
-      // 鼠标附近的晕染
-      float mouseDist = length(uv - uMouse);
-      float mouseInk = smoothstep(0.5, 0.0, mouseDist) * 0.1;
-      
-      float gray = 0.04 + ink + ink2 + mouseInk;
-      
-      gl_FragColor = vec4(vec3(gray), 1.0);
-    }
-  `,
-  transparent: false
-});
-
-const bgPlane = new THREE.Mesh(bgGeometry, bgMaterial);
-bgPlane.position.z = -10;
-scene.add(bgPlane);
-
-// === 毛笔笔触3D线条 ===
-const brushGroup = new THREE.Group();
-scene.add(brushGroup);
-
-function createBrushStroke(points) {
-  if (points.length < 2) return;
-  const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
-  const geometry = new THREE.TubeGeometry(curve, Math.min(points.length * 2, 50), 0.3, 6, false);
-  const material = new THREE.MeshBasicMaterial({
-    color: 0x222222,
-    transparent: true,
-    opacity: 0.6
-  });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.userData = { birth: Date.now(), life: 3000 };
-  brushGroup.add(mesh);
+function createStainedGlass(x,y,z,color,size){
+  const g=new THREE.Group();
+  const frame=new THREE.Mesh(new THREE.RingGeometry(size*0.9,size,16), new THREE.MeshStandardMaterial({color:0x4a4560,metalness:0.5,roughness:0.5,side:THREE.DoubleSide}));
+  g.add(frame);
+  const glass=new THREE.Mesh(new THREE.CircleGeometry(size*0.85,16), new THREE.MeshStandardMaterial({color:color,transparent:true,opacity:0.5,emissive:color,emissiveIntensity:0.3,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
+  g.add(glass);
+  const fm=new THREE.MeshStandardMaterial({color:0x4a4560,metalness:0.5,roughness:0.5});
+  for(let i=0;i<6;i++){
+    const a=(i/6)*Math.PI*2;
+    const line=new THREE.Mesh(new THREE.BoxGeometry(0.05,size,0.05),fm);
+    line.position.set(Math.cos(a)*size*0.4,Math.sin(a)*size*0.4,0); line.rotation.z=a; g.add(line);
+  }
+  g.position.set(x,y,z); return g;
 }
+const glassPositions=[{x:-12,y:5,color:0xff3333,size:2.5},{x:-6,y:6,color:0xff8800,size:2},{x:0,y:7,color:0xffdd00,size:3},{x:6,y:6,color:0x33ff66,size:2},{x:12,y:5,color:0x3388ff,size:2.5}];
+glassPositions.forEach(gp=>cathedralGroup.add(createStainedGlass(gp.x,gp.y,-12,gp.color,gp.size)));
 
-// === 鼠标/触摸交互 ===
-const mouse = new THREE.Vector2(-100, -100);
-const worldMouse = new THREE.Vector3();
-let brushPoints = [];
-let lastPoint = null;
-
-window.addEventListener('mousemove', (e) => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-  
-  worldMouse.set(mouse.x * 40, mouse.y * 30, 0);
-  
-  if (isDrawing) {
-    const dist = lastPoint ? worldMouse.distanceTo(lastPoint) : 100;
-    if (dist > 0.5) {
-      const pressure = Math.max(0.3, Math.min(1.0, 20 / (dist + 1)));
-      const size = 2 + pressure * 6;
-      addInkPoint(worldMouse.x, worldMouse.y, size, pressure * 0.8);
-      brushPoints.push(worldMouse.clone());
-      if (brushPoints.length > 20) {
-        createBrushStroke(brushPoints);
-        brushPoints = [brushPoints[brushPoints.length - 1]];
-      }
-      lastPoint = worldMouse.clone();
-    }
-  }
-  
-  bgMaterial.uniforms.uMouse.value.set(e.clientX / window.innerWidth, 1 - e.clientY / window.innerHeight);
-});
-
-window.addEventListener('mousedown', () => {
-  isDrawing = true;
-  lastPoint = null;
-  brushPoints = [];
-});
-
-window.addEventListener('mouseup', () => {
-  isDrawing = false;
-  if (brushPoints.length > 1) {
-    createBrushStroke(brushPoints);
-  }
-  brushPoints = [];
-});
-
-window.addEventListener('click', (e) => {
-  // 点击晕染扩散
-  for (let i = 0; i < 30; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const dist = Math.random() * 8;
-    addInkPoint(
-      worldMouse.x + Math.cos(angle) * dist,
-      worldMouse.y + Math.sin(angle) * dist,
-      3 + Math.random() * 8,
-      0.3 + Math.random() * 0.4
-    );
-  }
-  inkMaterial.uniforms.uSpread.value = 1.0;
-  setTimeout(() => { inkMaterial.uniforms.uSpread.value = 0; }, 1000);
-});
-
-// === 预设书法笔画（装饰）===
-const decorGroup = new THREE.Group();
-scene.add(decorGroup);
-
-// 创建几条装饰性墨迹流动线
-for (let i = 0; i < 5; i++) {
-  const points = [];
-  const startX = -30 + Math.random() * 60;
-  const startY = -20 + Math.random() * 40;
-  for (let j = 0; j < 10; j++) {
-    points.push(new THREE.Vector3(
-      startX + j * 2 + Math.sin(j * 0.5) * 5,
-      startY + j * 3 + Math.cos(j * 0.3) * 3,
-      (Math.random() - 0.5) * 2
-    ));
-  }
-  const curve = new THREE.CatmullRomCurve3(points);
-  const geometry = new THREE.TubeGeometry(curve, 30, 0.1 + Math.random() * 0.3, 6, false);
-  const material = new THREE.MeshBasicMaterial({
-    color: 0x1a1a1a,
-    transparent: true,
-    opacity: 0.15 + Math.random() * 0.2
-  });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.userData = { phase: Math.random() * Math.PI * 2, speed: 0.2 + Math.random() * 0.3 };
-  decorGroup.add(mesh);
+// God Rays
+const rayCount=300;
+const rayGeo=new THREE.BufferGeometry();
+const rayPos=new Float32Array(rayCount*3);
+const rayColors=new Float32Array(rayCount*3);
+for(let i=0;i<rayCount;i++){
+  const wi=Math.floor(Math.random()*glassPositions.length);
+  const gp=glassPositions[wi];
+  rayPos[i*3]=gp.x+(Math.random()-0.5)*2;
+  rayPos[i*3+1]=gp.y-Math.random()*15;
+  rayPos[i*3+2]=gp.z+Math.random()*20;
+  const c=new THREE.Color(gp.color);
+  rayColors[i*3]=c.r; rayColors[i*3+1]=c.g; rayColors[i*3+2]=c.b;
 }
+rayGeo.setAttribute('position',new THREE.BufferAttribute(rayPos,3));
+rayGeo.setAttribute('color',new THREE.BufferAttribute(rayColors,3));
+const rayMat=new THREE.PointsMaterial({size:0.3,vertexColors:true,transparent:true,opacity:0.4,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+const godRays=new THREE.Points(rayGeo,rayMat); scene.add(godRays);
 
-// === 动画循环 ===
-const clock = new THREE.Clock();
+// 尘埃
+const dustCount=200;
+const dustGeo=new THREE.BufferGeometry();
+const dustPos=new Float32Array(dustCount*3);
+for(let i=0;i<dustCount;i++){
+  dustPos[i*3]=(Math.random()-0.5)*40; dustPos[i*3+1]=-8+Math.random()*20; dustPos[i*3+2]=(Math.random()-0.5)*30;
+}
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dustPos,3));
+const dustMat=new THREE.PointsMaterial({color:0xffddaa,size:0.15,transparent:true,opacity:0.3,blending:THREE.AdditiveBlending});
+const dust=new THREE.Points(dustGeo,dustMat); scene.add(dust);
 
-function animate() {
+// 交互
+const mouse=new THREE.Vector2();
+let isPraying=false, prayTime=0;
+window.addEventListener('mousemove',e=>{
+  mouse.x=(e.clientX/window.innerWidth)*2-1;
+  mouse.y=-(e.clientY/window.innerHeight)*2+1;
+});
+window.addEventListener('click',()=>{ isPraying=true; prayTime=0; });
+
+const clock=new THREE.Clock();
+function animate(){
   requestAnimationFrame(animate);
-  const time = clock.getElapsedTime();
-  
-  inkMaterial.uniforms.uTime.value = time;
-  bgMaterial.uniforms.uTime.value = time;
-  
-  // 更新笔触年龄
-  for (let i = 0; i < maxStrokes; i++) {
-    if (strokeAlphas[i] > 0) {
-      strokeAges[i] += 0.016;
-      const age = strokeAges[i];
-      if (age < 2.0) {
-        strokeAlphas[i] = Math.min(0.8, strokeAlphas[i] + 0.02);
-      } else if (age > 5.0) {
-        strokeAlphas[i] *= 0.995;
-      }
+  const time=clock.getElapsedTime();
+  const delta=clock.getDelta();
+
+  windowLights.forEach((l,i)=>{ l.intensity=0.3+Math.sin(time*0.5+i*1.2)*0.2; });
+
+  const rPos=godRays.geometry.attributes.position.array;
+  for(let i=0;i<rayCount;i++){
+    rPos[i*3+1]-=0.02; rPos[i*3]+=Math.sin(time+i*0.1)*0.005;
+    if(rPos[i*3+1]<-8){
+      const wi=Math.floor(Math.random()*glassPositions.length);
+      const gp=glassPositions[wi];
+      rPos[i*3]=gp.x+(Math.random()-0.5)*2; rPos[i*3+1]=gp.y; rPos[i*3+2]=gp.z;
     }
   }
-  strokeGeometry.attributes.alpha.needsUpdate = true;
-  
-  // 背景装饰线呼吸
-  decorGroup.children.forEach(child => {
-    child.material.opacity = 0.1 + Math.sin(time * child.userData.speed + child.userData.phase) * 0.08;
-    child.rotation.z = Math.sin(time * 0.1 + child.userData.phase) * 0.02;
-  });
-  
-  // 清理旧笔触
-  brushGroup.children.forEach((child, i) => {
-    const age = Date.now() - child.userData.birth;
-    if (age > child.userData.life) {
-      child.material.opacity *= 0.98;
-      if (child.material.opacity < 0.01) {
-        brushGroup.remove(child);
-      }
-    }
-  });
-  
-  renderer.render(scene, camera);
+  godRays.geometry.attributes.position.needsUpdate=true;
+
+  const dPos=dust.geometry.attributes.position.array;
+  for(let i=0;i<dustCount;i++){
+    dPos[i*3+1]+=Math.sin(time*0.3+i*0.05)*0.003;
+    dPos[i*3]+=Math.cos(time*0.2+i*0.03)*0.002;
+  }
+  dust.geometry.attributes.position.needsUpdate=true;
+
+  camera.position.x=Math.sin(time*0.1)*3;
+  camera.position.y=2+Math.sin(time*0.15)*1;
+  camera.lookAt(0,2,0);
+
+  sunLight.position.x=10+mouse.x*5; sunLight.position.y=20+mouse.y*5;
+
+  if(isPraying){
+    prayTime+=delta;
+    const pf=Math.sin(prayTime*2)*0.5+0.5;
+    sunLight.intensity=0.8+pf*1.5;
+    godRays.material.opacity=0.4+pf*0.4;
+    godRays.material.size=0.3+pf*0.5;
+    windowLights.forEach(l=>{ l.intensity=0.5+pf; });
+    if(prayTime>3) isPraying=false;
+  } else {
+    sunLight.intensity=0.8+Math.sin(time*0.3)*0.1;
+    godRays.material.opacity=0.4; godRays.material.size=0.3;
+  }
+  renderer.render(scene,camera);
 }
-
 animate();
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(window.innerWidth,window.innerHeight);
 });
 </script>
 </body>

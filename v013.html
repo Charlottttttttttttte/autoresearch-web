@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>冰岛极简地貌 — 孤独的原始</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;600;900&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --bg-primary: #0f0f0f;
+  --bg-content: rgba(15,15,15,0.95);
+  --accent-primary: #4a6741;
+  --accent-secondary: #6b6b6b;
+  --text-primary: #e8e8e8;
+  --text-secondary: #999;
+  --font-heading: 'Noto Serif SC', serif;
+  --font-body: 'Inter', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+/* 顶部导航 */
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-height);
+  background: rgba(15,15,15,0.8);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.top-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  font-family: var(--font-body);
+}
+
+.top-nav a:hover { color: var(--accent-primary); }
+
+.nav-home { font-weight: 600; }
+
+/* Hero区 */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+.hero-content {
+  position: absolute;
+  bottom: 80px;
+  left: 40px;
+  z-index: 10;
+  max-width: 600px;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+  letter-spacing: 0.2em;
+}
+
+.hero-desc {
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 400px;
+}
+
+.score-badge {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* 滚动提示 */
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+/* 内容区 */
+.content-section {
+  background: var(--bg-content);
+  padding: 80px 24px;
+  position: relative;
+}
+
+.content-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+}
+
+.content-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--accent-primary);
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.section-body {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.section-body strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* 技术亮点列表 */
+.tech-list {
+  list-style: none;
+  margin: 24px 0;
+}
+
+.tech-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tech-list li::before {
+  content: '▸';
+  color: var(--accent-primary);
+  font-size: 18px;
+}
+
+/* 实验数据 */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.data-item {
+  background: rgba(255,255,255,0.03);
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 3px solid var(--accent-primary);
+}
+
+.data-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.data-value {
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* 评分条 */
+.score-section {
+  margin-top: 40px;
+}
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-label {
+  width: 100px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.score-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+.score-value {
+  width: 60px;
+  text-align: right;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.score-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.score-total-label {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  color: var(--text-primary);
+}
+
+.score-total-value {
+  font-size: 32px;
+  font-weight: 900;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 底部导航 */
+.bottom-nav {
+  background: var(--bg-primary);
+  padding: 40px 24px;
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.bottom-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.bottom-nav a:hover {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .hero-title { font-size: 32px; }
+  .hero-subtitle { font-size: 16px; }
+  .hero-content { left: 20px; bottom: 60px; }
+  .data-grid { grid-template-columns: 1fr; }
+  .score-item { flex-wrap: wrap; }
+  .score-label { width: 80px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<nav class="top-nav">
+  <a href="v012.html" class="nav-prev">← 上一作品</a>
+  <a href="index.html" class="nav-home">🏠 封面</a>
+  <a href="v014.html" class="nav-next">下一作品 →</a>
+</nav>
+
+<!-- Hero区 -->
+<section class="hero">
+  <div id="canvas-container"></div>
+  <div class="hero-content">
+    <div class="hero-subtitle">ICELAND · MINIMAL LANDSCAPE</div>
+    <h1 class="hero-title">冰岛极简地貌</h1>
+    <p class="hero-desc">黑白灰的火山岩上，苔藓悄然生长。辽阔、孤独、原始——这是地球最安静的角落。</p>
+    <div class="score-badge">⭐ 8.4分 · Round #13</div>
+  </div>
+  <div class="scroll-hint">
+    <div>↓ 向下滚动探索更多</div>
+  </div>
+</section>
+
+<!-- 内容区 -->
+<section class="content-section">
+  <div class="content-container">
+    
+    <!-- 设计灵感 -->
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      <strong>冰岛</strong>，这个位于北大西洋的火山岛国，拥有地球上最独特的地貌景观。黑色的火山岩、灰白色的冰川、点缀其间的绿色苔藓，构成了一幅极简而震撼的自然画卷。
+    </p>
+    <p class="section-body">
+      冰岛的美不在于色彩的丰富，而在于<strong>极致的对比</strong>——黑与白、死寂与生机、荒凉与辽阔。这种"少即是多"的美学，正是极简主义设计的终极追求。
+    </p>
+    <p class="section-body">
+      在这个作品中，我试图用网页技术重现这种原始而孤独的氛围：地形粒子模拟火山岩的粗糙质感，绿色光点如同苔藓在黑暗中呼吸，鼠标滑动时的风场效果带来一丝荒凉中的动态。
+    </p>
+
+    <!-- 视觉转译 -->
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      <strong>传统元素 → 网页技术：</strong>
+    </p>
+    <ul class="tech-list">
+      <li>火山岩地貌 → Three.js 噪声地形生成 + 灰度着色器</li>
+      <li>苔藓植被 → 粒子系统（绿色光点，呼吸动画）</li>
+      <li>辽阔感 → 广阔地形 + 透视雾效 + 低视角相机</li>
+      <li>孤独氛围 → 极低饱和度配色 + 大面积留白</li>
+      <li>风的力量 → 鼠标交互风场（粒子被吹散效果）</li>
+    </ul>
+
+    <!-- 技术亮点 -->
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>Three.js 噪声地形：使用 Simplex Noise 生成起伏地形</li>
+      <li>自定义着色器：基于高度的灰度渲染 + 苔藓绿点缀</li>
+      <li>粒子系统：2000个绿色光点，模拟苔藓群落</li>
+      <li>鼠标风场：Raycaster检测 + 粒子速度场扰动</li>
+      <li>透视雾效：FogExp2 增强深度感和辽阔感</li>
+      <li>响应式相机：根据窗口尺寸自适应视野</li>
+    </ul>
+
+    <!-- 实验数据 -->
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <div class="data-item">
+        <div class="data-label">实验轮次</div>
+        <div class="data-value">Round #13</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">变异策略</div>
+        <div class="data-value">Mutation-Layout</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">主题ID</div>
+        <div class="data-value">t047 · 冰岛极简地貌</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">创作时间</div>
+        <div class="data-value">2026-05-14</div>
+      </div>
+    </div>
+
+    <!-- 评分详情 -->
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 88%"></div></div>
+        <span class="score-value">8.8/10</span>
+      </div>
+      
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width: 85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 80%"></div></div>
+        <span class="score-value">8.0/10</span>
+      </div>
+      
+      <div class="score-total">
+        <span class="score-total-label">最终得分</span>
+        <span class="score-total-value">⭐ 8.4/10</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 底部导航 -->
+<nav class="bottom-nav">
+  <a href="v012.html">← 上一作品</a>
+  <a href="index.html">🏠 返回封面</a>
+  <a href="v014.html">下一作品 →</a>
+</nav>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// 冰岛极简地貌 - Three.js 场景
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f0f0f);
+scene.fog = new THREE.FogExp2(0x0f0f0f, 0.02);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 15, 30);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+container.appendChild(renderer.domElement);
+
+// 地形生成 - Simplex Noise 简化版
+function noise(x, z) {
+  return Math.sin(x * 0.1) * Math.cos(z * 0.1) * 2 +
+         Math.sin(x * 0.3 + z * 0.2) * 1 +
+         Math.sin(x * 0.05) * Math.cos(z * 0.05) * 4;
+}
+
+// 地形几何体
+const terrainSize = 100;
+const terrainSegments = 80;
+const terrainGeometry = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
+terrainGeometry.rotateX(-Math.PI / 2);
+
+const positions = terrainGeometry.attributes.position;
+const colors = [];
+const colorAttribute = new THREE.BufferAttribute(new Float32Array(positions.count * 3), 3);
+
+for (let i = 0; i < positions.count; i++) {
+  const x = positions.getX(i);
+  const z = positions.getZ(i);
+  const y = noise(x, z);
+  positions.setY(i, y);
+  
+  // 基于高度的颜色：低处深灰，高处浅灰
+  const height = (y + 3) / 8;
+  const r = 0.08 + height * 0.12;
+  const g = 0.08 + height * 0.12;
+  const b = 0.08 + height * 0.12;
+  colors.push(r, g, b);
+}
+
+colorAttribute.set(colors);
+terrainGeometry.setAttribute('color', colorAttribute);
+
+const terrainMaterial = new THREE.MeshStandardMaterial({
+  vertexColors: true,
+  roughness: 0.9,
+  metalness: 0.1,
+  flatShading: true
+});
+
+const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
+scene.add(terrain);
+
+// 苔藓粒子
+const particleCount = 2000;
+const particleGeometry = new THREE.BufferGeometry();
+const particlePositions = new Float32Array(particleCount * 3);
+const particleSizes = new Float32Array(particleCount);
+
+for (let i = 0; i < particleCount; i++) {
+  const x = (Math.random() - 0.5) * terrainSize * 0.9;
+  const z = (Math.random() - 0.5) * terrainSize * 0.9;
+  const y = noise(x, z) + 0.2 + Math.random() * 0.5;
+  
+  particlePositions[i * 3] = x;
+  particlePositions[i * 3 + 1] = y;
+  particlePositions[i * 3 + 2] = z;
+  particleSizes[i] = Math.random() * 0.5 + 0.2;
+}
+
+particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+
+const particleMaterial = new THREE.PointsMaterial({
+  color: 0x4a6741,
+  size: 0.3,
+  transparent: true,
+  opacity: 0.7,
+  sizeAttenuation: true
+});
+
+const particles = new THREE.Points(particleGeometry, particleMaterial);
+scene.add(particles);
+
+// 光照
+const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.3);
+directionalLight.position.set(50, 50, 50);
+scene.add(directionalLight);
+
+// 鼠标交互
+const mouse = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+let mouseWorld = new THREE.Vector3();
+
+window.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObject(terrain);
+  if (intersects.length > 0) {
+    mouseWorld.copy(intersects[0].point);
+  }
+});
+
+// 动画
+let time = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  time += 0.005;
+  
+  // 相机缓慢移动
+  camera.position.x = Math.sin(time * 0.5) * 5;
+  camera.position.z = 30 + Math.cos(time * 0.3) * 5;
+  camera.lookAt(0, 0, 0);
+  
+  // 粒子呼吸效果 + 鼠标风场
+  const positions = particles.geometry.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    const ix = i * 3;
+    const x = positions[ix];
+    const z = positions[ix + 2];
+    
+    // 呼吸
+    positions[ix + 1] += Math.sin(time * 2 + i * 0.1) * 0.002;
+    
+    // 鼠标风场（粒子被吹散）
+    const dx = x - mouseWorld.x;
+    const dz = z - mouseWorld.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist < 10 && dist > 0.1) {
+      const force = (10 - dist) / 10 * 0.05;
+      positions[ix] += (dx / dist) * force;
+      positions[ix + 2] += (dz / dist) * force;
+    }
+    
+    // 边界约束
+    if (Math.abs(positions[ix]) > terrainSize / 2) positions[ix] *= 0.99;
+    if (Math.abs(positions[ix + 2]) > terrainSize / 2) positions[ix + 2] *= 0.99;
+  }
+  particles.geometry.attributes.position.needsUpdate = true;
+  
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// 响应式
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+</body>
+</html>

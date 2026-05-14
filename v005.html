@@ -3,474 +3,407 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>威尼斯面具嘉年华 — 金色伪装</title>
+<title>电路板城市 — AutoResearch TOP5</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Serif+SC:wght@300;400;600;700&display=swap');
+:root {
+  --bg: #020408;
+  --text: #33ff66;
+  --text-dim: rgba(51,255,102,0.55);
+  --text-faint: rgba(51,255,102,0.2);
+  --glass-bg: rgba(2,4,8,0.65);
+  --glass-border: rgba(51,255,102,0.1);
+  --accent: #33ff66;
+  --accent-dim: rgba(51,255,102,0.3);
+  --gold: #d4af37;
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
-  background: #080510;
-  overflow: hidden;
-  font-family: 'Cinzel', serif;
-  color: #e8d5a0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif SC', 'Georgia', serif;
+  overflow-x: hidden;
 }
-#canvas-container {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  z-index: 1;
+.nav-top, .nav-bottom {
+  position: fixed; left: 0; width: 100%; z-index: 100;
+  display: flex; justify-content: center; align-items: center; gap: 24px;
+  padding: 14px 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem; letter-spacing: 0.1em;
 }
-.overlay {
-  position: fixed;
-  z-index: 10;
-  pointer-events: none;
+.nav-top { top: 0; }
+.nav-bottom { bottom: 0; border-bottom: none; border-top: 1px solid var(--glass-border); }
+.nav-top a, .nav-bottom a {
+  color: var(--text-dim); text-decoration: none;
+  transition: color 0.3s ease; padding: 4px 12px;
 }
-.title {
-  top: 8%;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
+.nav-top a:hover, .nav-bottom a:hover { color: var(--accent); }
+
+.hero-section { position: relative; width: 100%; height: 100vh; overflow: hidden; }
+#canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+.hero-overlay {
+  position: absolute; z-index: 10; pointer-events: none;
+  top: 12%; left: 6%;
 }
-.title h1 {
-  font-size: 3.2rem;
-  font-weight: 400;
-  letter-spacing: 0.3em;
-  color: #d4af37;
-  text-shadow: 0 0 50px rgba(212,175,55,0.25);
-  opacity: 0;
-  animation: maskReveal 2s ease 0.8s forwards;
+.hero-overlay h1 {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  font-weight: 400; letter-spacing: 0.2em;
+  color: var(--accent);
+  text-shadow: 0 0 30px rgba(51,255,102,0.3);
+  opacity: 0; animation: bootUp 1s ease 0.5s forwards;
 }
-.title .subtitle {
-  font-size: 1rem;
-  color: rgba(212,175,55,0.4);
-  margin-top: 12px;
-  letter-spacing: 0.4em;
-  font-family: 'Playfair Display', serif;
-  font-style: italic;
-  opacity: 0;
-  animation: maskReveal 2s ease 1.5s forwards;
+.hero-overlay .subtitle {
+  font-size: 0.85rem; color: rgba(51,255,102,0.4);
+  margin-top: 12px; letter-spacing: 0.3em;
+  opacity: 0; animation: bootUp 1s ease 1s forwards;
 }
-@keyframes maskReveal {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+.hero-score {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1rem; color: var(--accent);
+  margin-top: 16px; letter-spacing: 0.15em;
+  opacity: 0; animation: bootUp 1s ease 1.3s forwards;
 }
-.mask-indicator {
-  position: fixed;
-  bottom: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  z-index: 10;
-  pointer-events: none;
+.hero-desc {
+  font-size: 0.8rem; color: var(--text-dim);
+  margin-top: 8px; letter-spacing: 0.05em;
+  opacity: 0; animation: bootUp 1s ease 1.5s forwards;
 }
-.mask-indicator span {
-  display: block;
-  font-size: 0.8rem;
-  color: rgba(212,175,55,0.3);
-  letter-spacing: 0.2em;
-  margin-bottom: 8px;
+@keyframes bootUp {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
-.mask-dots {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
+.hero-hint {
+  position: absolute; bottom: 8%; left: 50%;
+  transform: translateX(-50%); z-index: 10;
+  pointer-events: none; text-align: center;
 }
-.mask-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(212,175,55,0.2);
-  transition: all 0.5s ease;
+.hero-hint span {
+  display: block; font-size: 0.7rem;
+  color: var(--text-faint); letter-spacing: 0.15em;
+  margin-bottom: 4px;
 }
-.mask-dot.active {
-  background: #d4af37;
-  box-shadow: 0 0 10px rgba(212,175,55,0.5);
-  transform: scale(1.3);
+
+.content-section {
+  position: relative; z-index: 20;
+  background: rgba(2,4,8,0.95);
+  padding: 80px 20px 120px;
 }
-.info {
-  bottom: 8%;
-  right: 8%;
-  text-align: right;
+.content-wrap { max-width: 720px; margin: 0 auto; }
+.content-block { margin-bottom: 60px; }
+.content-block h2 {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem; font-weight: 400;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px;
 }
-.info span {
-  display: block;
-  font-size: 0.75rem;
-  color: rgba(212,175,55,0.2);
-  letter-spacing: 0.15em;
+.content-block h2::before {
+  content: ''; display: block; width: 24px; height: 2px; background: var(--accent);
+}
+.content-block p {
+  font-size: 1rem; line-height: 1.9; color: var(--text-dim); text-align: justify;
+}
+.content-block ul { list-style: none; padding: 0; }
+.content-block ul li {
+  font-size: 0.95rem; line-height: 2; color: var(--text-dim);
+  padding-left: 20px; position: relative;
+}
+.content-block ul li::before {
+  content: '>'; position: absolute; left: 0;
+  color: var(--accent); font-size: 1rem;
+}
+.score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 480px) { .score-grid { grid-template-columns: 1fr; } }
+.score-item { display: flex; flex-direction: column; gap: 6px; }
+.score-label { font-size: 0.8rem; color: var(--text-dim); letter-spacing: 0.05em; }
+.score-bar-wrap { height: 4px; background: rgba(51,255,102,0.08); border-radius: 2px; overflow: hidden; }
+.score-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 1s ease; }
+.score-value { font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; color: var(--text); text-align: right; }
+.meta-line { font-size: 0.85rem; color: var(--text-faint); letter-spacing: 0.05em; line-height: 2; }
+.meta-line strong { color: var(--text-dim); font-weight: 400; }
+.keywords { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.keyword {
+  font-size: 0.75rem; padding: 4px 12px;
+  border: 1px solid var(--glass-border); border-radius: 100px;
+  color: var(--text-faint); letter-spacing: 0.05em;
 }
 </style>
 </head>
 <body>
-<div id="canvas-container"></div>
-<div class="overlay title">
-  <h1>CARNEVALE</h1>
-  <div class="subtitle">面具之下，谁是你</div>
-</div>
-<div class="mask-indicator">
-  <span>点击切换面具</span>
-  <div class="mask-dots">
-    <div class="mask-dot active" data-mask="0"></div>
-    <div class="mask-dot" data-mask="1"></div>
-    <div class="mask-dot" data-mask="2"></div>
+
+<nav class="nav-top">
+  <a href="v004.html">← 上一作品</a>
+  <a href="index.html">封面</a>
+  <a href="v001.html">下一作品 →</a>
+</nav>
+
+<div class="hero-section">
+  <div id="canvas-container"></div>
+  <div class="hero-overlay">
+    <h1>PCB_CITY.exe</h1>
+    <div class="subtitle">电路板城市 · 微观视角</div>
+    <div class="hero-score">8.1 / 10 — Round 6</div>
+    <div class="hero-desc">绿色线路 · 金色节点 · 数据流动</div>
+  </div>
+  <div class="hero-hint">
+    <span>移动鼠标探索电路板</span>
+    <span>点击节点传输数据包</span>
   </div>
 </div>
-<div class="overlay info">
-  <span>移动鼠标旋转面具</span>
+
+<div class="content-section">
+  <div class="content-wrap">
+
+    <div class="content-block">
+      <h2>设计灵感</h2>
+      <p>当你把一块电路板放在显微镜下，会发现它是一座精密的微型城市：金色的焊点是高楼大厦，绿色的铜箔线路是纵横交错的道路，而沿着线路奔流的电子信号则是这座城市永不熄灭的动脉血液。PCB（Printed Circuit Board，印刷电路板）是现代电子设备的"骨架"，它的设计语言——网格、节点、路径——天然具备一种冷峻的秩序之美。</p>
+      <p style="margin-top:12px;">网页转译中，我们以鸟瞰视角构建了一座5×5的节点网格，每个金色节点代表一个集成电路芯片，节点之间的绿色线路是数据传输通道。当你点击某个节点，它会瞬间激活并发光，同时向相邻节点发送绿色数据包。数据包沿线路流动，到达目标节点后有一定概率继续向更远的节点传播——这模拟了真实电路中信号级的联触发效应。背景中的微小电子尘埃在空间中飘浮，增添了微观世界的尺度感。</p>
+      <div class="keywords">
+        <span class="keyword">绿色线路</span>
+        <span class="keyword">金色节点</span>
+        <span class="keyword">微型</span>
+        <span class="keyword">秩序</span>
+        <span class="keyword">连接</span>
+        <span class="keyword">电子</span>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h2>技术亮点</h2>
+      <ul>
+        <li><strong>网格节点图系统</strong> — 25个SphereGeometry节点按5×5网格排列，预计算connectionPairs连接关系，形成完整的图结构</li>
+        <li><strong>数据包路由动画</strong> — 使用lerpVectors在startNode与endNode之间插值移动，progress变量控制进度，到达后 probabilistic 继续传播</li>
+        <li><strong>射线拾取交互</strong> — Raycaster检测鼠标与节点的交集，点击切换active状态并触发材料变化（金色→亮金）与连接线激活（绿色高亮）</li>
+        <li><strong>芯片组件建模</strong> — 4个BoxGeometry芯片配金色引脚（pin），模拟真实IC封装的外观</li>
+        <li><strong>相机环绕漫游</strong> — 相机以正弦轨迹缓慢环绕电路板中心，提供动态的鸟瞰视角</li>
+        <li><strong>实时UI数据面板</strong> — 节点数、活跃数据包数、模拟频率通过DOM实时更新，增强赛博朋克沉浸感</li>
+      </ul>
+    </div>
+
+    <div class="content-block">
+      <h2>评分详情</h2>
+      <div class="score-grid">
+        <div class="score-item">
+          <div class="score-label">视觉设计 Visual</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div>
+          <div class="score-value">8.0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">3D效果 3D Effects</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div>
+          <div class="score-value">8.0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">动态表现 Motion</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:85%"></div></div>
+          <div class="score-value">8.5</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">交互设计 Interaction</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div>
+          <div class="score-value">8.0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">代码质量 Code Quality</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:75%"></div></div>
+          <div class="score-value">7.5</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h2>实验数据</h2>
+      <div class="meta-line"><strong>实验轮次：</strong>Round 6（第6轮）</div>
+      <div class="meta-line"><strong>突变策略：</strong>Mutation-t056 — 电路板城市赛博风格定向突变</div>
+      <div class="meta-line"><strong>创作时长：</strong>约45分钟</div>
+      <div class="meta-line"><strong>最终得分：</strong>8.1 / 10（TOP5）</div>
+      <div class="meta-line"><strong>通过状态：</strong>✅ 通过（Pass）</div>
+    </div>
+
+  </div>
 </div>
+
+<nav class="nav-bottom">
+  <a href="v004.html">← 上一作品</a>
+  <a href="index.html">封面</a>
+  <a href="v001.html">下一作品 →</a>
+</nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// === 威尼斯面具嘉年华 Three.js 场景 ===
+// === 电路板城市 Three.js（简化版）===
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x080510, 0.012);
-
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 0, 28);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x080510, 1);
+scene.fog = new THREE.FogExp2(0x020408, 0.006);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0,35,25); camera.lookAt(0,0,0);
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setClearColor(0x020408,1);
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-// === 光源系统 ===
-const ambientLight = new THREE.AmbientLight(0x1a1020, 0.4);
-scene.add(ambientLight);
+const ambientLight = new THREE.AmbientLight(0x002211,0.5); scene.add(ambientLight);
+const mainLight = new THREE.DirectionalLight(0x33ff66,0.3);
+mainLight.position.set(10,20,10); scene.add(mainLight);
 
-const goldSpot = new THREE.SpotLight(0xd4af37, 1.5, 60, Math.PI * 0.3, 0.5, 1);
-goldSpot.position.set(8, 15, 10);
-goldSpot.target.position.set(0, 0, 0);
-scene.add(goldSpot);
-scene.add(goldSpot.target);
+const board = new THREE.Mesh(new THREE.PlaneGeometry(50,50), new THREE.MeshStandardMaterial({color:0x0a1a0a,metalness:0.1,roughness:0.9}));
+board.rotation.x=-Math.PI/2; board.position.y=-0.5; scene.add(board);
+const gridHelper = new THREE.GridHelper(50,25,0x1a3a1a,0x0f2a0f);
+gridHelper.position.y=-0.4; scene.add(gridHelper);
 
-const purpleSpot = new THREE.SpotLight(0x6633aa, 0.8, 50, Math.PI * 0.4, 0.5, 1);
-purpleSpot.position.set(-10, 10, 8);
-purpleSpot.target.position.set(0, 0, 0);
-scene.add(purpleSpot);
-purpleSpot.target.position.set(0, 0, 0);
-scene.add(purpleSpot.target);
-
-const rimLight = new THREE.PointLight(0xff8844, 0.5, 30);
-rimLight.position.set(0, -5, 15);
-scene.add(rimLight);
-
-// === 面具系统 ===
-const maskGroup = new THREE.Group();
-scene.add(maskGroup);
-
-const masks = [];
-let currentMask = 0;
-
-function createMaskTypeA() {
-  const group = new THREE.Group();
-  
-  // 面具主体（椭圆）
-  const faceGeo = new THREE.SphereGeometry(4, 32, 24);
-  const faceMat = new THREE.MeshStandardMaterial({
-    color: 0xf5e6c8,
-    metalness: 0.3,
-    roughness: 0.5
-  });
-  const face = new THREE.Mesh(faceGeo, faceMat);
-  face.scale.set(1, 1.3, 0.6);
-  group.add(face);
-  
-  // 金色装饰边框
-  const borderGeo = new THREE.TorusGeometry(4.2, 0.15, 8, 32);
-  const goldMat = new THREE.MeshStandardMaterial({
-    color: 0xd4af37,
-    metalness: 0.9,
-    roughness: 0.1,
-    emissive: 0xd4af37,
-    emissiveIntensity: 0.1
-  });
-  const border = new THREE.Mesh(borderGeo, goldMat);
-  border.scale.set(1, 1.3, 1);
-  group.add(border);
-  
-  // 眼睛（空洞）
-  const eyeGeo = new THREE.SphereGeometry(0.8, 16, 16);
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0a0a0a });
-  const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-  leftEye.position.set(-1.5, 0.5, 2);
-  leftEye.scale.set(1, 0.8, 0.5);
-  group.add(leftEye);
-  
-  const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-  rightEye.position.set(1.5, 0.5, 2);
-  rightEye.scale.set(1, 0.8, 0.5);
-  group.add(rightEye);
-  
-  // 额头装饰
-  const crownGeo = new THREE.ConeGeometry(1.5, 2, 6);
-  const crown = new THREE.Mesh(crownGeo, goldMat);
-  crown.position.set(0, 5.5, 0);
-  group.add(crown);
-  
-  // 羽毛装饰
-  for (let i = 0; i < 5; i++) {
-    const featherGeo = new THREE.PlaneGeometry(0.3, 3, 4, 8);
-    const featherMat = new THREE.MeshStandardMaterial({
-      color: i % 2 === 0 ? 0xd4af37 : 0xffffff,
-      metalness: 0.5,
-      roughness: 0.3,
-      side: THREE.DoubleSide
-    });
-    const feather = new THREE.Mesh(featherGeo, featherMat);
-    feather.position.set(-3 + i * 1.5, 5, -1);
-    feather.rotation.z = (i - 2) * 0.3;
-    feather.rotation.x = -0.3;
-    group.add(feather);
-  }
-  
-  return group;
-}
-
-function createMaskTypeB() {
-  const group = new THREE.Group();
-  
-  // 面具主体（更尖）
-  const faceGeo = new THREE.ConeGeometry(4, 10, 6);
-  const faceMat = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    metalness: 0.4,
-    roughness: 0.4
-  });
-  const face = new THREE.Mesh(faceGeo, faceMat);
-  face.rotation.z = Math.PI;
-  face.scale.set(1, 1, 0.4);
-  group.add(face);
-  
-  // 金色花纹
-  const goldMat = new THREE.MeshStandardMaterial({
-    color: 0xd4af37,
-    metalness: 0.9,
-    roughness: 0.1,
-    emissive: 0xd4af37,
-    emissiveIntensity: 0.15
-  });
-  
-  // 菱形装饰
-  for (let i = 0; i < 3; i++) {
-    const diamondGeo = new THREE.OctahedronGeometry(0.5, 0);
-    const diamond = new THREE.Mesh(diamondGeo, goldMat);
-    diamond.position.set(0, -2 + i * 2, 1.5);
-    group.add(diamond);
-  }
-  
-  // 眼部装饰
-  const eyeRingGeo = new THREE.TorusGeometry(1, 0.1, 8, 16);
-  const leftEye = new THREE.Mesh(eyeRingGeo, goldMat);
-  leftEye.position.set(-1.2, 1, 1.2);
-  group.add(leftEye);
-  
-  const rightEye = new THREE.Mesh(eyeRingGeo, goldMat);
-  rightEye.position.set(1.2, 1, 1.2);
-  group.add(rightEye);
-  
-  // 顶部尖刺
-  const spikeGeo = new THREE.ConeGeometry(0.3, 3, 4);
-  const spike = new THREE.Mesh(spikeGeo, goldMat);
-  spike.position.set(0, 5.5, 0);
-  group.add(spike);
-  
-  return group;
-}
-
-function createMaskTypeC() {
-  const group = new THREE.Group();
-  
-  // 圆形月亮面具
-  const faceGeo = new THREE.CylinderGeometry(4, 4, 1, 32);
-  const faceMat = new THREE.MeshStandardMaterial({
-    color: 0x1a1a2e,
-    metalness: 0.6,
-    roughness: 0.3
-  });
-  const face = new THREE.Mesh(faceGeo, faceMat);
-  face.rotation.x = Math.PI / 2;
-  group.add(face);
-  
-  // 金色星星装饰
-  const goldMat = new THREE.MeshStandardMaterial({
-    color: 0xd4af37,
-    metalness: 0.95,
-    roughness: 0.05,
-    emissive: 0xd4af37,
-    emissiveIntensity: 0.2
-  });
-  
-  for (let i = 0; i < 8; i++) {
-    const angle = (i / 8) * Math.PI * 2;
-    const starGeo = new THREE.OctahedronGeometry(0.3, 0);
-    const star = new THREE.Mesh(starGeo, goldMat);
-    star.position.set(Math.cos(angle) * 3, Math.sin(angle) * 3, 0.6);
-    group.add(star);
-  }
-  
-  // 中心月亮
-  const moonGeo = new THREE.SphereGeometry(1.5, 16, 16);
-  const moonMat = new THREE.MeshStandardMaterial({
-    color: 0xffdd88,
-    metalness: 0.5,
-    roughness: 0.2,
-    emissive: 0xffdd88,
-    emissiveIntensity: 0.3
-  });
-  const moon = new THREE.Mesh(moonGeo, moonMat);
-  moon.position.set(0, 0, 0.6);
-  group.add(moon);
-  
-  // 眼睛
-  const eyeGeo = new THREE.SphereGeometry(0.6, 16, 16);
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-  leftEye.position.set(-1.2, 0, 0.8);
-  group.add(leftEye);
-  
-  const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-  rightEye.position.set(1.2, 0, 0.8);
-  group.add(rightEye);
-  
-  return group;
-}
-
-masks.push(createMaskTypeA());
-masks.push(createMaskTypeB());
-masks.push(createMaskTypeC());
-
-masks.forEach((mask, i) => {
-  mask.visible = i === 0;
-  maskGroup.add(mask);
-});
-
-// === 金色粒子系统 ===
-const particleCount = 350;
-const pGeo = new THREE.BufferGeometry();
-const pPos = new Float32Array(particleCount * 3);
-const pColor = new Float32Array(particleCount * 3);
-
-const palette = [
-  new THREE.Color(0xd4af37),
-  new THREE.Color(0xffdd88),
-  new THREE.Color(0x6633aa),
-  new THREE.Color(0xffffff)
+// 节点
+const nodes=[];
+const nodeGroup=new THREE.Group(); scene.add(nodeGroup);
+const nodePositions=[
+  [-18,-18],[-10,-18],[-2,-18],[6,-18],[14,-18],
+  [-18,-10],[-10,-10],[-2,-10],[6,-10],[14,-10],
+  [-18,-2],[-10,-2],[-2,-2],[6,-2],[14,-2],
+  [-18,6],[-10,6],[-2,6],[6,6],[14,6],
+  [-18,14],[-10,14],[-2,14],[6,14],[14,14]
 ];
-
-for (let i = 0; i < particleCount; i++) {
-  pPos[i*3] = (Math.random() - 0.5) * 30;
-  pPos[i*3+1] = (Math.random() - 0.5) * 25;
-  pPos[i*3+2] = (Math.random() - 0.5) * 15;
-  const c = palette[Math.floor(Math.random() * palette.length)];
-  pColor[i*3] = c.r; pColor[i*3+1] = c.g; pColor[i*3+2] = c.b;
-}
-
-pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-pGeo.setAttribute('color', new THREE.BufferAttribute(pColor, 3));
-
-const pMat = new THREE.PointsMaterial({
-  size: 0.4,
-  vertexColors: true,
-  transparent: true,
-  opacity: 0.6,
-  blending: THREE.AdditiveBlending,
-  sizeAttenuation: true
+const goldMat=new THREE.MeshStandardMaterial({color:0xd4af37,metalness:0.9,roughness:0.1,emissive:0xd4af37,emissiveIntensity:0.3});
+const activeGoldMat=new THREE.MeshStandardMaterial({color:0xffee44,metalness:0.9,roughness:0.1,emissive:0xffee44,emissiveIntensity:0.8});
+nodePositions.forEach((pos,i)=>{
+  const node=new THREE.Mesh(new THREE.SphereGeometry(0.6,16,16),goldMat.clone());
+  node.position.set(pos[0],0,pos[1]);
+  node.userData={id:i,active:false,connections:[]};
+  nodeGroup.add(node); nodes.push(node);
 });
 
-const particles = new THREE.Points(pGeo, pMat);
-scene.add(particles);
-
-// === 背景装饰（哥特式拱门剪影）===
-const archGroup = new THREE.Group();
-scene.add(archGroup);
-
-for (let i = -2; i <= 2; i++) {
-  const archCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-3, 0, 0),
-    new THREE.Vector3(-2, 6, 0),
-    new THREE.Vector3(0, 9, 0),
-    new THREE.Vector3(2, 6, 0),
-    new THREE.Vector3(3, 0, 0)
-  ]);
-  const archGeo = new THREE.TubeGeometry(archCurve, 20, 0.2, 6, false);
-  const archMat = new THREE.MeshBasicMaterial({
-    color: 0x1a1020,
-    transparent: true,
-    opacity: 0.3
-  });
-  const arch = new THREE.Mesh(archGeo, archMat);
-  arch.position.set(i * 10, -8, -15);
-  archGroup.add(arch);
-}
-
-// === 交互 ===
-const mouse = new THREE.Vector2();
-
-window.addEventListener('mousemove', (e) => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+// 线路
+const connections=[];
+const lineGroup=new THREE.Group(); scene.add(lineGroup);
+const connectionPairs=[
+  [0,1],[1,2],[2,3],[3,4],[5,6],[6,7],[7,8],[8,9],
+  [10,11],[11,12],[12,13],[13,14],[15,16],[16,17],[17,18],[18,19],
+  [20,21],[21,22],[22,23],[23,24],[0,5],[5,10],[10,15],[15,20],
+  [1,6],[6,11],[11,16],[16,21],[2,7],[7,12],[12,17],[17,22],
+  [3,8],[8,13],[13,18],[18,23],[4,9],[9,14],[14,19],[19,24],
+  [1,7],[2,8],[5,11],[6,12],[11,17],[12,18],[16,22],[17,23]
+];
+connectionPairs.forEach(pair=>{
+  const n1=nodes[pair[0]], n2=nodes[pair[1]];
+  n1.userData.connections.push(pair[1]); n2.userData.connections.push(pair[0]);
+  const pts=[n1.position.clone(),n2.position.clone()];
+  const lg=new THREE.BufferGeometry().setFromPoints(pts);
+  const lm=new THREE.LineBasicMaterial({color:0x1a5a2a,transparent:true,opacity:0.4});
+  const line=new THREE.Line(lg,lm);
+  line.userData={n1:pair[0],n2:pair[1],active:false};
+  lineGroup.add(line); connections.push(line);
 });
 
-window.addEventListener('click', () => {
-  masks[currentMask].visible = false;
-  currentMask = (currentMask + 1) % masks.length;
-  masks[currentMask].visible = true;
-  
-  // 更新指示器
-  document.querySelectorAll('.mask-dot').forEach((dot, i) => {
-    dot.classList.toggle('active', i === currentMask);
-  });
-  
-  // 切换粒子颜色
-  const newColors = [
-    [new THREE.Color(0xd4af37), new THREE.Color(0xffdd88), new THREE.Color(0x6633aa)],
-    [new THREE.Color(0xffffff), new THREE.Color(0xd4af37), new THREE.Color(0xff4444)],
-    [new THREE.Color(0x4444ff), new THREE.Color(0xd4af37), new THREE.Color(0xffffff)]
-  ][currentMask];
-  
-  const colors = particles.geometry.attributes.color.array;
-  for (let i = 0; i < particleCount; i++) {
-    const c = newColors[Math.floor(Math.random() * newColors.length)];
-    colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+// 数据包
+const packets=[];
+const packetGroup=new THREE.Group(); scene.add(packetGroup);
+function createPacket(sn,en){
+  const pg=new THREE.SphereGeometry(0.25,8,8);
+  const pm=new THREE.MeshBasicMaterial({color:0x33ff66,transparent:true,opacity:0.9});
+  const pkt=new THREE.Mesh(pg,pm);
+  pkt.position.copy(nodes[sn].position);
+  pkt.userData={start:sn,end:en,progress:0,speed:0.02+Math.random()*0.02};
+  packetGroup.add(pkt); packets.push(pkt);
+}
+
+// 芯片
+const chipGroup=new THREE.Group(); scene.add(chipGroup);
+const chipPositions=[{x:-14,z:-14,w:6,h:6},{x:10,z:-14,w:5,h:5},{x:-14,z:10,w:7,h:5},{x:10,z:10,w:5,h:7}];
+chipPositions.forEach(cp=>{
+  const chip=new THREE.Mesh(new THREE.BoxGeometry(cp.w,0.8,cp.h), new THREE.MeshStandardMaterial({color:0x1a1a1a,metalness:0.5,roughness:0.4}));
+  chip.position.set(cp.x,0,cp.z); chipGroup.add(chip);
+  const pinMat=new THREE.MeshStandardMaterial({color:0xd4af37,metalness:0.9,roughness:0.1});
+  for(let j=0;j<8;j++){
+    const pin=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.3,0.8),pinMat);
+    pin.position.set(cp.x-cp.w/2+(j+0.5)*cp.w/8,0.2,cp.z-cp.h/2-0.4);
+    chipGroup.add(pin);
   }
-  particles.geometry.attributes.color.needsUpdate = true;
 });
 
-// === 动画 ===
-const clock = new THREE.Clock();
+// 电子尘埃
+const dustCount=200;
+const dustGeo=new THREE.BufferGeometry();
+const dustPos=new Float32Array(dustCount*3);
+for(let i=0;i<dustCount;i++){
+  dustPos[i*3]=(Math.random()-0.5)*50; dustPos[i*3+1]=Math.random()*5; dustPos[i*3+2]=(Math.random()-0.5)*50;
+}
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dustPos,3));
+const dustMat=new THREE.PointsMaterial({color:0x33ff66,size:0.1,transparent:true,opacity:0.3,blending:THREE.AdditiveBlending});
+const dust=new THREE.Points(dustGeo,dustMat); scene.add(dust);
 
-function animate() {
+// 交互
+const mouse=new THREE.Vector2();
+const raycaster=new THREE.Raycaster();
+window.addEventListener('mousemove',e=>{
+  mouse.x=(e.clientX/window.innerWidth)*2-1;
+  mouse.y=-(e.clientY/window.innerHeight)*2+1;
+});
+window.addEventListener('click',()=>{
+  raycaster.setFromCamera(mouse,camera);
+  const intersects=raycaster.intersectObjects(nodes);
+  if(intersects.length>0){
+    const node=intersects[0].object;
+    node.userData.active=!node.userData.active;
+    node.material=node.userData.active?activeGoldMat.clone():goldMat.clone();
+    node.userData.connections.forEach(cid=>{
+      if(Math.random()>0.3) createPacket(node.userData.id,cid);
+    });
+    connections.forEach(line=>{
+      if(line.userData.n1===node.userData.id||line.userData.n2===node.userData.id){
+        line.material.color.setHex(0x33ff66); line.material.opacity=0.8; line.userData.active=true;
+        setTimeout(()=>{ line.material.color.setHex(0x1a5a2a); line.material.opacity=0.4; line.userData.active=false; },1000);
+      }
+    });
+  }
+});
+
+const clock=new THREE.Clock();
+function animate(){
   requestAnimationFrame(animate);
-  const time = clock.getElapsedTime();
+  const time=clock.getElapsedTime();
 
-  // 面具漂浮
-  maskGroup.position.y = Math.sin(time * 0.5) * 0.5;
-  maskGroup.rotation.y = mouse.x * 0.4 + Math.sin(time * 0.2) * 0.1;
-  maskGroup.rotation.x = -mouse.y * 0.2;
+  nodes.forEach((node,i)=>{
+    const sc=1+Math.sin(time*2+i*0.5)*0.1; node.scale.setScalar(sc);
+    if(node.userData.active) node.material.emissiveIntensity=0.5+Math.sin(time*5)*0.3;
+  });
 
-  // 粒子舞动
-  const positions = particles.geometry.attributes.position.array;
-  for (let i = 0; i < particleCount; i++) {
-    positions[i*3+1] += Math.sin(time * 0.8 + i * 0.1) * 0.01;
-    positions[i*3] += Math.cos(time * 0.5 + i * 0.05) * 0.005;
-    positions[i*3+2] += Math.sin(time * 0.3 + i * 0.08) * 0.003;
+  for(let i=packets.length-1;i>=0;i--){
+    const pkt=packets[i];
+    pkt.userData.progress+=pkt.userData.speed;
+    const s=nodes[pkt.userData.start].position;
+    const e=nodes[pkt.userData.end].position;
+    pkt.position.lerpVectors(s,e,pkt.userData.progress);
+    if(pkt.userData.progress>=1){
+      packetGroup.remove(pkt); packets.splice(i,1);
+      const target=nodes[pkt.userData.end];
+      if(target.userData.connections.length>0&&Math.random()>0.5){
+        const next=target.userData.connections[Math.floor(Math.random()*target.userData.connections.length)];
+        createPacket(pkt.userData.end,next);
+      }
+    }
   }
-  particles.geometry.attributes.position.needsUpdate = true;
-  particles.rotation.y = time * 0.05;
 
-  // 光源变化
-  goldSpot.intensity = 1.5 + Math.sin(time * 0.7) * 0.3;
-  purpleSpot.intensity = 0.8 + Math.cos(time * 0.5) * 0.2;
-  rimLight.intensity = 0.5 + Math.sin(time * 0.3) * 0.2;
+  const dp=dust.geometry.attributes.position.array;
+  for(let i=0;i<dustCount;i++){
+    dp[i*3+1]+=Math.sin(time+i)*0.01;
+    if(dp[i*3+1]>5) dp[i*3+1]=0;
+  }
+  dust.geometry.attributes.position.needsUpdate=true;
 
-  renderer.render(scene, camera);
+  camera.position.x=Math.sin(time*0.1)*5;
+  camera.position.z=25+Math.cos(time*0.1)*5;
+  camera.lookAt(0,0,0);
+
+  renderer.render(scene,camera);
 }
-
 animate();
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(window.innerWidth,window.innerHeight);
 });
 </script>
 </body>

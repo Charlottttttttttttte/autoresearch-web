@@ -2,172 +2,332 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>🏆 AutoResearch TOP5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoResearch — 24小时AI自动设计实验 · TOP5作品集</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&family=Noto+Serif+SC:wght@300;400;600;700&display=swap');
+:root {
+  --bg: #0a0a0a;
+  --text: #f0f0f0;
+  --text-dim: rgba(240,240,240,0.5);
+  --text-faint: rgba(240,240,240,0.2);
+  --glass-bg: rgba(10,10,10,0.6);
+  --glass-border: rgba(255,255,255,0.08);
+  --accent-red: #ff2244;
+  --accent-gold: #d4af37;
+  --accent-purple: #6633aa;
+  --accent-green: #33ff66;
+  --accent-cyan: #3388ff;
+  --accent-moss: #4a6741;
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
-  background: #0a0a0a;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  padding: 20px 16px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif SC', 'Georgia', serif;
+  overflow-x: hidden;
   min-height: 100vh;
 }
-.header { text-align: center; margin-bottom: 28px; padding-top: 10px; }
-.header h1 { font-size: 22px; margin-bottom: 6px; }
-.header p { color: #888; font-size: 13px; }
-.stats {
-  display: flex; justify-content: center; gap: 28px;
-  margin-bottom: 28px;
+#canvas-container {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
 }
-.stat { text-align: center; }
-.stat .num { font-size: 26px; font-weight: bold; color: #ffd700; }
-.stat .label { font-size: 11px; color: #666; margin-top: 4px; }
-.card {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border-radius: 16px; margin-bottom: 16px;
-  border: 1px solid #2a2a4e; overflow: hidden;
+
+/* Hero */
+.hero {
+  position: relative;
+  width: 100%; min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 10; pointer-events: none;
+  text-align: center; padding: 0 20px;
 }
-.card-header {
-  padding: 16px 16px 10px;
-  display: flex; justify-content: space-between; align-items: flex-start;
-}
-.rank-area { text-align: right; }
-.rank-num {
-  font-size: 32px; font-weight: bold;
-  color: rgba(255,255,255,0.08); line-height: 1;
-}
-.score {
-  font-size: 22px; font-weight: bold;
-  background: linear-gradient(90deg, #ff006e, #8338ec);
+.hero-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  background: linear-gradient(135deg, #fff 30%, var(--accent-gold) 60%, var(--accent-red) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0;
+  animation: heroIn 1.2s ease 0.3s forwards;
 }
-.theme-name { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
-.meta { color: #888; font-size: 12px; padding: 0 16px 14px; }
-.actions {
-  display: flex; gap: 8px; padding: 0 16px 16px;
+.hero-subtitle {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(0.9rem, 2vw, 1.3rem);
+  color: var(--text-dim);
+  letter-spacing: 0.3em;
+  margin-top: 20px;
+  opacity: 0;
+  animation: heroIn 1.2s ease 0.7s forwards;
 }
-.btn {
-  flex: 1; padding: 14px;
-  border-radius: 12px; text-align: center;
-  text-decoration: none; font-size: 14px; font-weight: 600;
-  border: none; cursor: pointer;
+.hero-stats {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-faint);
+  letter-spacing: 0.15em;
+  margin-top: 16px;
+  opacity: 0;
+  animation: heroIn 1.2s ease 1.1s forwards;
 }
-.btn-primary {
-  background: linear-gradient(90deg, #ff006e, #8338ec);
-  color: #fff;
+.hero-stats span { margin: 0 12px; }
+@keyframes heroIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.btn-secondary {
-  background: #2a2a4e; color: #ccc;
+
+/* Entry Buttons */
+.entries {
+  position: relative; z-index: 10;
+  display: flex; flex-wrap: wrap;
+  justify-content: center; gap: 16px;
+  padding: 0 20px 60px;
+  max-width: 900px; margin: 0 auto;
+  pointer-events: auto;
 }
-.gold { border-color: #ffd700; }
-.silver { border-color: #c0c0c0; }
-.bronze { border-color: #cd7f32; }
-.footer {
-  text-align: center; color: #444;
-  font-size: 11px; padding: 20px 0 10px;
+.entry-btn {
+  display: block; width: 160px;
+  padding: 18px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.4s ease;
+  cursor: pointer;
 }
-.hint {
-  text-align: center; color: #555;
-  font-size: 12px; margin-bottom: 20px;
+.entry-btn .entry-score {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem; font-weight: 700;
+  line-height: 1;
+}
+.entry-btn .entry-name {
+  font-size: 0.85rem; margin-top: 8px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+.entry-btn .entry-theme {
+  font-size: 0.7rem; margin-top: 4px;
+  color: var(--text-faint);
+  letter-spacing: 0.1em;
+}
+.entry-btn:hover {
+  transform: translateY(-4px);
+  border-color: currentColor;
+}
+.entry-btn.v1 { color: var(--accent-red); }
+.entry-btn.v2 { color: var(--accent-gold); }
+.entry-btn.v3 { color: var(--accent-purple); }
+.entry-btn.v4 { color: var(--accent-green); }
+.entry-btn.v5 { color: var(--accent-cyan); }
+.entry-btn.v6 { color: var(--accent-moss); }
+
+/* Scroll hint */
+.scroll-hint {
+  position: absolute; bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 10; pointer-events: none;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+  animation: bounce 2s ease infinite;
+}
+.scroll-hint span {
+  font-size: 0.7rem; color: var(--text-faint);
+  letter-spacing: 0.2em;
+}
+.scroll-hint::after {
+  content: ''; width: 1px; height: 30px;
+  background: linear-gradient(to bottom, var(--text-faint), transparent);
+}
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .entry-btn { width: calc(50% - 12px); min-width: 140px; }
+  .entries { gap: 12px; }
 }
 </style>
 </head>
 <body>
-<div class="header">
-  <h1>🏆 网站 AutoResearch</h1>
-  <p>实时互动作品展示 · 点击体验</p>
+<div id="canvas-container"></div>
+
+<div class="hero">
+  <h1 class="hero-title">AutoResearch</h1>
+  <p class="hero-subtitle">24小时AI自动设计实验 · TOP5作品集</p>
+  <p class="hero-stats"><span>13轮实验</span><span>·</span><span>7个通过</span><span>·</span><span>最高分8.5</span></p>
 </div>
 
-<div class="stats">
-  <div class="stat"><div class="num">11</div><div class="label">总轮次</div></div>
-  <div class="stat"><div class="num">6</div><div class="label">通过</div></div>
-  <div class="stat"><div class="num">8.5</div><div class="label">最高分</div></div>
+<div class="entries">
+  <a href="v001.html" class="entry-btn v1">
+    <div class="entry-score">8.5</div>
+    <div class="entry-name">解构主义破碎</div>
+    <div class="entry-theme">t023 · Round 8</div>
+  </a>
+  <a href="v013.html" class="entry-btn v6">
+    <div class="entry-score">8.4</div>
+    <div class="entry-name">冰岛极简地貌</div>
+    <div class="entry-theme">t047 · Round 13</div>
+  </a>
+  <a href="v002.html" class="entry-btn v2">
+    <div class="entry-score">8.4</div>
+    <div class="entry-name">威尼斯面具嘉年华</div>
+    <div class="entry-theme">t048 · Round 5</div>
+  </a>
+  <a href="v003.html" class="entry-btn v3">
+    <div class="entry-score">8.3</div>
+    <div class="entry-name">哥特式光影教堂</div>
+    <div class="entry-theme">t029 · Round 4</div>
+  </a>
+  <a href="v004.html" class="entry-btn v4">
+    <div class="entry-score">8.2</div>
+    <div class="entry-name">维也纳分离派</div>
+    <div class="entry-theme">t041 · Round 2</div>
+  </a>
+  <a href="v005.html" class="entry-btn v5">
+    <div class="entry-score">8.1</div>
+    <div class="entry-name">电路板城市</div>
+    <div class="entry-theme">t056 · Round 6</div>
+  </a>
 </div>
 
-<div class="hint">👇 点击下方按钮体验实时互动效果（含3D/动画/触摸交互）</div>
+<div class="scroll-hint"><span>向下探索</span></div>
 
-<!-- #1 -->
-<div class="card gold">
-  <div class="card-header">
-    <div>
-      <div class="theme-name">解构主义破碎</div>
-      <div class="score">⭐ 8.5分</div>
-    </div>
-    <div class="rank-area"><div class="rank-num">#1</div></div>
-  </div>
-  <div class="meta">Round 8 · Mutation-Interact · 鼠标移动驱散碎片 · 点击触发爆炸重组</div>
-  <div class="actions">
-    <a href="v008.html" class="btn btn-primary">🖥️ PC版</a>
-    <a href="mobile/v008_解构主义破碎.html" class="btn btn-secondary">📱 手机版</a>
-  </div>
-</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// === 封面融合粒子系统 ===
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0a0a, 0.008);
 
-<!-- #2 -->
-<div class="card silver">
-  <div class="card-header">
-    <div>
-      <div class="theme-name">威尼斯面具嘉年华</div>
-      <div class="score">⭐ 8.4分</div>
-    </div>
-    <div class="rank-area"><div class="rank-num">#2</div></div>
-  </div>
-  <div class="meta">Round 5 · Mutation-Fusion · 金色面具悬浮 · 粒子环绕 · 触摸旋转</div>
-  <div class="actions">
-    <a href="v005.html" class="btn btn-primary">🖥️ PC版</a>
-    <a href="mobile/v005_威尼斯面具嘉年华.html" class="btn btn-secondary">📱 手机版</a>
-  </div>
-</div>
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 40);
 
-<!-- #3 -->
-<div class="card bronze">
-  <div class="card-header">
-    <div>
-      <div class="theme-name">哥特式光影教堂</div>
-      <div class="score">⭐ 8.3分</div>
-    </div>
-    <div class="rank-area"><div class="rank-num">#3</div></div>
-  </div>
-  <div class="meta">Round 4 · Mutation-Motion · 彩色玫瑰窗 · 光束穿透 · 视差滚动</div>
-  <div class="actions">
-    <a href="v004.html" class="btn btn-primary">🖥️ PC版</a>
-    <a href="mobile/v004_哥特式光影教堂.html" class="btn btn-secondary">📱 手机版</a>
-  </div>
-</div>
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0a0a0a, 1);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-<!-- #4 -->
-<div class="card">
-  <div class="card-header">
-    <div>
-      <div class="theme-name">维也纳分离派</div>
-      <div class="score">⭐ 8.2分</div>
-    </div>
-    <div class="rank-area"><div class="rank-num">#4</div></div>
-  </div>
-  <div class="meta">Round 2 · Mutation-Reset · 金色藤蔓绽放 · 粒子飘散 · 鼠标跟随</div>
-  <div class="actions">
-    <a href="v002.html" class="btn btn-primary">🖥️ PC版</a>
-    <a href="mobile/v002_维也纳分离派.html" class="btn btn-secondary">📱 手机版</a>
-  </div>
-</div>
+// 融合五作品色彩的粒子
+const particleCount = 600;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(particleCount * 3);
+const pColor = new Float32Array(particleCount * 3);
+const pVel = new Float32Array(particleCount * 3);
 
-<!-- #5 -->
-<div class="card">
-  <div class="card-header">
-    <div>
-      <div class="theme-name">电路板城市</div>
-      <div class="score">⭐ 8.1分</div>
-    </div>
-    <div class="rank-area"><div class="rank-num">#5</div></div>
-  </div>
-  <div class="meta">Round 6 · Mutation-3D · 绿色电路节点 · 数据包流动 · 点击触发脉冲</div>
-  <div class="actions">
-    <a href="v006.html" class="btn btn-primary">🖥️ PC版</a>
-    <a href="mobile/v006_电路板城市.html" class="btn btn-secondary">📱 手机版</a>
-  </div>
-</div>
+const palette = [
+  new THREE.Color(0xff2244), // 解构红
+  new THREE.Color(0xd4af37), // 威尼斯金
+  new THREE.Color(0x6633aa), // 哥特紫
+  new THREE.Color(0x33ff66), // 分离绿
+  new THREE.Color(0x3388ff), // 电路蓝
+  new THREE.Color(0xff8800), // 哥特橙
+  new THREE.Color(0xffffff), // 白
+];
 
-<div class="footer">生成时间：2026-05-14 · 点击📱手机版体验触摸交互 · PC版效果更丰富</div>
+for (let i = 0; i < particleCount; i++) {
+  pPos[i*3] = (Math.random() - 0.5) * 60;
+  pPos[i*3+1] = (Math.random() - 0.5) * 40;
+  pPos[i*3+2] = (Math.random() - 0.5) * 20;
+  pVel[i*3] = (Math.random() - 0.5) * 0.02;
+  pVel[i*3+1] = (Math.random() - 0.5) * 0.015;
+  pVel[i*3+2] = (Math.random() - 0.5) * 0.01;
+  const c = palette[Math.floor(Math.random() * palette.length)];
+  pColor[i*3] = c.r; pColor[i*3+1] = c.g; pColor[i*3+2] = c.b;
+}
+
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pColor, 3));
+
+const pMat = new THREE.PointsMaterial({
+  size: 0.5, vertexColors: true,
+  transparent: true, opacity: 0.7,
+  blending: THREE.AdditiveBlending,
+  sizeAttenuation: true
+});
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
+// 连接线（微弱）
+const lineMat = new THREE.LineBasicMaterial({ color: 0x333333, transparent: true, opacity: 0.08 });
+const lineGeo = new THREE.BufferGeometry();
+const linePositions = new Float32Array(200 * 3);
+lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+const lines = new THREE.LineSegments(lineGeo, lineMat);
+scene.add(lines);
+
+// 鼠标交互
+const mouse = new THREE.Vector2();
+window.addEventListener('mousemove', e => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const time = clock.getElapsedTime();
+
+  const positions = particles.geometry.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    positions[i*3] += pVel[i*3] + Math.sin(time * 0.3 + i) * 0.002;
+    positions[i*3+1] += pVel[i*3+1] + Math.cos(time * 0.2 + i) * 0.002;
+    positions[i*3+2] += pVel[i*3+2];
+
+    // 边界环绕
+    if (positions[i*3] > 30) positions[i*3] = -30;
+    if (positions[i*3] < -30) positions[i*3] = 30;
+    if (positions[i*3+1] > 20) positions[i*3+1] = -20;
+    if (positions[i*3+1] < -20) positions[i*3+1] = 20;
+  }
+  particles.geometry.attributes.position.needsUpdate = true;
+  particles.rotation.y = time * 0.02;
+
+  // 更新连接线（每帧随机选部分粒子连接）
+  const lp = lines.geometry.attributes.position.array;
+  for (let i = 0; i < 100; i++) {
+    const idx1 = Math.floor(Math.random() * particleCount);
+    const idx2 = Math.floor(Math.random() * particleCount);
+    const d = Math.hypot(
+      positions[idx1*3]-positions[idx2*3],
+      positions[idx1*3+1]-positions[idx2*3+1],
+      positions[idx1*3+2]-positions[idx2*3+2]
+    );
+    if (d < 8) {
+      lp[i*6] = positions[idx1*3];
+      lp[i*6+1] = positions[idx1*3+1];
+      lp[i*6+2] = positions[idx1*3+2];
+      lp[i*6+3] = positions[idx2*3];
+      lp[i*6+4] = positions[idx2*3+1];
+      lp[i*6+5] = positions[idx2*3+2];
+    } else {
+      lp[i*6] = lp[i*6+1] = lp[i*6+2] = lp[i*6+3] = lp[i*6+4] = lp[i*6+5] = 0;
+    }
+  }
+  lines.geometry.attributes.position.needsUpdate = true;
+
+  camera.position.x += (mouse.x * 2 - camera.position.x) * 0.02;
+  camera.position.y += (mouse.y * 1 - camera.position.y) * 0.02;
+  camera.lookAt(0, 0, 0);
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
 </body>
 </html>

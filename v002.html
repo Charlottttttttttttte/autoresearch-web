@@ -3,349 +3,392 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>维也纳分离派 — 金色花语</title>
+<title>威尼斯面具嘉年华 — AutoResearch TOP5</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@1&family=Noto+Serif+SC:wght@300;400;600;700&display=swap');
+:root {
+  --bg: #080510;
+  --text: #e8d5a0;
+  --text-dim: rgba(232,213,160,0.55);
+  --text-faint: rgba(232,213,160,0.2);
+  --glass-bg: rgba(8,5,16,0.65);
+  --glass-border: rgba(212,175,55,0.12);
+  --accent: #d4af37;
+  --accent-dim: rgba(212,175,55,0.3);
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
-  background: #0a0a0a;
-  overflow: hidden;
-  font-family: 'Playfair Display', 'Georgia', serif;
-  color: #d4af37;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif SC', 'Georgia', serif;
+  overflow-x: hidden;
 }
-#canvas-container {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  z-index: 1;
+.nav-top, .nav-bottom {
+  position: fixed; left: 0; width: 100%; z-index: 100;
+  display: flex; justify-content: center; align-items: center; gap: 24px;
+  padding: 14px 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem; letter-spacing: 0.1em;
 }
-.overlay {
-  position: fixed;
-  z-index: 10;
-  pointer-events: none;
+.nav-top { top: 0; }
+.nav-bottom { bottom: 0; border-bottom: none; border-top: 1px solid var(--glass-border); }
+.nav-top a, .nav-bottom a {
+  color: var(--text-dim); text-decoration: none;
+  transition: color 0.3s ease; padding: 4px 12px;
 }
-.title {
-  top: 10%;
-  left: 8%;
+.nav-top a:hover, .nav-bottom a:hover { color: var(--accent); }
+
+.hero-section { position: relative; width: 100%; height: 100vh; overflow: hidden; }
+#canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+.hero-overlay {
+  position: absolute; z-index: 10; pointer-events: none;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  text-align: center;
 }
-.title h1 {
-  font-size: 4rem;
-  font-weight: 300;
-  font-style: italic;
-  letter-spacing: 0.05em;
-  color: #d4af37;
-  text-shadow: 0 0 60px rgba(212,175,55,0.3), 0 2px 10px rgba(0,0,0,0.8);
-  opacity: 0;
-  animation: fadeInUp 1.5s ease 0.5s forwards;
+.hero-overlay h1 {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 400; letter-spacing: 0.3em;
+  color: var(--accent);
+  text-shadow: 0 0 50px rgba(212,175,55,0.25);
+  opacity: 0; animation: maskReveal 2s ease 0.5s forwards;
 }
-.title .subtitle {
-  font-size: 1.1rem;
-  color: rgba(212,175,55,0.5);
-  margin-top: 16px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  opacity: 0;
-  animation: fadeInUp 1.5s ease 0.8s forwards;
+.hero-overlay .subtitle {
+  font-family: 'Playfair Display', serif; font-style: italic;
+  font-size: 1rem; color: rgba(212,175,55,0.4);
+  margin-top: 12px; letter-spacing: 0.4em;
+  opacity: 0; animation: maskReveal 2s ease 1s forwards;
 }
-.title .divider {
-  width: 60px;
-  height: 1px;
-  background: linear-gradient(90deg, #d4af37, transparent);
-  margin-top: 20px;
-  opacity: 0;
-  animation: fadeInUp 1.5s ease 1s forwards;
+.hero-score {
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem; color: var(--accent);
+  margin-top: 20px; letter-spacing: 0.15em;
+  opacity: 0; animation: maskReveal 2s ease 1.3s forwards;
 }
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.hero-desc {
+  font-size: 0.85rem; color: var(--text-dim);
+  margin-top: 8px; letter-spacing: 0.05em;
+  opacity: 0; animation: maskReveal 2s ease 1.5s forwards;
 }
-.info {
-  bottom: 8%;
-  right: 8%;
-  text-align: right;
+@keyframes maskReveal {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
-.info span {
-  display: block;
-  font-size: 0.8rem;
-  color: rgba(212,175,55,0.3);
-  letter-spacing: 0.15em;
-  margin-bottom: 6px;
+.hero-hint {
+  position: absolute; bottom: 10%; right: 8%; z-index: 10;
+  pointer-events: none; text-align: right;
 }
-.corner-decor {
-  position: fixed;
-  width: 120px;
-  height: 120px;
-  z-index: 10;
-  pointer-events: none;
+.hero-hint span {
+  display: block; font-size: 0.7rem;
+  color: var(--text-faint); letter-spacing: 0.15em;
+  margin-bottom: 4px;
 }
-.corner-decor.top-left {
-  top: 30px; left: 30px;
-  border-top: 1px solid rgba(212,175,55,0.2);
-  border-left: 1px solid rgba(212,175,55,0.2);
+
+.content-section {
+  position: relative; z-index: 20;
+  background: rgba(8,5,16,0.95);
+  padding: 80px 20px 120px;
 }
-.corner-decor.bottom-right {
-  bottom: 30px; right: 30px;
-  border-bottom: 1px solid rgba(212,175,55,0.2);
-  border-right: 1px solid rgba(212,175,55,0.2);
+.content-wrap { max-width: 720px; margin: 0 auto; }
+.content-block { margin-bottom: 60px; }
+.content-block h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.content-block h2::before {
+  content: ''; display: block; width: 24px; height: 2px; background: var(--accent);
+}
+.content-block p {
+  font-size: 1rem; line-height: 1.9; color: var(--text-dim); text-align: justify;
+}
+.content-block ul { list-style: none; padding: 0; }
+.content-block ul li {
+  font-size: 0.95rem; line-height: 2; color: var(--text-dim);
+  padding-left: 20px; position: relative;
+}
+.content-block ul li::before {
+  content: '›'; position: absolute; left: 0;
+  color: var(--accent); font-size: 1.2rem;
+}
+.score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 480px) { .score-grid { grid-template-columns: 1fr; } }
+.score-item { display: flex; flex-direction: column; gap: 6px; }
+.score-label { font-size: 0.8rem; color: var(--text-dim); letter-spacing: 0.05em; }
+.score-bar-wrap { height: 4px; background: rgba(212,175,55,0.08); border-radius: 2px; overflow: hidden; }
+.score-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 1s ease; }
+.score-value { font-family: 'Cinzel', serif; font-size: 0.85rem; color: var(--text); text-align: right; }
+.meta-line { font-size: 0.85rem; color: var(--text-faint); letter-spacing: 0.05em; line-height: 2; }
+.meta-line strong { color: var(--text-dim); font-weight: 400; }
+.keywords { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.keyword {
+  font-size: 0.75rem; padding: 4px 12px;
+  border: 1px solid var(--glass-border); border-radius: 100px;
+  color: var(--text-faint); letter-spacing: 0.05em;
 }
 </style>
 </head>
 <body>
-<div id="canvas-container"></div>
-<div class="corner-decor top-left"></div>
-<div class="corner-decor bottom-right"></div>
-<div class="overlay title">
-  <h1>Wiener Secession</h1>
-  <div class="subtitle">维也纳分离派 · 1897</div>
-  <div class="divider"></div>
+
+<nav class="nav-top">
+  <a href="v001.html">← 上一作品</a>
+  <a href="index.html">封面</a>
+  <a href="v003.html">下一作品 →</a>
+</nav>
+
+<div class="hero-section">
+  <div id="canvas-container"></div>
+  <div class="hero-overlay">
+    <h1>CARNEVALE</h1>
+    <div class="subtitle">面具之下，谁是你</div>
+    <div class="hero-score">8.4 / 10 — Round 5</div>
+    <div class="hero-desc">华丽面具 · 金色伪装 · 戏剧神秘</div>
+  </div>
+  <div class="hero-hint">
+    <span>移动鼠标旋转面具</span>
+    <span>点击切换面具</span>
+  </div>
 </div>
-<div class="overlay info">
-  <span>移动鼠标唤醒花卉</span>
-  <span>点击绽放金色光芒</span>
+
+<div class="content-section">
+  <div class="content-wrap">
+
+    <div class="content-block">
+      <h2>设计灵感</h2>
+      <p>威尼斯面具嘉年华（Carnevale di Venezia）是欧洲最古老、最神秘的节日之一，起源于11世纪。面具不仅是伪装身份的工具，更是社会阶层消融的象征——在面具背后，贵族与平民可以平等地狂欢。威尼斯面具以其繁复的金箔装饰、羽毛冠饰和戏剧化的造型闻名，金色与深紫色的搭配承载着奢华与神秘的双重气质。</p>
+      <p style="margin-top:12px;">网页转译中，我们用Three.js procedural modeling生成了三种风格迥异的面具：椭圆古典脸、尖锥神秘脸与星月夜空脸。金色SpotLight从上方倾泻而下，紫色辅助光从侧方穿透，营造出舞台聚光灯般的戏剧效果。350个 vertex-colored 粒子在面具周围舞动，背景中的哥特式拱门剪影进一步强化了威尼斯圣马可广场的纵深感。</p>
+      <div class="keywords">
+        <span class="keyword">华丽面具</span>
+        <span class="keyword">金色</span>
+        <span class="keyword">神秘</span>
+        <span class="keyword">戏剧</span>
+        <span class="keyword">繁复</span>
+        <span class="keyword">伪装</span>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h2>技术亮点</h2>
+      <ul>
+        <li><strong>程序化面具建模</strong> — 三种面具完全由基础几何体组合而成：SphereGeometry椭圆脸、ConeGeometry尖锥脸、CylinderGeometry星月盘</li>
+        <li><strong>双SpotLight舞台照明</strong> — 金色主光源 + 紫色辅助光源，配合 rimLight 勾勒面具轮廓，模拟剧院布光</li>
+        <li><strong>顶点着色粒子系统</strong> — 350个粒子使用vertexColors属性，切换面具时动态更新颜色数组，实现无缝过渡</li>
+        <li><strong>CatmullRomCurve3拱门剪影</strong> — 背景中的哥特式拱门使用TubeGeometry生成，低透明度营造景深</li>
+        <li><strong>面具状态机</strong> — 点击循环切换三种面具，visible属性控制显示，避免重复创建mesh</li>
+        <li><strong>鼠标跟随旋转</strong> — 面具组rotation直接映射鼠标坐标，叠加正弦浮动实现有机感</li>
+      </ul>
+    </div>
+
+    <div class="content-block">
+      <h2>评分详情</h2>
+      <div class="score-grid">
+        <div class="score-item">
+          <div class="score-label">视觉设计 Visual</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:90%"></div></div>
+          <div class="score-value">9.0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">3D效果 3D Effects</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:85%"></div></div>
+          <div class="score-value">8.5</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">动态表现 Motion</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div>
+          <div class="score-value">8.0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">交互设计 Interaction</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:85%"></div></div>
+          <div class="score-value">8.5</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">代码质量 Code Quality</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:75%"></div></div>
+          <div class="score-value">7.5</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h2>实验数据</h2>
+      <div class="meta-line"><strong>实验轮次：</strong>Round 5（第5轮）</div>
+      <div class="meta-line"><strong>突变策略：</strong>Mutation-t048 — 威尼斯面具嘉年华风格定向突变</div>
+      <div class="meta-line"><strong>创作时长：</strong>约50分钟</div>
+      <div class="meta-line"><strong>最终得分：</strong>8.4 / 10（TOP2）</div>
+      <div class="meta-line"><strong>通过状态：</strong>✅ 通过（Pass）</div>
+    </div>
+
+  </div>
 </div>
+
+<nav class="nav-bottom">
+  <a href="v001.html">← 上一作品</a>
+  <a href="index.html">封面</a>
+  <a href="v003.html">下一作品 →</a>
+</nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// === 维也纳分离派 Three.js 场景 ===
+// === 威尼斯面具嘉年华 Three.js（简化版）===
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x0a0a0a, 0.015);
-
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 0, 35);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x0a0a0a, 1);
+scene.fog = new THREE.FogExp2(0x080510, 0.012);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0,0,28);
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setClearColor(0x080510,1);
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-// === 光源 ===
-const ambientLight = new THREE.AmbientLight(0x2a1a0a, 0.4);
-scene.add(ambientLight);
+const ambientLight = new THREE.AmbientLight(0x1a1020,0.4); scene.add(ambientLight);
+const goldSpot = new THREE.SpotLight(0xd4af37,1.5,60,Math.PI*0.3,0.5,1);
+goldSpot.position.set(8,15,10); goldSpot.target.position.set(0,0,0);
+scene.add(goldSpot); scene.add(goldSpot.target);
+const purpleSpot = new THREE.SpotLight(0x6633aa,0.8,50,Math.PI*0.4,0.5,1);
+purpleSpot.position.set(-10,10,8); purpleSpot.target.position.set(0,0,0);
+scene.add(purpleSpot); scene.add(purpleSpot.target);
+const rimLight = new THREE.PointLight(0xff8844,0.5,30);
+rimLight.position.set(0,-5,15); scene.add(rimLight);
 
-const goldLight = new THREE.PointLight(0xd4af37, 1.2, 100);
-goldLight.position.set(10, 10, 15);
-scene.add(goldLight);
+// 面具系统
+const maskGroup = new THREE.Group(); scene.add(maskGroup);
+const masks = []; let currentMask = 0;
+const goldMat = new THREE.MeshStandardMaterial({color:0xd4af37,metalness:0.9,roughness:0.1,emissive:0xd4af37,emissiveIntensity:0.1});
 
-const warmLight = new THREE.PointLight(0xff8844, 0.6, 80);
-warmLight.position.set(-10, -5, 10);
-scene.add(warmLight);
-
-const backLight = new THREE.PointLight(0x4466aa, 0.4, 60);
-backLight.position.set(0, 0, -10);
-scene.add(backLight);
-
-// === 金色花卉曲线系统 ===
-const flowerGroup = new THREE.Group();
-scene.add(flowerGroup);
-
-function createFlowerCurve(points, color, thickness, opacity) {
-  const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(p[0], p[1], p[2])));
-  const geometry = new THREE.TubeGeometry(curve, 64, thickness, 8, false);
-  const material = new THREE.MeshStandardMaterial({
-    color: color,
-    metalness: 0.8,
-    roughness: 0.2,
-    emissive: color,
-    emissiveIntensity: 0.15,
-    transparent: true,
-    opacity: opacity
-  });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.userData = { curve: curve, basePoints: points, phase: Math.random() * Math.PI * 2 };
-  return mesh;
-}
-
-function createPetalShape(x, y, z, scale, rotation, color) {
-  const shape = new THREE.Shape();
-  shape.moveTo(0, 0);
-  shape.bezierCurveTo(0.5, 0.3, 0.8, 1.2, 0, 2);
-  shape.bezierCurveTo(-0.8, 1.2, -0.5, 0.3, 0, 0);
-  
-  const geometry = new THREE.ShapeGeometry(shape, 12);
-  const material = new THREE.MeshStandardMaterial({
-    color: color,
-    metalness: 0.6,
-    roughness: 0.3,
-    emissive: color,
-    emissiveIntensity: 0.1,
-    side: THREE.DoubleSide,
-    transparent: true,
-    opacity: 0.85
-  });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(x, y, z);
-  mesh.scale.set(scale, scale, scale);
-  mesh.rotation.z = rotation;
-  mesh.userData = { baseScale: scale, phase: Math.random() * Math.PI * 2 };
-  return mesh;
-}
-
-// 创建藤蔓主茎
-const vines = [
-  { points: [[0,-12,0], [1,-8,1], [-1,-4,-1], [2,0,2], [0,5,0], [-1,10,-1]], color: 0xc9a227, thick: 0.12 },
-  { points: [[0,-12,0], [-2,-7,-1], [1,-3,1], [-1,2,-2], [2,8,1]], color: 0xb8941f, thick: 0.08 },
-  { points: [[0,-12,0], [2,-6,2], [0,0,-1], [-2,6,2], [1,11,0]], color: 0xd4af37, thick: 0.06 },
-];
-
-vines.forEach(v => {
-  const vine = createFlowerCurve(v.points, v.color, v.thick, 0.9);
-  flowerGroup.add(vine);
-});
-
-// 创建花瓣
-const petalColors = [0xf4e4c1, 0xe8d5a3, 0xd4af37, 0xc9a227, 0xffeebb, 0xf0d878];
-for (let i = 0; i < 18; i++) {
-  const angle = (i / 18) * Math.PI * 2;
-  const radius = 3 + Math.random() * 4;
-  const x = Math.cos(angle) * radius;
-  const y = Math.sin(angle) * radius * 0.6 + 2;
-  const z = (Math.random() - 0.5) * 3;
-  const scale = 0.8 + Math.random() * 1.2;
-  const color = petalColors[Math.floor(Math.random() * petalColors.length)];
-  const petal = createPetalShape(x, y, z, scale, angle + Math.PI/2, color);
-  flowerGroup.add(petal);
-}
-
-// 小花朵
-for (let i = 0; i < 8; i++) {
-  const angle = (i / 8) * Math.PI * 2;
-  const x = Math.cos(angle) * (6 + Math.random() * 4);
-  const y = Math.sin(angle) * (4 + Math.random() * 3) - 2;
-  const z = (Math.random() - 0.5) * 4;
-  for (let j = 0; j < 5; j++) {
-    const pAngle = (j / 5) * Math.PI * 2;
-    const px = x + Math.cos(pAngle) * 0.8;
-    const py = y + Math.sin(pAngle) * 0.6;
-    const pz = z;
-    const petal = createPetalShape(px, py, pz, 0.4, pAngle + Math.PI/2, 0xe8d5a3);
-    flowerGroup.add(petal);
+function createMaskTypeA(){
+  const g = new THREE.Group();
+  const face = new THREE.Mesh(new THREE.SphereGeometry(4,32,24), new THREE.MeshStandardMaterial({color:0xf5e6c8,metalness:0.3,roughness:0.5}));
+  face.scale.set(1,1.3,0.6); g.add(face);
+  const border = new THREE.Mesh(new THREE.TorusGeometry(4.2,0.15,8,32), goldMat.clone());
+  border.scale.set(1,1.3,1); g.add(border);
+  const eyeMat = new THREE.MeshBasicMaterial({color:0x0a0a0a});
+  const le = new THREE.Mesh(new THREE.SphereGeometry(0.8,16,16),eyeMat);
+  le.position.set(-1.5,0.5,2); le.scale.set(1,0.8,0.5); g.add(le);
+  const re = new THREE.Mesh(new THREE.SphereGeometry(0.8,16,16),eyeMat);
+  re.position.set(1.5,0.5,2); re.scale.set(1,0.8,0.5); g.add(re);
+  const crown = new THREE.Mesh(new THREE.ConeGeometry(1.5,2,6), goldMat.clone());
+  crown.position.set(0,5.5,0); g.add(crown);
+  for(let i=0;i<5;i++){
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(0.3,3,4,8), new THREE.MeshStandardMaterial({color:i%2===0?0xd4af37:0xffffff,metalness:0.5,roughness:0.3,side:THREE.DoubleSide}));
+    f.position.set(-3+i*1.5,5,-1); f.rotation.z=(i-2)*0.3; f.rotation.x=-0.3; g.add(f);
   }
+  return g;
 }
+function createMaskTypeB(){
+  const g = new THREE.Group();
+  const face = new THREE.Mesh(new THREE.ConeGeometry(4,10,6), new THREE.MeshStandardMaterial({color:0xffffff,metalness:0.4,roughness:0.4}));
+  face.rotation.z=Math.PI; face.scale.set(1,1,0.4); g.add(face);
+  const gm = goldMat.clone();
+  for(let i=0;i<3;i++){
+    const d = new THREE.Mesh(new THREE.OctahedronGeometry(0.5,0),gm.clone());
+    d.position.set(0,-2+i*2,1.5); g.add(d);
+  }
+  const erg = new THREE.TorusGeometry(1,0.1,8,16);
+  const le = new THREE.Mesh(erg,gm.clone()); le.position.set(-1.2,1,1.2); g.add(le);
+  const re = new THREE.Mesh(erg,gm.clone()); re.position.set(1.2,1,1.2); g.add(re);
+  const spike = new THREE.Mesh(new THREE.ConeGeometry(0.3,3,4),gm.clone());
+  spike.position.set(0,5.5,0); g.add(spike);
+  return g;
+}
+function createMaskTypeC(){
+  const g = new THREE.Group();
+  const face = new THREE.Mesh(new THREE.CylinderGeometry(4,4,1,32), new THREE.MeshStandardMaterial({color:0x1a1a2e,metalness:0.6,roughness:0.3}));
+  face.rotation.x=Math.PI/2; g.add(face);
+  const gm = goldMat.clone(); gm.emissiveIntensity=0.2;
+  for(let i=0;i<8;i++){
+    const a=(i/8)*Math.PI*2;
+    const s = new THREE.Mesh(new THREE.OctahedronGeometry(0.3,0),gm.clone());
+    s.position.set(Math.cos(a)*3,Math.sin(a)*3,0.6); g.add(s);
+  }
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(1.5,16,16), new THREE.MeshStandardMaterial({color:0xffdd88,metalness:0.5,roughness:0.2,emissive:0xffdd88,emissiveIntensity:0.3}));
+  moon.position.set(0,0,0.6); g.add(moon);
+  const eyeMat = new THREE.MeshBasicMaterial({color:0xffffff});
+  const le = new THREE.Mesh(new THREE.SphereGeometry(0.6,16,16),eyeMat);
+  le.position.set(-1.2,0,0.8); g.add(le);
+  const re = new THREE.Mesh(new THREE.SphereGeometry(0.6,16,16),eyeMat);
+  re.position.set(1.2,0,0.8); g.add(re);
+  return g;
+}
+masks.push(createMaskTypeA(),createMaskTypeB(),createMaskTypeC());
+masks.forEach((m,i)=>{ m.visible=i===0; maskGroup.add(m); });
 
-// === 金色粒子系统 ===
-const particleCount = 400;
+// 粒子
+const particleCount = 350;
 const pGeo = new THREE.BufferGeometry();
-const pPos = new Float32Array(particleCount * 3);
-const pColor = new Float32Array(particleCount * 3);
-const pSize = new Float32Array(particleCount);
+const pPos = new Float32Array(particleCount*3);
+const pColor = new Float32Array(particleCount*3);
+const palette = [new THREE.Color(0xd4af37),new THREE.Color(0xffdd88),new THREE.Color(0x6633aa),new THREE.Color(0xffffff)];
+for(let i=0;i<particleCount;i++){
+  pPos[i*3]=(Math.random()-0.5)*30; pPos[i*3+1]=(Math.random()-0.5)*25; pPos[i*3+2]=(Math.random()-0.5)*15;
+  const c=palette[Math.floor(Math.random()*palette.length)];
+  pColor[i*3]=c.r; pColor[i*3+1]=c.g; pColor[i*3+2]=c.b;
+}
+pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+pGeo.setAttribute('color',new THREE.BufferAttribute(pColor,3));
+const pMat = new THREE.PointsMaterial({size:0.4,vertexColors:true,transparent:true,opacity:0.6,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+const particles = new THREE.Points(pGeo,pMat); scene.add(particles);
 
-const goldPalette = [
-  new THREE.Color(0xd4af37),
-  new THREE.Color(0xf4e4c1),
-  new THREE.Color(0xffeebb),
-  new THREE.Color(0xc9a227),
-  new THREE.Color(0xe8d5a3)
-];
-
-for (let i = 0; i < particleCount; i++) {
-  pPos[i*3] = (Math.random() - 0.5) * 40;
-  pPos[i*3+1] = (Math.random() - 0.5) * 35;
-  pPos[i*3+2] = (Math.random() - 0.5) * 20;
-  const c = goldPalette[Math.floor(Math.random() * goldPalette.length)];
-  pColor[i*3] = c.r; pColor[i*3+1] = c.g; pColor[i*3+2] = c.b;
-  pSize[i] = Math.random() * 2 + 0.3;
+// 背景拱门
+const archGroup = new THREE.Group(); scene.add(archGroup);
+for(let i=-2;i<=2;i++){
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-3,0,0),new THREE.Vector3(-2,6,0),new THREE.Vector3(0,9,0),new THREE.Vector3(2,6,0),new THREE.Vector3(3,0,0)
+  ]);
+  const arch = new THREE.Mesh(new THREE.TubeGeometry(curve,20,0.2,6,false), new THREE.MeshBasicMaterial({color:0x1a1020,transparent:true,opacity:0.3}));
+  arch.position.set(i*10,-8,-15); archGroup.add(arch);
 }
 
-pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-pGeo.setAttribute('color', new THREE.BufferAttribute(pColor, 3));
-pGeo.setAttribute('size', new THREE.BufferAttribute(pSize, 1));
-
-const pMat = new THREE.PointsMaterial({
-  size: 0.4,
-  vertexColors: true,
-  transparent: true,
-  opacity: 0.7,
-  blending: THREE.AdditiveBlending,
-  sizeAttenuation: true
-});
-
-const particleSystem = new THREE.Points(pGeo, pMat);
-scene.add(particleSystem);
-
-// === 鼠标交互 ===
+// 交互
 const mouse = new THREE.Vector2();
-const raycaster = new THREE.Raycaster();
-let mouseWorld = new THREE.Vector3();
-let isBlooming = false;
-let bloomTime = 0;
-
-window.addEventListener('mousemove', (e) => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  mouseWorld.copy(raycaster.ray.direction).multiplyScalar(20).add(camera.position);
+window.addEventListener('mousemove',e=>{
+  mouse.x=(e.clientX/window.innerWidth)*2-1;
+  mouse.y=-(e.clientY/window.innerHeight)*2+1;
+});
+window.addEventListener('click',()=>{
+  masks[currentMask].visible=false;
+  currentMask=(currentMask+1)%masks.length;
+  masks[currentMask].visible=true;
+  const newColors=[[new THREE.Color(0xd4af37),new THREE.Color(0xffdd88),new THREE.Color(0x6633aa)],[new THREE.Color(0xffffff),new THREE.Color(0xd4af37),new THREE.Color(0xff4444)],[new THREE.Color(0x4444ff),new THREE.Color(0xd4af37),new THREE.Color(0xffffff)]][currentMask];
+  const colors=particles.geometry.attributes.color.array;
+  for(let i=0;i<particleCount;i++){
+    const c=newColors[Math.floor(Math.random()*newColors.length)];
+    colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b;
+  }
+  particles.geometry.attributes.color.needsUpdate=true;
 });
 
-window.addEventListener('click', () => {
-  isBlooming = true;
-  bloomTime = 0;
-});
-
-// === 动画 ===
 const clock = new THREE.Clock();
-
-function animate() {
+function animate(){
   requestAnimationFrame(animate);
-  const time = clock.getElapsedTime();
-  const delta = clock.getDelta();
-
-  // 藤蔓轻柔摆动
-  flowerGroup.children.forEach((child, i) => {
-    if (child.userData.curve) {
-      child.rotation.z = Math.sin(time * 0.3 + child.userData.phase) * 0.03;
-    }
-    if (child.userData.baseScale) {
-      const breathe = 1 + Math.sin(time * 1.5 + child.userData.phase) * 0.08;
-      child.scale.setScalar(child.userData.baseScale * breathe);
-    }
-  });
-
-  // 整体花卉跟随鼠标轻微倾斜
-  flowerGroup.rotation.y += (mouse.x * 0.2 - flowerGroup.rotation.y) * 0.02;
-  flowerGroup.rotation.x += (-mouse.y * 0.15 - flowerGroup.rotation.x) * 0.02;
-
-  // 粒子漂浮
-  const positions = particleSystem.geometry.attributes.position.array;
-  for (let i = 0; i < particleCount; i++) {
-    positions[i*3+1] += Math.sin(time * 0.5 + i * 0.1) * 0.008;
-    positions[i*3] += Math.cos(time * 0.3 + i * 0.05) * 0.003;
+  const time=clock.getElapsedTime();
+  maskGroup.position.y=Math.sin(time*0.5)*0.5;
+  maskGroup.rotation.y=mouse.x*0.4+Math.sin(time*0.2)*0.1;
+  maskGroup.rotation.x=-mouse.y*0.2;
+  const pos=particles.geometry.attributes.position.array;
+  for(let i=0;i<particleCount;i++){
+    pos[i*3+1]+=Math.sin(time*0.8+i*0.1)*0.01;
+    pos[i*3]+=Math.cos(time*0.5+i*0.05)*0.005;
+    pos[i*3+2]+=Math.sin(time*0.3+i*0.08)*0.003;
   }
-  particleSystem.geometry.attributes.position.needsUpdate = true;
-  particleSystem.rotation.y = time * 0.03;
-
-  // 绽放效果
-  if (isBlooming) {
-    bloomTime += delta;
-    const bloomFactor = Math.sin(bloomTime * 3) * 0.5 + 0.5;
-    flowerGroup.children.forEach(child => {
-      if (child.userData.baseScale) {
-        child.scale.setScalar(child.userData.baseScale * (1 + bloomFactor * 0.5));
-      }
-    });
-    pMat.size = 0.4 + bloomFactor * 1.0;
-    pMat.opacity = 0.7 + bloomFactor * 0.3;
-    goldLight.intensity = 1.2 + bloomFactor * 2.0;
-    if (bloomTime > 2.5) isBlooming = false;
-  } else {
-    pMat.size = 0.4;
-    pMat.opacity = 0.7;
-    goldLight.intensity = 1.2 + Math.sin(time) * 0.2;
-  }
-
-  // 光源微妙变化
-  goldLight.position.x = 10 + Math.sin(time * 0.5) * 3;
-  goldLight.position.y = 10 + Math.cos(time * 0.3) * 2;
-
-  renderer.render(scene, camera);
+  particles.geometry.attributes.position.needsUpdate=true;
+  particles.rotation.y=time*0.05;
+  goldSpot.intensity=1.5+Math.sin(time*0.7)*0.3;
+  purpleSpot.intensity=0.8+Math.cos(time*0.5)*0.2;
+  rimLight.intensity=0.5+Math.sin(time*0.3)*0.2;
+  renderer.render(scene,camera);
 }
-
 animate();
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(window.innerWidth,window.innerHeight);
 });
 </script>
 </body>

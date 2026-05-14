@@ -3,410 +3,380 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>哥特式光影教堂 — 神圣之光</title>
+<title>维也纳分离派 — AutoResearch TOP5</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,700;1,400&family=Noto+Serif+SC:wght@300;400;600;700&display=swap');
+:root {
+  --bg: #0a0a0a;
+  --text: #d4af37;
+  --text-dim: rgba(212,175,55,0.55);
+  --text-faint: rgba(212,175,55,0.2);
+  --glass-bg: rgba(10,10,10,0.65);
+  --glass-border: rgba(212,175,55,0.12);
+  --accent: #d4af37;
+  --accent-dim: rgba(212,175,55,0.3);
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
-  background: #050508;
-  overflow: hidden;
-  font-family: 'Cinzel', serif;
-  color: #e0d5c5;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif SC', 'Georgia', serif;
+  overflow-x: hidden;
 }
-#canvas-container {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  z-index: 1;
+.nav-top, .nav-bottom {
+  position: fixed; left: 0; width: 100%; z-index: 100;
+  display: flex; justify-content: center; align-items: center; gap: 24px;
+  padding: 14px 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  font-family: 'Playfair Display', serif;
+  font-size: 0.8rem; letter-spacing: 0.1em;
 }
-.overlay {
-  position: fixed;
-  z-index: 10;
-  pointer-events: none;
+.nav-top { top: 0; }
+.nav-bottom { bottom: 0; border-bottom: none; border-top: 1px solid var(--glass-border); }
+.nav-top a, .nav-bottom a {
+  color: var(--text-dim); text-decoration: none;
+  transition: color 0.3s ease; padding: 4px 12px;
 }
-.title {
-  top: 8%;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
+.nav-top a:hover, .nav-bottom a:hover { color: var(--accent); }
+
+.hero-section { position: relative; width: 100%; height: 100vh; overflow: hidden; }
+#canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+.hero-overlay {
+  position: absolute; z-index: 10; pointer-events: none;
+  top: 12%; left: 8%;
 }
-.title h1 {
-  font-size: 3rem;
-  font-weight: 400;
-  letter-spacing: 0.4em;
-  color: rgba(224,213,197,0.9);
-  text-shadow: 0 0 60px rgba(212,175,55,0.2);
-  opacity: 0;
-  animation: divineReveal 2s ease 1s forwards;
+.hero-overlay h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 300; font-style: italic;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  text-shadow: 0 0 60px rgba(212,175,55,0.3), 0 2px 10px rgba(0,0,0,0.8);
+  opacity: 0; animation: fadeInUp 1.5s ease 0.5s forwards;
 }
-.title .subtitle {
-  font-size: 0.9rem;
-  color: rgba(224,213,197,0.35);
-  margin-top: 16px;
-  letter-spacing: 0.5em;
-  opacity: 0;
-  animation: divineReveal 2s ease 1.8s forwards;
+.hero-overlay .subtitle {
+  font-size: 0.95rem; color: rgba(212,175,55,0.5);
+  margin-top: 16px; letter-spacing: 0.3em; text-transform: uppercase;
+  opacity: 0; animation: fadeInUp 1.5s ease 0.8s forwards;
 }
-@keyframes divineReveal {
-  from { opacity: 0; transform: translateY(30px); }
+.hero-overlay .divider {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  margin-top: 20px;
+  opacity: 0; animation: fadeInUp 1.5s ease 1s forwards;
+}
+.hero-score {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem; color: var(--accent);
+  margin-top: 20px; letter-spacing: 0.1em;
+  opacity: 0; animation: fadeInUp 1.5s ease 1.2s forwards;
+}
+.hero-desc {
+  font-size: 0.85rem; color: var(--text-dim);
+  margin-top: 8px; letter-spacing: 0.05em;
+  opacity: 0; animation: fadeInUp 1.5s ease 1.4s forwards;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.info {
-  bottom: 8%;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
+.hero-hint {
+  position: absolute; bottom: 8%; right: 8%; z-index: 10;
+  pointer-events: none; text-align: right;
 }
-.info span {
-  display: block;
-  font-size: 0.75rem;
-  color: rgba(224,213,197,0.2);
-  letter-spacing: 0.2em;
+.hero-hint span {
+  display: block; font-size: 0.7rem;
+  color: var(--text-faint); letter-spacing: 0.15em;
   margin-bottom: 6px;
 }
-.cross {
-  position: fixed;
-  top: 8%;
-  right: 8%;
-  width: 30px;
-  height: 40px;
-  pointer-events: none;
-  z-index: 10;
-  opacity: 0;
-  animation: divineReveal 2s ease 2.5s forwards;
+
+.content-section {
+  position: relative; z-index: 20;
+  background: rgba(10,10,10,0.95);
+  padding: 80px 20px 120px;
 }
-.cross::before, .cross::after {
-  content: '';
-  position: absolute;
-  background: rgba(212,175,55,0.3);
+.content-wrap { max-width: 720px; margin: 0 auto; }
+.content-block { margin-bottom: 60px; }
+.content-block h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px;
 }
-.cross::before {
-  width: 2px; height: 100%;
-  left: 50%; transform: translateX(-50%);
+.content-block h2::before {
+  content: ''; display: block; width: 24px; height: 2px; background: var(--accent);
 }
-.cross::after {
-  width: 60%; height: 2px;
-  top: 30%; left: 20%;
+.content-block p {
+  font-size: 1rem; line-height: 1.9; color: var(--text-dim); text-align: justify;
+}
+.content-block ul { list-style: none; padding: 0; }
+.content-block ul li {
+  font-size: 0.95rem; line-height: 2; color: var(--text-dim);
+  padding-left: 20px; position: relative;
+}
+.content-block ul li::before {
+  content: '›'; position: absolute; left: 0;
+  color: var(--accent); font-size: 1.2rem;
+}
+.score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 480px) { .score-grid { grid-template-columns: 1fr; } }
+.score-item { display: flex; flex-direction: column; gap: 6px; }
+.score-label { font-size: 0.8rem; color: var(--text-dim); letter-spacing: 0.05em; }
+.score-bar-wrap { height: 4px; background: rgba(212,175,55,0.08); border-radius: 2px; overflow: hidden; }
+.score-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 1s ease; }
+.score-value { font-family: 'Playfair Display', serif; font-size: 0.85rem; color: var(--text); text-align: right; }
+.meta-line { font-size: 0.85rem; color: var(--text-faint); letter-spacing: 0.05em; line-height: 2; }
+.meta-line strong { color: var(--text-dim); font-weight: 400; }
+.keywords { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.keyword {
+  font-size: 0.75rem; padding: 4px 12px;
+  border: 1px solid var(--glass-border); border-radius: 100px;
+  color: var(--text-faint); letter-spacing: 0.05em;
 }
 </style>
 </head>
 <body>
-<div id="canvas-container"></div>
-<div class="cross"></div>
-<div class="overlay title">
-  <h1>LUX AETERNA</h1>
-  <div class="subtitle">永恒之光</div>
+
+<nav class="nav-top">
+  <a href="v003.html">← 上一作品</a>
+  <a href="index.html">封面</a>
+  <a href="v005.html">下一作品 →</a>
+</nav>
+
+<div class="hero-section">
+  <div id="canvas-container"></div>
+  <div class="hero-overlay">
+    <h1>Wiener Secession</h1>
+    <div class="subtitle">维也纳分离派 · 1897</div>
+    <div class="divider"></div>
+    <div class="hero-score">8.2 / 10 — Round 2</div>
+    <div class="hero-desc">曲线花卉 · 金色绽放 · 新艺术优雅</div>
+  </div>
+  <div class="hero-hint">
+    <span>移动鼠标唤醒花卉</span>
+    <span>点击绽放金色光芒</span>
+  </div>
 </div>
-<div class="overlay info">
-  <span>移动鼠标改变光束角度</span>
-  <span>点击召唤神圣光辉</span>
+
+<div class="content-section">
+  <div class="content-wrap">
+
+    <div class="content-block">
+      <h2>设计灵感</h2>
+      <p>维也纳分离派（Wiener Secession）诞生于1897年，由古斯塔夫·克里姆特（Gustav Klimt）等先锋艺术家创立，是对传统学院派美学的反叛。分离派主张艺术应自由探索一切表现形式，不受历史风格的束缚。克里姆特的黄金时期作品——《吻》《阿黛尔·布洛赫-鲍尔肖像》——以金箔贴饰、螺旋曲线和有机花卉图案闻名，将拜占庭镶嵌画的庄重与Art Nouveau的柔美融为一体。</p>
+      <p style="margin-top:12px;">网页转译中，我们用Three.js的CatmullRomCurve3与TubeGeometry绘制了数条蜿蜒向上的金色藤蔓主茎，再以自定义Shape的贝塞尔曲线生成18片大小不一的花瓣，围绕花心呈放射状排列。8簇小花环绕主花，每簇5片微型花瓣。400个金色粒子在画面中飘散，整体色调以金、暖白、淡橙为主，营造出克里姆特画作般的奢华氛围。</p>
+      <div class="keywords">
+        <span class="keyword">曲线花卉</span>
+        <span class="keyword">金色</span>
+        <span class="keyword">女性化</span>
+        <span class="keyword">海报</span>
+        <span class="keyword">新艺术</span>
+        <span class="keyword">优雅</span>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h2>技术亮点</h2>
+      <ul>
+        <li><strong>TubeGeometry藤蔓系统</strong> — 3条主茎使用CatmullRomCurve3定义路径，TubeGeometry生成管状几何体，金属度0.8营造金箔质感</li>
+        <li><strong>贝塞尔花瓣Shape</strong> — 自定义Shape使用bezierCurveTo绘制不对称花瓣轮廓，ShapeGeometry生成平面花瓣mesh</li>
+        <li><strong>呼吸动画</strong> — 每片花瓣的scale随时间正弦波动（±8%），模拟真实花卉的呼吸节奏</li>
+        <li><strong>绽放交互</strong> — 点击触发2.5秒bloom动画：花瓣scale放大50%、粒子size从0.4增至1.4、PointLight强度从1.2升至3.2</li>
+        <li><strong>鼠标跟随倾斜</strong> — 花卉组rotation通过lerp平滑追踪鼠标位置，营造"花朵注视着你"的有机感</li>
+        <li><strong>三色光源体系</strong> — 金色主光（暖调）+ 橙色辅光（侧方）+ 蓝色背光（冷调），形成色彩对比与层次</li>
+      </ul>
+    </div>
+
+    <div class="content-block">
+      <h2>评分详情</h2>
+      <div class="score-grid">
+        <div class="score-item">
+          <div class="score-label">视觉设计 Visual</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:85%"></div></div>
+          <div class="score-value">8.5</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">3D效果 3D Effects</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div>
+          <div class="score-value">8.0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">动态表现 Motion</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div>
+          <div class="score-value">8.0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">交互设计 Interaction</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:75%"></div></div>
+          <div class="score-value">7.5</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">代码质量 Code Quality</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div>
+          <div class="score-value">8.0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h2>实验数据</h2>
+      <div class="meta-line"><strong>实验轮次：</strong>Round 2（第2轮）</div>
+      <div class="meta-line"><strong>突变策略：</strong>Mutation-t041 — 维也纳分离派新艺术风格定向突变</div>
+      <div class="meta-line"><strong>创作时长：</strong>约40分钟</div>
+      <div class="meta-line"><strong>最终得分：</strong>8.2 / 10（TOP4）</div>
+      <div class="meta-line"><strong>通过状态：</strong>✅ 通过（Pass）</div>
+    </div>
+
+  </div>
 </div>
+
+<nav class="nav-bottom">
+  <a href="v003.html">← 上一作品</a>
+  <a href="index.html">封面</a>
+  <a href="v005.html">下一作品 →</a>
+</nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// === 哥特式光影教堂 Three.js 场景 ===
+// === 维也纳分离派 Three.js（简化版）===
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x050508, 0.008);
-
-const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 2, 25);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x050508, 1);
+scene.fog = new THREE.FogExp2(0x0a0a0a, 0.015);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0,0,35);
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setClearColor(0x0a0a0a,1);
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-// === 光源系统 ===
-const ambientLight = new THREE.AmbientLight(0x1a1530, 0.3);
-scene.add(ambientLight);
+const ambientLight = new THREE.AmbientLight(0x2a1a0a,0.4); scene.add(ambientLight);
+const goldLight = new THREE.PointLight(0xd4af37,1.2,100);
+goldLight.position.set(10,10,15); scene.add(goldLight);
+const warmLight = new THREE.PointLight(0xff8844,0.6,80);
+warmLight.position.set(-10,-5,10); scene.add(warmLight);
+const backLight = new THREE.PointLight(0x4466aa,0.4,60);
+backLight.position.set(0,0,-10); scene.add(backLight);
 
-// 主光束（从窗户射入）
-const sunLight = new THREE.DirectionalLight(0xffddaa, 0.8);
-sunLight.position.set(10, 20, 10);
-scene.add(sunLight);
-
-// 彩色玻璃窗光源
-const stainedColors = [0xff3333, 0xff8800, 0xffdd00, 0x33ff66, 0x3388ff, 0x8833ff];
-const windowLights = [];
-for (let i = 0; i < 6; i++) {
-  const light = new THREE.PointLight(stainedColors[i], 0.4, 40);
-  light.position.set(-15 + i * 6, 8, -5);
-  scene.add(light);
-  windowLights.push(light);
+const flowerGroup = new THREE.Group(); scene.add(flowerGroup);
+function createFlowerCurve(pts,color,thick,op){
+  const curve=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p[0],p[1],p[2])));
+  const geo=new THREE.TubeGeometry(curve,64,thick,8,false);
+  const mat=new THREE.MeshStandardMaterial({color:color,metalness:0.8,roughness:0.2,emissive:color,emissiveIntensity:0.15,transparent:true,opacity:op});
+  const mesh=new THREE.Mesh(geo,mat);
+  mesh.userData={curve:curve,phase:Math.random()*Math.PI*2};
+  return mesh;
+}
+function createPetalShape(x,y,z,sc,rot,color){
+  const shape=new THREE.Shape();
+  shape.moveTo(0,0);
+  shape.bezierCurveTo(0.5,0.3,0.8,1.2,0,2);
+  shape.bezierCurveTo(-0.8,1.2,-0.5,0.3,0,0);
+  const geo=new THREE.ShapeGeometry(shape,12);
+  const mat=new THREE.MeshStandardMaterial({color:color,metalness:0.6,roughness:0.3,emissive:color,emissiveIntensity:0.1,side:THREE.DoubleSide,transparent:true,opacity:0.85});
+  const mesh=new THREE.Mesh(geo,mat);
+  mesh.position.set(x,y,z); mesh.scale.set(sc,sc,sc); mesh.rotation.z=rot;
+  mesh.userData={baseScale:sc,phase:Math.random()*Math.PI*2};
+  return mesh;
 }
 
-// 地面反射光
-const groundLight = new THREE.PointLight(0xffddaa, 0.3, 30);
-groundLight.position.set(0, -5, 5);
-scene.add(groundLight);
-
-// === 哥特式建筑结构 ===
-const cathedralGroup = new THREE.Group();
-scene.add(cathedralGroup);
-
-// 地面
-const floorGeometry = new THREE.PlaneGeometry(60, 80, 20, 20);
-const floorMaterial = new THREE.MeshStandardMaterial({
-  color: 0x1a1a2e,
-  metalness: 0.1,
-  roughness: 0.9,
-  transparent: true,
-  opacity: 0.8
-});
-const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = -8;
-cathedralGroup.add(floor);
-
-// 柱子
-function createColumn(x, z, height) {
-  const geometry = new THREE.CylinderGeometry(0.6, 0.8, height, 8);
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x2a2538,
-    metalness: 0.3,
-    roughness: 0.7
-  });
-  const column = new THREE.Mesh(geometry, material);
-  column.position.set(x, -8 + height/2, z);
-  
-  // 柱头装饰
-  const capGeometry = new THREE.ConeGeometry(1.0, 1.5, 8);
-  const cap = new THREE.Mesh(capGeometry, material);
-  cap.position.set(x, -8 + height + 0.75, z);
-  cathedralGroup.add(cap);
-  
-  return column;
-}
-
-for (let i = -2; i <= 2; i++) {
-  cathedralGroup.add(createColumn(i * 8, -10, 18));
-  cathedralGroup.add(createColumn(i * 8, 5, 18));
-}
-
-// 尖拱结构
-function createArch(x, z, width, height) {
-  const curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-width/2, 0, 0),
-    new THREE.Vector3(-width/3, height * 0.7, 0),
-    new THREE.Vector3(0, height, 0),
-    new THREE.Vector3(width/3, height * 0.7, 0),
-    new THREE.Vector3(width/2, 0, 0)
-  ]);
-  const geometry = new THREE.TubeGeometry(curve, 20, 0.4, 6, false);
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x3a3548,
-    metalness: 0.4,
-    roughness: 0.6
-  });
-  const arch = new THREE.Mesh(geometry, material);
-  arch.position.set(x, 10, z);
-  return arch;
-}
-
-for (let i = -2; i < 2; i++) {
-  cathedralGroup.add(createArch(i * 8 + 4, -10, 8, 6));
-  cathedralGroup.add(createArch(i * 8 + 4, 5, 8, 6));
-}
-
-// === 彩色玻璃窗 ===
-function createStainedGlass(x, y, z, color, size) {
-  const group = new THREE.Group();
-  
-  // 窗框（圆形玫瑰窗风格）
-  const frameGeometry = new THREE.RingGeometry(size * 0.9, size, 16);
-  const frameMaterial = new THREE.MeshStandardMaterial({
-    color: 0x4a4560,
-    metalness: 0.5,
-    roughness: 0.5,
-    side: THREE.DoubleSide
-  });
-  const frame = new THREE.Mesh(frameGeometry, frameMaterial);
-  group.add(frame);
-  
-  // 彩色玻璃
-  const glassGeometry = new THREE.CircleGeometry(size * 0.85, 16);
-  const glassMaterial = new THREE.MeshStandardMaterial({
-    color: color,
-    transparent: true,
-    opacity: 0.5,
-    emissive: color,
-    emissiveIntensity: 0.3,
-    side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending
-  });
-  const glass = new THREE.Mesh(glassGeometry, glassMaterial);
-  group.add(glass);
-  
-  // 窗格线条
-  for (let i = 0; i < 6; i++) {
-    const angle = (i / 6) * Math.PI * 2;
-    const lineGeometry = new THREE.BoxGeometry(0.05, size, 0.05);
-    const line = new THREE.Mesh(lineGeometry, frameMaterial);
-    line.position.x = Math.cos(angle) * size * 0.4;
-    line.position.y = Math.sin(angle) * size * 0.4;
-    line.rotation.z = angle;
-    group.add(line);
-  }
-  
-  group.position.set(x, y, z);
-  return group;
-}
-
-const glassPositions = [
-  { x: -12, y: 5, color: 0xff3333, size: 2.5 },
-  { x: -6, y: 6, color: 0xff8800, size: 2 },
-  { x: 0, y: 7, color: 0xffdd00, size: 3 },
-  { x: 6, y: 6, color: 0x33ff66, size: 2 },
-  { x: 12, y: 5, color: 0x3388ff, size: 2.5 }
+const vines=[
+  {pts:[[0,-12,0],[1,-8,1],[-1,-4,-1],[2,0,2],[0,5,0],[-1,10,-1]],color:0xc9a227,thick:0.12},
+  {pts:[[0,-12,0],[-2,-7,-1],[1,-3,1],[-1,2,-2],[2,8,1]],color:0xb8941f,thick:0.08},
+  {pts:[[0,-12,0],[2,-6,2],[0,0,-1],[-2,6,2],[1,11,0]],color:0xd4af37,thick:0.06}
 ];
+vines.forEach(v=>flowerGroup.add(createFlowerCurve(v.pts,v.color,v.thick,0.9)));
 
-glassPositions.forEach(gp => {
-  cathedralGroup.add(createStainedGlass(gp.x, gp.y, -12, gp.color, gp.size));
-});
-
-// === 光束粒子系统（God Rays）===
-const rayCount = 300;
-const rayGeometry = new THREE.BufferGeometry();
-const rayPositions = new Float32Array(rayCount * 3);
-const rayColors = new Float32Array(rayCount * 3);
-
-for (let i = 0; i < rayCount; i++) {
-  const windowIdx = Math.floor(Math.random() * glassPositions.length);
-  const gp = glassPositions[windowIdx];
-  rayPositions[i*3] = gp.x + (Math.random() - 0.5) * 2;
-  rayPositions[i*3+1] = gp.y - Math.random() * 15;
-  rayPositions[i*3+2] = gp.z + Math.random() * 20;
-  
-  const color = new THREE.Color(gp.color);
-  rayColors[i*3] = color.r;
-  rayColors[i*3+1] = color.g;
-  rayColors[i*3+2] = color.b;
+const petalColors=[0xf4e4c1,0xe8d5a3,0xd4af37,0xc9a227,0xffeebb,0xf0d878];
+for(let i=0;i<18;i++){
+  const a=(i/18)*Math.PI*2;
+  const r=3+Math.random()*4;
+  const petal=createPetalShape(Math.cos(a)*r,Math.sin(a)*r*0.6+2,(Math.random()-0.5)*3,0.8+Math.random()*1.2,a+Math.PI/2,petalColors[Math.floor(Math.random()*petalColors.length)]);
+  flowerGroup.add(petal);
+}
+for(let i=0;i<8;i++){
+  const a=(i/8)*Math.PI*2;
+  const x=Math.cos(a)*(6+Math.random()*4);
+  const y=Math.sin(a)*(4+Math.random()*3)-2;
+  const z=(Math.random()-0.5)*4;
+  for(let j=0;j<5;j++){
+    const pa=(j/5)*Math.PI*2;
+    flowerGroup.add(createPetalShape(x+Math.cos(pa)*0.8,y+Math.sin(pa)*0.6,z,0.4,pa+Math.PI/2,0xe8d5a3));
+  }
 }
 
-rayGeometry.setAttribute('position', new THREE.BufferAttribute(rayPositions, 3));
-rayGeometry.setAttribute('color', new THREE.BufferAttribute(rayColors, 3));
-
-const rayMaterial = new THREE.PointsMaterial({
-  size: 0.3,
-  vertexColors: true,
-  transparent: true,
-  opacity: 0.4,
-  blending: THREE.AdditiveBlending,
-  sizeAttenuation: true
-});
-
-const godRays = new THREE.Points(rayGeometry, rayMaterial);
-scene.add(godRays);
-
-// === 飘浮尘埃粒子 ===
-const dustCount = 200;
-const dustGeometry = new THREE.BufferGeometry();
-const dustPositions = new Float32Array(dustCount * 3);
-
-for (let i = 0; i < dustCount; i++) {
-  dustPositions[i*3] = (Math.random() - 0.5) * 40;
-  dustPositions[i*3+1] = -8 + Math.random() * 20;
-  dustPositions[i*3+2] = (Math.random() - 0.5) * 30;
+const particleCount=400;
+const pGeo=new THREE.BufferGeometry();
+const pPos=new Float32Array(particleCount*3);
+const pColor=new Float32Array(particleCount*3);
+const goldPalette=[new THREE.Color(0xd4af37),new THREE.Color(0xf4e4c1),new THREE.Color(0xffeebb),new THREE.Color(0xc9a227),new THREE.Color(0xe8d5a3)];
+for(let i=0;i<particleCount;i++){
+  pPos[i*3]=(Math.random()-0.5)*40; pPos[i*3+1]=(Math.random()-0.5)*35; pPos[i*3+2]=(Math.random()-0.5)*20;
+  const c=goldPalette[Math.floor(Math.random()*goldPalette.length)];
+  pColor[i*3]=c.r; pColor[i*3+1]=c.g; pColor[i*3+2]=c.b;
 }
+pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+pGeo.setAttribute('color',new THREE.BufferAttribute(pColor,3));
+const pMat=new THREE.PointsMaterial({size:0.4,vertexColors:true,transparent:true,opacity:0.7,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+const particleSystem=new THREE.Points(pGeo,pMat); scene.add(particleSystem);
 
-dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-
-const dustMaterial = new THREE.PointsMaterial({
-  color: 0xffddaa,
-  size: 0.15,
-  transparent: true,
-  opacity: 0.3,
-  blending: THREE.AdditiveBlending
+const mouse=new THREE.Vector2();
+let isBlooming=false, bloomTime=0;
+window.addEventListener('mousemove',e=>{
+  mouse.x=(e.clientX/window.innerWidth)*2-1;
+  mouse.y=-(e.clientY/window.innerHeight)*2+1;
 });
+window.addEventListener('click',()=>{ isBlooming=true; bloomTime=0; });
 
-const dust = new THREE.Points(dustGeometry, dustMaterial);
-scene.add(dust);
-
-// === 鼠标交互 ===
-const mouse = new THREE.Vector2();
-let isPraying = false;
-let prayTime = 0;
-
-window.addEventListener('mousemove', (e) => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-});
-
-window.addEventListener('click', () => {
-  isPraying = true;
-  prayTime = 0;
-});
-
-// === 动画 ===
-const clock = new THREE.Clock();
-
-function animate() {
+const clock=new THREE.Clock();
+function animate(){
   requestAnimationFrame(animate);
-  const time = clock.getElapsedTime();
-  const delta = clock.getDelta();
+  const time=clock.getElapsedTime();
+  const delta=clock.getDelta();
 
-  // 彩色玻璃窗脉动
-  windowLights.forEach((light, i) => {
-    light.intensity = 0.3 + Math.sin(time * 0.5 + i * 1.2) * 0.2;
-  });
-
-  // 光束飘落
-  const rPos = godRays.geometry.attributes.position.array;
-  for (let i = 0; i < rayCount; i++) {
-    rPos[i*3+1] -= 0.02;
-    rPos[i*3] += Math.sin(time + i * 0.1) * 0.005;
-    if (rPos[i*3+1] < -8) {
-      const windowIdx = Math.floor(Math.random() * glassPositions.length);
-      const gp = glassPositions[windowIdx];
-      rPos[i*3] = gp.x + (Math.random() - 0.5) * 2;
-      rPos[i*3+1] = gp.y;
-      rPos[i*3+2] = gp.z;
+  flowerGroup.children.forEach(child=>{
+    if(child.userData.curve) child.rotation.z=Math.sin(time*0.3+child.userData.phase)*0.03;
+    if(child.userData.baseScale){
+      const breathe=1+Math.sin(time*1.5+child.userData.phase)*0.08;
+      child.scale.setScalar(child.userData.baseScale*breathe);
     }
+  });
+  flowerGroup.rotation.y+=(mouse.x*0.2-flowerGroup.rotation.y)*0.02;
+  flowerGroup.rotation.x+=(-mouse.y*0.15-flowerGroup.rotation.x)*0.02;
+
+  const pos=particleSystem.geometry.attributes.position.array;
+  for(let i=0;i<particleCount;i++){
+    pos[i*3+1]+=Math.sin(time*0.5+i*0.1)*0.008;
+    pos[i*3]+=Math.cos(time*0.3+i*0.05)*0.003;
   }
-  godRays.geometry.attributes.position.needsUpdate = true;
+  particleSystem.geometry.attributes.position.needsUpdate=true;
+  particleSystem.rotation.y=time*0.03;
 
-  // 尘埃漂浮
-  const dPos = dust.geometry.attributes.position.array;
-  for (let i = 0; i < dustCount; i++) {
-    dPos[i*3+1] += Math.sin(time * 0.3 + i * 0.05) * 0.003;
-    dPos[i*3] += Math.cos(time * 0.2 + i * 0.03) * 0.002;
-  }
-  dust.geometry.attributes.position.needsUpdate = true;
-
-  // 相机缓慢移动
-  camera.position.x = Math.sin(time * 0.1) * 3;
-  camera.position.y = 2 + Math.sin(time * 0.15) * 1;
-  camera.lookAt(0, 2, 0);
-
-  // 鼠标影响光源角度
-  sunLight.position.x = 10 + mouse.x * 5;
-  sunLight.position.y = 20 + mouse.y * 5;
-
-  // 祈祷效果
-  if (isPraying) {
-    prayTime += delta;
-    const prayFactor = Math.sin(prayTime * 2) * 0.5 + 0.5;
-    sunLight.intensity = 0.8 + prayFactor * 1.5;
-    godRays.material.opacity = 0.4 + prayFactor * 0.4;
-    godRays.material.size = 0.3 + prayFactor * 0.5;
-    windowLights.forEach(l => { l.intensity = 0.5 + prayFactor; });
-    if (prayTime > 3) isPraying = false;
+  if(isBlooming){
+    bloomTime+=delta;
+    const bf=Math.sin(bloomTime*3)*0.5+0.5;
+    flowerGroup.children.forEach(child=>{
+      if(child.userData.baseScale) child.scale.setScalar(child.userData.baseScale*(1+bf*0.5));
+    });
+    pMat.size=0.4+bf*1.0; pMat.opacity=0.7+bf*0.3;
+    goldLight.intensity=1.2+bf*2.0;
+    if(bloomTime>2.5) isBlooming=false;
   } else {
-    sunLight.intensity = 0.8 + Math.sin(time * 0.3) * 0.1;
-    godRays.material.opacity = 0.4;
-    godRays.material.size = 0.3;
+    pMat.size=0.4; pMat.opacity=0.7;
+    goldLight.intensity=1.2+Math.sin(time)*0.2;
   }
-
-  renderer.render(scene, camera);
+  goldLight.position.x=10+Math.sin(time*0.5)*3;
+  goldLight.position.y=10+Math.cos(time*0.3)*2;
+  renderer.render(scene,camera);
 }
-
 animate();
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(window.innerWidth,window.innerHeight);
 });
 </script>
 </body>
