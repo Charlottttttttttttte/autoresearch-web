@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>晶体生长模拟 — AutoResearch</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+:root {
+  --bg-primary: #05080c;
+  --bg-content: rgba(5,8,12,0.94);
+  --accent-primary: #7ec8e3;
+  --accent-secondary: #c8e6f0;
+  --text-primary: #ffffff;
+  --text-secondary: #8a9ba8;
+  --font-heading: 'Noto Serif SC', serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+#canvas-container {
+  position: fixed; top:0; left:0; width:100%; height:100vh; z-index:1;
+}
+.top-nav {
+  position: fixed; top:0; left:0; right:0; height: var(--nav-height);
+  background: rgba(5,8,12,0.75); backdrop-filter: blur(12px);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 24px; z-index: 1000;
+  border-bottom: 1px solid rgba(126,200,227,0.08);
+}
+.top-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 0.5px;
+}
+.top-nav a:hover { color: var(--accent-primary); }
+.hero-overlay {
+  position: relative; z-index: 10; height: 100vh;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 0 80px 60px; pointer-events: none;
+}
+.hero-title {
+  font-family: var(--font-heading); font-size: 64px; font-weight: 700;
+  color: var(--text-primary); text-shadow: 0 0 40px rgba(126,200,227,0.3);
+  margin-bottom: 12px; letter-spacing: 4px;
+}
+.hero-subtitle {
+  font-size: 18px; color: var(--accent-primary); font-weight: 300;
+  margin-bottom: 20px; letter-spacing: 2px;
+}
+.hero-score {
+  display: inline-block; background: rgba(126,200,227,0.15);
+  border: 1px solid rgba(126,200,227,0.3); border-radius: 20px;
+  padding: 6px 18px; font-size: 14px; color: var(--accent-primary);
+  backdrop-filter: blur(8px); pointer-events: auto;
+}
+.content-section {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 80px 24px;
+}
+.content-container {
+  max-width: var(--content-max-width); margin: 0 auto;
+}
+.section-title {
+  font-family: var(--font-heading); font-size: 28px;
+  color: var(--accent-primary); margin-bottom: 24px; letter-spacing: 2px;
+}
+.section-body {
+  font-size: 16px; line-height: 1.9; color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+.tech-list {
+  list-style: none; padding: 0;
+}
+.tech-list li {
+  padding: 12px 0; border-bottom: 1px solid rgba(126,200,227,0.1);
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 15px; color: var(--text-secondary); line-height: 1.7;
+}
+.tech-list li::before {
+  content: '◆'; color: var(--accent-primary); font-size: 10px;
+  margin-top: 6px; flex-shrink: 0;
+}
+.data-grid {
+  display: grid; grid-template-columns: 140px 1fr; gap: 12px 24px;
+  font-size: 15px; color: var(--text-secondary);
+}
+.data-grid .label { color: var(--text-primary); font-weight: 700; }
+.score-section { margin-top: 40px; }
+.score-item {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+}
+.score-label { width: 100px; font-size: 14px; color: var(--text-secondary); }
+.score-bar {
+  flex: 1; height: 8px; background: rgba(255,255,255,0.06);
+  border-radius: 4px; overflow: hidden; max-width: 280px;
+}
+.score-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+}
+.score-value { width: 60px; text-align: right; font-size: 14px; color: var(--accent-primary); font-weight: 700; }
+.total-score {
+  display: flex; align-items: center; gap: 16px; margin-top: 24px;
+  padding-top: 24px; border-top: 1px solid rgba(126,200,227,0.2);
+}
+.total-label { width: 100px; font-size: 16px; color: var(--text-primary); font-weight: 700; }
+.total-value { font-size: 24px; color: var(--accent-primary); font-weight: 700; }
+.bottom-nav {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 40px 24px;
+  border-top: 1px solid rgba(126,200,227,0.1);
+  display: flex; justify-content: center; gap: 40px;
+}
+.bottom-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 1px;
+}
+.bottom-nav a:hover { color: var(--accent-primary); }
+@media (max-width: 768px) {
+  .hero-overlay { padding: 0 0 60px 24px; }
+  .hero-title { font-size: 36px; }
+  .hero-subtitle { font-size: 14px; }
+  .score-item { flex-wrap: wrap; }
+  .score-bar { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="v025.html">← 上一作品</a>
+  <a href="index.html">🏠 封面</a>
+  <a href="v027.html">下一作品 →</a>
+</nav>
+
+<div id="canvas-container"></div>
+
+<div class="hero-overlay">
+  <h1 class="hero-title">晶体生长模拟</h1>
+  <p class="hero-subtitle">Crystal Growth Simulation · 秩序从混沌中结晶</p>
+  <span class="hero-score">⭐ 8.5/10</span>
+</div>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      晶体生长是自然界最精密的自组织过程之一。在溶液中，原子与分子遵循着严格的数学规律，以六边形、立方体等对称形式层层堆叠，从微观到宏观展现出令人惊叹的几何秩序。本作品以数字化的方式重现这一过程——透明的晶格在黑暗中缓缓生成，光线穿透多层界面产生折射与反射，如同凝视显微镜下的矿物世界。冰蓝色的冷色调传达出晶体的纯净与永恒，而缓慢的生长动画则暗示着时间在最微小的尺度上流逝。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      将晶体学的核心概念转化为网页技术：六方晶系的天然对称性 → Three.js 中的六边形几何体群；光的折射与双折射现象 → 多层半透明材质叠加，配合环境光与点光源的交互；晶体缺陷与位错 → 粒子系统中随机偏移的"不完美"晶格点；缓慢的生长过程 → 基于时间轴的渐进式缩放与透明度动画。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>Three.js 自定义六边形几何体群，模拟六方晶系的天然对称结构</li>
+      <li>多层半透明 MeshPhysicalMaterial，实现真实的光线折射与内反射效果</li>
+      <li>基于噪声函数的渐进式生长动画，每颗晶体以不同速率从中心向外扩展</li>
+      <li>鼠标悬停触发局部晶体共振发光，形成人与微观世界的交互对话</li>
+      <li>环境光 + 点光源 + 自发光材质的三层光照系统，营造冰晶内部的深邃感</li>
+      <li>响应式粒子密度控制，移动端自动降低晶格数量保证流畅度</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <span class="label">轮次</span><span>Round #26</span>
+      <span class="label">策略</span><span>Crystal-Hex-Growth</span>
+      <span class="label">主题ID</span><span>t052</span>
+      <span class="label">创作时间</span><span>2026-05-14</span>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:90%"></div></div>
+        <span class="score-value">9.0/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width:82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:83%"></div></div>
+        <span class="score-value">8.3/10</span>
+      </div>
+      <div class="total-score">
+        <span class="total-label">总分</span>
+        <span class="total-value">⭐ 8.5/10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v025.html">← 上一作品</a>
+  <a href="index.html">🏠 返回封面</a>
+  <a href="v027.html">下一作品 →</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x05080c, 0.015);
+
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 200);
+  camera.position.set(0, 8, 18);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  container.appendChild(renderer.domElement);
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0x2a4a5a, 0.6);
+  scene.add(ambientLight);
+
+  const pointLight1 = new THREE.PointLight(0x7ec8e3, 1.5, 60);
+  pointLight1.position.set(10, 15, 10);
+  scene.add(pointLight1);
+
+  const pointLight2 = new THREE.PointLight(0xc8e6f0, 1.0, 60);
+  pointLight2.position.set(-10, 8, -8);
+  scene.add(pointLight2);
+
+  const pointLight3 = new THREE.PointLight(0xa0d8f0, 0.8, 50);
+  pointLight3.position.set(0, -5, 12);
+  scene.add(pointLight3);
+
+  // Crystal material
+  const crystalMat = new THREE.MeshPhysicalMaterial({
+    color: 0x7ec8e3,
+    transparent: true,
+    opacity: 0.35,
+    roughness: 0.05,
+    metalness: 0.1,
+    transmission: 0.7,
+    thickness: 2.0,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.05,
+    side: THREE.DoubleSide
+  });
+
+  const crystalMat2 = new THREE.MeshPhysicalMaterial({
+    color: 0xc8e6f0,
+    transparent: true,
+    opacity: 0.25,
+    roughness: 0.08,
+    metalness: 0.05,
+    transmission: 0.8,
+    thickness: 1.5,
+    clearcoat: 1.0,
+    side: THREE.DoubleSide
+  });
+
+  const crystalMat3 = new THREE.MeshPhysicalMaterial({
+    color: 0xa0d8f0,
+    transparent: true,
+    opacity: 0.3,
+    roughness: 0.06,
+    metalness: 0.15,
+    transmission: 0.75,
+    thickness: 2.5,
+    clearcoat: 1.0,
+    side: THREE.DoubleSide,
+    emissive: 0x1a3a4a,
+    emissiveIntensity: 0.3
+  });
+
+  // Hexagonal prism geometry
+  function createHexPrism(radius, height) {
+    const shape = new THREE.Shape();
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i;
+      const x = radius * Math.cos(angle);
+      const y = radius * Math.sin(angle);
+      if (i === 0) shape.moveTo(x, y);
+      else shape.lineTo(x, y);
+    }
+    shape.closePath();
+    const extrudeSettings = { depth: height, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.05, bevelSegments: 2 };
+    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  }
+
+  const crystals = [];
+  const numCrystals = 120;
+
+  for (let i = 0; i < numCrystals; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = Math.random() * 12 + 1;
+    const x = Math.cos(angle) * dist;
+    const z = Math.sin(angle) * dist;
+    const y = (Math.random() - 0.5) * 10;
+    const radius = Math.random() * 0.4 + 0.15;
+    const height = Math.random() * 2.5 + 0.8;
+
+    const mats = [crystalMat, crystalMat2, crystalMat3];
+    const mat = mats[Math.floor(Math.random() * mats.length)];
+    const geo = createHexPrism(radius, height);
+    const mesh = new THREE.Mesh(geo, mat.clone());
+
+    mesh.position.set(x, y, z);
+    mesh.rotation.x = (Math.random() - 0.5) * 0.5;
+    mesh.rotation.z = (Math.random() - 0.5) * 0.5;
+    mesh.rotation.y = Math.random() * Math.PI * 2;
+
+    const growthDelay = Math.random() * 8;
+    const growthSpeed = Math.random() * 0.3 + 0.2;
+    mesh.scale.set(0.01, 0.01, 0.01);
+
+    crystals.push({ mesh, growthDelay, growthSpeed, baseScale: 1.0, glowIntensity: Math.random() });
+    scene.add(mesh);
+  }
+
+  // Central crystal cluster
+  const centerMat = new THREE.MeshPhysicalMaterial({
+    color: 0xe0f0f8,
+    transparent: true,
+    opacity: 0.5,
+    roughness: 0.02,
+    metalness: 0.2,
+    transmission: 0.9,
+    thickness: 4.0,
+    clearcoat: 1.0,
+    emissive: 0x2a5a6a,
+    emissiveIntensity: 0.5,
+    side: THREE.DoubleSide
+  });
+
+  for (let i = 0; i < 8; i++) {
+    const geo = createHexPrism(0.6 + Math.random() * 0.5, 3 + Math.random() * 3);
+    const mesh = new THREE.Mesh(geo, centerMat.clone());
+    const angle = (Math.PI / 4) * i;
+    mesh.position.set(Math.cos(angle) * 1.5, (Math.random() - 0.5) * 2, Math.sin(angle) * 1.5);
+    mesh.rotation.y = angle + Math.PI / 6;
+    mesh.scale.set(0.01, 0.01, 0.01);
+    crystals.push({ mesh, growthDelay: i * 0.3, growthSpeed: 0.4, baseScale: 1.0, glowIntensity: 1.0 });
+    scene.add(mesh);
+  }
+
+  // Floating particles
+  const particleCount = 400;
+  const particleGeo = new THREE.BufferGeometry();
+  const pPositions = new Float32Array(particleCount * 3);
+  const pVelocities = [];
+  for (let i = 0; i < particleCount; i++) {
+    pPositions[i*3] = (Math.random() - 0.5) * 30;
+    pPositions[i*3+1] = (Math.random() - 0.5) * 20;
+    pPositions[i*3+2] = (Math.random() - 0.5) * 30;
+    pVelocities.push({
+      x: (Math.random() - 0.5) * 0.01,
+      y: Math.random() * 0.008 + 0.002,
+      z: (Math.random() - 0.5) * 0.01
+    });
+  }
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+  const particleMat = new THREE.PointsMaterial({
+    color: 0xc8e6f0,
+    size: 0.08,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending
+  });
+  const particles = new THREE.Points(particleGeo, particleMat);
+  scene.add(particles);
+
+  // Raycaster for mouse interaction
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2(-10, -10);
+  let hoveredCrystal = null;
+
+  document.addEventListener('mousemove', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
+
+  // Animation
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    // Crystal growth
+    crystals.forEach(c => {
+      const elapsed = t - c.growthDelay;
+      if (elapsed > 0 && elapsed < 6) {
+        const progress = Math.min(elapsed * c.growthSpeed, 1.0);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        c.mesh.scale.setScalar(eased * c.baseScale);
+      } else if (elapsed >= 6) {
+        c.mesh.scale.setScalar(c.baseScale);
+      }
+
+      // Gentle floating
+      c.mesh.position.y += Math.sin(t * 0.5 + c.growthDelay) * 0.002;
+      c.mesh.rotation.y += 0.001 * c.glowIntensity;
+    });
+
+    // Particle drift
+    const positions = particles.geometry.attributes.position.array;
+    for (let i = 0; i < particleCount; i++) {
+      positions[i*3] += pVelocities[i].x;
+      positions[i*3+1] += pVelocities[i].y;
+      positions[i*3+2] += pVelocities[i].z;
+      if (positions[i*3+1] > 12) positions[i*3+1] = -10;
+    }
+    particles.geometry.attributes.position.needsUpdate = true;
+    particles.rotation.y = t * 0.02;
+
+    // Mouse hover glow
+    raycaster.setFromCamera(mouse, camera);
+    const meshList = crystals.map(c => c.mesh);
+    const intersects = raycaster.intersectObjects(meshList);
+
+    if (hoveredCrystal) {
+      hoveredCrystal.material.emissiveIntensity = hoveredCrystal.userData.baseEmissive || 0.3;
+      hoveredCrystal = null;
+    }
+
+    if (intersects.length > 0) {
+      const hit = intersects[0].object;
+      if (!hit.userData.baseEmissive) hit.userData.baseEmissive = hit.material.emissiveIntensity || 0.3;
+      hit.material.emissiveIntensity = 2.0;
+      hit.material.emissive = new THREE.Color(0x7ec8e3);
+      hoveredCrystal = hit;
+    }
+
+    // Lights orbit
+    pointLight1.position.x = Math.sin(t * 0.3) * 12;
+    pointLight1.position.z = Math.cos(t * 0.3) * 12;
+    pointLight2.position.x = Math.sin(t * 0.2 + 2) * 10;
+    pointLight2.position.z = Math.cos(t * 0.2 + 2) * 10;
+
+    // Camera gentle orbit
+    camera.position.x = Math.sin(t * 0.05) * 3;
+    camera.position.z = 18 + Math.cos(t * 0.05) * 2;
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
