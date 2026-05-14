@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>哥特式光影教堂 — 神圣的黄昏</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Serif+SC:wght@300;600&display=swap');
+
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-content: rgba(10,14,26,0.95);
+  --accent-primary: #d4a843;
+  --accent-secondary: #3d5a80;
+  --text-primary: #e8e0d0;
+  --text-secondary: #8a8a9e;
+  --font-heading: 'Cinzel', serif;
+  --font-body: 'Noto Serif SC', serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+/* 顶部导航 */
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-height);
+  background: rgba(10,14,26,0.8);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(212,168,67,0.1);
+}
+
+.top-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  font-family: var(--font-body);
+}
+
+.top-nav a:hover { color: var(--accent-primary); }
+
+/* Hero区 */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+.hero-content {
+  position: absolute;
+  bottom: 80px;
+  left: 40px;
+  z-index: 10;
+  max-width: 600px;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: 44px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  letter-spacing: 0.05em;
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.hero-desc {
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 400px;
+  font-family: var(--font-body);
+}
+
+.score-badge {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* 滚动提示 */
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+/* 内容区 */
+.content-section {
+  background: var(--bg-content);
+  padding: 80px 24px;
+  position: relative;
+}
+
+.content-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+}
+
+.content-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--accent-primary);
+  margin-bottom: 24px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.section-body {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.section-body strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* 技术亮点列表 */
+.tech-list {
+  list-style: none;
+  margin: 24px 0;
+}
+
+.tech-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tech-list li::before {
+  content: '▸';
+  color: var(--accent-primary);
+  font-size: 18px;
+}
+
+/* 实验数据 */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.data-item {
+  background: rgba(255,255,255,0.03);
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 3px solid var(--accent-primary);
+}
+
+.data-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.data-value {
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* 评分条 */
+.score-section {
+  margin-top: 40px;
+}
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-label {
+  width: 100px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.score-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+.score-value {
+  width: 60px;
+  text-align: right;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.score-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.score-total-label {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  color: var(--text-primary);
+}
+
+.score-total-value {
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 底部导航 */
+.bottom-nav {
+  background: var(--bg-primary);
+  padding: 40px 24px;
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  border-top: 1px solid rgba(212,168,67,0.1);
+}
+
+.bottom-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.bottom-nav a:hover {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .hero-title { font-size: 32px; }
+  .hero-subtitle { font-size: 14px; }
+  .hero-content { left: 20px; bottom: 60px; }
+  .data-grid { grid-template-columns: 1fr; }
+  .score-item { flex-wrap: wrap; }
+  .score-label { width: 80px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<nav class="top-nav">
+  <a href="v013.html" class="nav-prev">← 上一作品</a>
+  <a href="index.html" class="nav-home">🏠 封面</a>
+  <a href="v015.html" class="nav-next">下一作品 →</a>
+</nav>
+
+<!-- Hero区 -->
+<section class="hero">
+  <div id="canvas-container"></div>
+  <div class="hero-content">
+    <div class="hero-subtitle">Gothic Cathedral · Sacred Twilight</div>
+    <h1 class="hero-title">哥特式光影教堂</h1>
+    <p class="hero-desc">当最后一缕阳光穿透玫瑰窗，深蓝夜空中的金色光柱，是信仰与艺术的永恒对话。</p>
+    <div class="score-badge">⭐ 8.5分 · Round #14</div>
+  </div>
+  <div class="scroll-hint">
+    <div>↓ 向下滚动探索更多</div>
+  </div>
+</section>
+
+<!-- 内容区 -->
+<section class="content-section">
+  <div class="content-container">
+    
+    <!-- 设计灵感 -->
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      <strong>哥特式教堂</strong>是欧洲中世纪建筑的最高成就。尖拱、飞扶壁、彩色玫瑰窗——这些元素不仅服务于结构，更创造了一种"向上攀升"的视觉张力，将观者的目光引向天堂。
+    </p>
+    <p class="section-body">
+      本作品选择<strong>黄昏时分</strong>作为场景——这是光与影最富戏剧性的时刻。深蓝色的夜空作为背景，金色的光束从玫瑰窗中倾泻而出，营造出神秘而庄严的宗教氛围。
+    </p>
+    <p class="section-body">
+      与 Round 4 的版本不同，这次通过 <strong>Mutation-Color</strong> 策略，将配色从紫黑调转变为深蓝+暖金调，更接近真实黄昏时分的教堂光影。
+    </p>
+
+    <!-- 视觉转译 -->
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      <strong>传统元素 → 网页技术：</strong>
+    </p>
+    <ul class="tech-list">
+      <li>玫瑰窗 → Three.js 圆形几何体 + 彩色玻璃着色器</li>
+      <li>光束穿透 → God Rays 效果（体积光散射模拟）</li>
+      <li>尖拱结构 → 程序化生成的尖拱轮廓线</li>
+      <li>黄昏天空 → 深蓝到深紫的渐变背景 + 星光粒子</li>
+      <li>金色光芒 → 点光源 + 泛光效果（Bloom）</li>
+    </ul>
+
+    <!-- 技术亮点 -->
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>Three.js 玫瑰窗：6重圆环几何体，每层不同颜色</li>
+      <li>God Rays 效果：锥形几何体模拟光束，透明度渐变</li>
+      <li>粒子星空：500颗星星，根据鼠标位置产生视差</li>
+      <li>动态光照：点光源强度随时间正弦波动，模拟烛光摇曳</li>
+      <li>配色方案：深蓝 #0a0e1a + 暖金 #d4a843，高对比神圣感</li>
+      <li>Cinzel 字体：中世纪刻字风格，强化哥特氛围</li>
+    </ul>
+
+    <!-- 实验数据 -->
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <div class="data-item">
+        <div class="data-label">实验轮次</div>
+        <div class="data-value">Round #14</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">变异策略</div>
+        <div class="data-value">Mutation-Color</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">主题ID</div>
+        <div class="data-value">t029 · 哥特式光影教堂</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">对比版本</div>
+        <div class="data-value">Round 4 (紫黑调) → Round 14 (蓝金调)</div>
+      </div>
+    </div>
+
+    <!-- 评分详情 -->
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 90%"></div></div>
+        <span class="score-value">9.0/10</span>
+      </div>
+      
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 88%"></div></div>
+        <span class="score-value">8.8/10</span>
+      </div>
+      
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width: 85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      
+      <div class="score-total">
+        <span class="score-total-label">最终得分</span>
+        <span class="score-total-value">⭐ 8.5/10</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 底部导航 -->
+<nav class="bottom-nav">
+  <a href="v013.html">← 上一作品</a>
+  <a href="index.html">🏠 返回封面</a>
+  <a href="v015.html">下一作品 →</a>
+</nav>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// 哥特式光影教堂 - Three.js 场景
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0e1a);
+scene.fog = new THREE.FogExp2(0x0a0e1a, 0.015);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 5, 25);
+camera.lookAt(0, 2, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+container.appendChild(renderer.domElement);
+
+// 玫瑰窗（多层圆环）
+const roseWindowGroup = new THREE.Group();
+const colors = [0xd4a843, 0x8b4513, 0x4169e1, 0x228b22, 0xdc143c];
+
+for (let i = 0; i < 6; i++) {
+  const geometry = new THREE.TorusGeometry(2 + i * 0.8, 0.15, 8, 32);
+  const material = new THREE.MeshBasicMaterial({
+    color: colors[i % colors.length],
+    transparent: true,
+    opacity: 0.6 - i * 0.05
+  });
+  const ring = new THREE.Mesh(geometry, material);
+  ring.rotation.x = -Math.PI / 2;
+  roseWindowGroup.add(ring);
+}
+
+// 玫瑰窗中心
+const centerGeo = new THREE.CircleGeometry(2, 32);
+const centerMat = new THREE.MeshBasicMaterial({
+  color: 0xd4a843,
+  transparent: true,
+  opacity: 0.3,
+  side: THREE.DoubleSide
+});
+const center = new THREE.Mesh(centerGeo, centerMat);
+center.rotation.x = -Math.PI / 2;
+center.position.y = 0.1;
+roseWindowGroup.add(center);
+
+roseWindowGroup.position.set(0, 8, -5);
+scene.add(roseWindowGroup);
+
+// 光束（God Rays）
+const rayCount = 8;
+for (let i = 0; i < rayCount; i++) {
+  const angle = (i / rayCount) * Math.PI * 2;
+  const rayGeo = new THREE.ConeGeometry(0.3, 15, 8, 1, true);
+  const rayMat = new THREE.MeshBasicMaterial({
+    color: 0xd4a843,
+    transparent: true,
+    opacity: 0.08,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending
+  });
+  const ray = new THREE.Mesh(rayGeo, rayMat);
+  ray.position.set(
+    Math.cos(angle) * 1.5,
+    0,
+    Math.sin(angle) * 1.5 + 3
+  );
+  ray.rotation.x = Math.PI;
+  ray.rotation.z = angle;
+  scene.add(ray);
+}
+
+// 尖拱轮廓
+const archShape = new THREE.Shape();
+archShape.moveTo(-4, 0);
+archShape.lineTo(-4, 6);
+archShape.quadraticCurveTo(0, 12, 4, 6);
+archShape.lineTo(4, 0);
+archShape.lineTo(-4, 0);
+
+const archGeo = new THREE.ShapeGeometry(archShape);
+const archMat = new THREE.MeshBasicMaterial({
+  color: 0x1a1a2e,
+  transparent: true,
+  opacity: 0.5,
+  side: THREE.DoubleSide
+});
+const arch = new THREE.Mesh(archGeo, archMat);
+arch.position.set(0, 0, -5);
+scene.add(arch);
+
+// 地面
+const floorGeo = new THREE.PlaneGeometry(50, 50);
+const floorMat = new THREE.MeshStandardMaterial({
+  color: 0x0a0a0f,
+  roughness: 0.9
+});
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -2;
+scene.add(floor);
+
+// 星空粒子
+const starCount = 500;
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(starCount * 3);
+
+for (let i = 0; i < starCount; i++) {
+  starPos[i * 3] = (Math.random() - 0.5) * 100;
+  starPos[i * 3 + 1] = Math.random() * 30 + 5;
+  starPos[i * 3 + 2] = (Math.random() - 0.5) * 50 - 20;
+}
+
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const starMat = new THREE.PointsMaterial({
+  color: 0xffffff,
+  size: 0.15,
+  transparent: true,
+  opacity: 0.8
+});
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// 光照
+const ambientLight = new THREE.AmbientLight(0x404060, 0.3);
+scene.add(ambientLight);
+
+const pointLight = new THREE.PointLight(0xd4a843, 1, 50);
+pointLight.position.set(0, 8, -3);
+scene.add(pointLight);
+
+// 鼠标交互
+const mouse = new THREE.Vector2();
+window.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
+// 动画
+let time = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  time += 0.01;
+  
+  // 玫瑰窗旋转
+  roseWindowGroup.rotation.y = Math.sin(time * 0.5) * 0.1;
+  
+  // 光束闪烁
+  scene.children.forEach(child => {
+    if (child.geometry && child.geometry.type === 'ConeGeometry') {
+      child.material.opacity = 0.05 + Math.sin(time * 2 + child.position.x) * 0.03;
+    }
+  });
+  
+  // 点光源摇曳
+  pointLight.intensity = 0.8 + Math.sin(time * 3) * 0.2;
+  
+  // 星空视差
+  stars.rotation.y = mouse.x * 0.1;
+  stars.rotation.x = mouse.y * 0.05;
+  
+  // 相机微动
+  camera.position.x = Math.sin(time * 0.3) * 1;
+  camera.position.y = 5 + Math.cos(time * 0.2) * 0.5;
+  camera.lookAt(0, 5, -5);
+  
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// 响应式
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+</body>
+</html>
