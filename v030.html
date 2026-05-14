@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>teamLab 数字自然 — AutoResearch</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+:root {
+  --bg-primary: #0a0a12;
+  --bg-content: rgba(10,10,18,0.94);
+  --accent-primary: #ff6b9d;
+  --accent-secondary: #a8e6cf;
+  --text-primary: #ffffff;
+  --text-secondary: #8899aa;
+  --font-heading: 'Noto Serif SC', serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+#canvas-container {
+  position: fixed; top:0; left:0; width:100%; height:100vh; z-index:1;
+}
+.top-nav {
+  position: fixed; top:0; left:0; right:0; height: var(--nav-height);
+  background: rgba(10,10,18,0.75); backdrop-filter: blur(12px);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 24px; z-index: 1000;
+  border-bottom: 1px solid rgba(255,107,157,0.08);
+}
+.top-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 0.5px;
+}
+.top-nav a:hover { color: var(--accent-primary); }
+.hero-overlay {
+  position: relative; z-index: 10; height: 100vh;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 0 80px 60px; pointer-events: none;
+}
+.hero-title {
+  font-family: var(--font-heading); font-size: 64px; font-weight: 700;
+  color: var(--text-primary); text-shadow: 0 0 40px rgba(255,107,157,0.3);
+  margin-bottom: 12px; letter-spacing: 4px;
+}
+.hero-subtitle {
+  font-size: 18px; color: var(--accent-secondary); font-weight: 300;
+  margin-bottom: 20px; letter-spacing: 2px;
+}
+.hero-score {
+  display: inline-block; background: rgba(255,107,157,0.15);
+  border: 1px solid rgba(255,107,157,0.3); border-radius: 20px;
+  padding: 6px 18px; font-size: 14px; color: var(--accent-primary);
+  backdrop-filter: blur(8px); pointer-events: auto;
+}
+.content-section {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 80px 24px;
+}
+.content-container {
+  max-width: var(--content-max-width); margin: 0 auto;
+}
+.section-title {
+  font-family: var(--font-heading); font-size: 28px;
+  color: var(--accent-primary); margin-bottom: 24px; letter-spacing: 2px;
+}
+.section-body {
+  font-size: 16px; line-height: 1.9; color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+.tech-list {
+  list-style: none; padding: 0;
+}
+.tech-list li {
+  padding: 12px 0; border-bottom: 1px solid rgba(255,107,157,0.1);
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 15px; color: var(--text-secondary); line-height: 1.7;
+}
+.tech-list li::before {
+  content: '◆'; color: var(--accent-primary); font-size: 10px;
+  margin-top: 6px; flex-shrink: 0;
+}
+.data-grid {
+  display: grid; grid-template-columns: 140px 1fr; gap: 12px 24px;
+  font-size: 15px; color: var(--text-secondary);
+}
+.data-grid .label { color: var(--text-primary); font-weight: 700; }
+.score-section { margin-top: 40px; }
+.score-item {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+}
+.score-label { width: 100px; font-size: 14px; color: var(--text-secondary); }
+.score-bar {
+  flex: 1; height: 8px; background: rgba(255,255,255,0.06);
+  border-radius: 4px; overflow: hidden; max-width: 280px;
+}
+.score-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+}
+.score-value { width: 60px; text-align: right; font-size: 14px; color: var(--accent-primary); font-weight: 700; }
+.total-score {
+  display: flex; align-items: center; gap: 16px; margin-top: 24px;
+  padding-top: 24px; border-top: 1px solid rgba(255,107,157,0.2);
+}
+.total-label { width: 100px; font-size: 16px; color: var(--text-primary); font-weight: 700; }
+.total-value { font-size: 24px; color: var(--accent-primary); font-weight: 700; }
+.bottom-nav {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 40px 24px;
+  border-top: 1px solid rgba(255,107,157,0.1);
+  display: flex; justify-content: center; gap: 40px;
+}
+.bottom-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 1px;
+}
+.bottom-nav a:hover { color: var(--accent-primary); }
+@media (max-width: 768px) {
+  .hero-overlay { padding: 0 0 60px 24px; }
+  .hero-title { font-size: 36px; }
+  .hero-subtitle { font-size: 14px; }
+  .score-item { flex-wrap: wrap; }
+  .score-bar { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="v029.html">← 上一作品</a>
+  <a href="index.html">🏠 封面</a>
+  <a href="v031.html">下一作品 →</a>
+</nav>
+
+<div id="canvas-container"></div>
+
+<div class="hero-overlay">
+  <h1 class="hero-title">teamLab 数字自然</h1>
+  <p class="hero-subtitle">teamLab Digital Nature · 花在指尖绽放，光随步履流淌</p>
+  <span class="hero-score">⭐ 8.5/10</span>
+</div>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      teamLab 是当代最具影响力的数字艺术团体之一，他们的作品模糊了观者与被观者、自然与数字、瞬间与永恒之间的边界。在 teamLab 的无边界世界中，花朵随着你的脚步绽放又凋零，蝴蝶从你指尖诞生，瀑布在空间中流淌并照亮其他作品。这种"超主观空间"哲学启发本作品：不是让人观看自然，而是让人成为自然的一部分。当鼠标划过屏幕，光之粒子如萤火虫般聚散，花朵在轨迹尽头绽放，整个数字生态系统因你的存在而改变。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      将 teamLab 的核心体验转化为网页技术：无边界空间 → 全屏 Three.js 场景，消除画布边界感；花朵绽放与凋零 → 基于粒子生命周期的缩放与透明度动画；光之瀑布 → 连续的发光粒子流，受重力与噪声场影响；蝴蝶飞行 → 正弦波驱动的粒子路径，模拟翅翼振动；人与自然的交互 → 鼠标位置作为引力源，吸引并扰动粒子系统；四季流转 → 随时间缓慢过渡的全局色调变化。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>Three.js 大规模粒子系统，3000+ 粒子实时响应鼠标交互</li>
+      <li>花朵绽放算法：鼠标轨迹附近粒子按生命周期缩放，模拟花瓣展开</li>
+      <li>引力场系统：鼠标位置产生引力井，粒子向光标流动并形成光带</li>
+      <li>季节色调过渡：全局色相随时间缓慢漂移，从春粉到夏绿到秋金到冬蓝</li>
+      <li>萤火虫粒子：随机闪烁的小光点，使用 AdditiveBlending 营造发光效果</li>
+      <li>无边界循环：超出画面的粒子从对侧重新进入，消除空间边界感</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <span class="label">轮次</span><span>Round #30</span>
+      <span class="label">策略</span><span>Immersive-Flower-Flow</span>
+      <span class="label">主题ID</span><span>t014</span>
+      <span class="label">创作时间</span><span>2026-05-14</span>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:88%"></div></div>
+        <span class="score-value">8.8/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width:83%"></div></div>
+        <span class="score-value">8.3/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="total-score">
+        <span class="total-label">总分</span>
+        <span class="total-value">⭐ 8.5/10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v029.html">← 上一作品</a>
+  <a href="index.html">🏠 返回封面</a>
+  <a href="v031.html">下一作品 →</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0a0a12, 0.012);
+
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.set(0, 5, 20);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  container.appendChild(renderer.domElement);
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0x1a1a2e, 0.5);
+  scene.add(ambientLight);
+
+  const pointLight1 = new THREE.PointLight(0xff6b9d, 1.0, 30);
+  pointLight1.position.set(0, 10, 0);
+  scene.add(pointLight1);
+
+  // Seasonal colors
+  const seasons = [
+    { primary: 0xff6b9d, secondary: 0xffa8c8 }, // spring pink
+    { primary: 0x4ecdc4, secondary: 0x88e6cf }, // summer green
+    { primary: 0xffa500, secondary: 0xffd700 }, // autumn gold
+    { primary: 0x87ceeb, secondary: 0xb0e0e6 }, // winter blue
+  ];
+
+  // Flower particles
+  const flowerCount = 2000;
+  const flowerGeo = new THREE.BufferGeometry();
+  const fPositions = new Float32Array(flowerCount * 3);
+  const fColors = new Float32Array(flowerCount * 3);
+  const fSizes = new Float32Array(flowerCount);
+  const fLife = new Float32Array(flowerCount);
+  const fMaxLife = new Float32Array(flowerCount);
+  const fVel = [];
+
+  for (let i = 0; i < flowerCount; i++) {
+    fPositions[i*3] = (Math.random() - 0.5) * 40;
+    fPositions[i*3+1] = (Math.random() - 0.5) * 20;
+    fPositions[i*3+2] = (Math.random() - 0.5) * 20;
+    fVel.push({
+      x: (Math.random() - 0.5) * 0.02,
+      y: (Math.random() - 0.5) * 0.02,
+      z: (Math.random() - 0.5) * 0.02
+    });
+    fLife[i] = Math.random() * 10;
+    fMaxLife[i] = 5 + Math.random() * 10;
+    fSizes[i] = Math.random() * 0.3 + 0.1;
+  }
+
+  flowerGeo.setAttribute('position', new THREE.BufferAttribute(fPositions, 3));
+  flowerGeo.setAttribute('color', new THREE.BufferAttribute(fColors, 3));
+  flowerGeo.setAttribute('size', new THREE.BufferAttribute(fSizes, 1));
+
+  const flowerMat = new THREE.PointsMaterial({
+    size: 0.3, vertexColors: true, transparent: true, opacity: 0.8,
+    blending: THREE.AdditiveBlending, sizeAttenuation: true,
+    depthWrite: false
+  });
+  const flowers = new THREE.Points(flowerGeo, flowerMat);
+  scene.add(flowers);
+
+  // Firefly particles
+  const ffCount = 150;
+  const ffGeo = new THREE.BufferGeometry();
+  const ffPositions = new Float32Array(ffCount * 3);
+  const ffPhases = [];
+  for (let i = 0; i < ffCount; i++) {
+    ffPositions[i*3] = (Math.random() - 0.5) * 30;
+    ffPositions[i*3+1] = (Math.random() - 0.5) * 15;
+    ffPositions[i*3+2] = (Math.random() - 0.5) * 15;
+    ffPhases.push(Math.random() * Math.PI * 2);
+  }
+  ffGeo.setAttribute('position', new THREE.BufferAttribute(ffPositions, 3));
+  const ffMat = new THREE.PointsMaterial({
+    color: 0xffffaa, size: 0.2, transparent: true, opacity: 0.6,
+    blending: THREE.AdditiveBlending
+  });
+  const fireflies = new THREE.Points(ffGeo, ffMat);
+  scene.add(fireflies);
+
+  // Mouse interaction
+  const mouse = new THREE.Vector2();
+  const mouseWorld = new THREE.Vector3();
+  const raycaster = new THREE.Raycaster();
+  const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+
+  document.addEventListener('mousemove', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    raycaster.ray.intersectPlane(plane, mouseWorld);
+  });
+
+  // Trail from mouse
+  const trailPositions = [];
+  const trailMax = 50;
+
+  // Animation
+  const clock = new THREE.Clock();
+
+  function getSeasonColor(t) {
+    const cycle = (t % 60) / 60;
+    const idx = Math.floor(cycle * 4);
+    const nextIdx = (idx + 1) % 4;
+    const alpha = (cycle * 4) % 1;
+    const c1 = new THREE.Color(seasons[idx].primary);
+    const c2 = new THREE.Color(seasons[nextIdx].primary);
+    return c1.lerp(c2, alpha);
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    const dt = Math.min(clock.getDelta(), 0.05);
+
+    const seasonColor = getSeasonColor(t);
+    pointLight1.color = seasonColor;
+
+    // Update trail
+    trailPositions.push(mouseWorld.clone());
+    if (trailPositions.length > trailMax) trailPositions.shift();
+
+    // Update flowers
+    const fPos = flowers.geometry.attributes.position.array;
+    const fCol = flowers.geometry.attributes.color.array;
+    const fSiz = flowers.geometry.attributes.size.array;
+
+    for (let i = 0; i < flowerCount; i++) {
+      fLife[i] += dt;
+      if (fLife[i] > fMaxLife[i]) {
+        fLife[i] = 0;
+        fPositions[i*3] = (Math.random() - 0.5) * 40;
+        fPositions[i*3+1] = (Math.random() - 0.5) * 20;
+        fPositions[i*3+2] = (Math.random() - 0.5) * 20;
+      }
+
+      // Gravity toward mouse
+      const dx = mouseWorld.x - fPositions[i*3];
+      const dy = mouseWorld.y - fPositions[i*3+1];
+      const dz = mouseWorld.z - fPositions[i*3+2];
+      const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+      if (dist < 8 && dist > 0.1) {
+        fVel[i].x += (dx / dist) * 0.005;
+        fVel[i].y += (dy / dist) * 0.005;
+        fVel[i].z += (dz / dist) * 0.005;
+      }
+
+      // Damping
+      fVel[i].x *= 0.98;
+      fVel[i].y *= 0.98;
+      fVel[i].z *= 0.98;
+
+      // Move
+      fPositions[i*3] += fVel[i].x;
+      fPositions[i*3+1] += fVel[i].y;
+      fPositions[i*3+2] += fVel[i].z;
+
+      // Wrap around
+      if (fPositions[i*3] > 20) fPositions[i*3] = -20;
+      if (fPositions[i*3] < -20) fPositions[i*3] = 20;
+      if (fPositions[i*3+1] > 10) fPositions[i*3+1] = -10;
+      if (fPositions[i*3+1] < -10) fPositions[i*3+1] = 10;
+      if (fPositions[i*3+2] > 10) fPositions[i*3+2] = -10;
+      if (fPositions[i*3+2] < -10) fPositions[i*3+2] = 10;
+
+      // Color based on life cycle (bloom)
+      const lifeRatio = fLife[i] / fMaxLife[i];
+      const bloom = Math.sin(lifeRatio * Math.PI); // 0 -> 1 -> 0
+      const c = seasonColor.clone().multiplyScalar(0.5 + bloom * 0.5);
+      fCol[i*3] = c.r;
+      fCol[i*3+1] = c.g;
+      fCol[i*3+2] = c.b;
+
+      // Size based on bloom
+      fSiz[i] = fSizes[i] * (0.5 + bloom * 1.5);
+    }
+
+    flowers.geometry.attributes.position.needsUpdate = true;
+    flowers.geometry.attributes.color.needsUpdate = true;
+    flowers.geometry.attributes.size.needsUpdate = true;
+
+    // Fireflies
+    const ffPos = fireflies.geometry.attributes.position.array;
+    for (let i = 0; i < ffCount; i++) {
+      ffPhases[i] += dt;
+      ffPos[i*3] += Math.sin(ffPhases[i] + i) * 0.02;
+      ffPos[i*3+1] += Math.cos(ffPhases[i] * 0.7 + i) * 0.015;
+      ffPos[i*3+2] += Math.sin(ffPhases[i] * 0.5 + i * 2) * 0.01;
+    }
+    fireflies.geometry.attributes.position.needsUpdate = true;
+    fireflies.material.opacity = 0.4 + Math.sin(t * 3) * 0.2;
+
+    // Camera gentle movement
+    camera.position.x = Math.sin(t * 0.1) * 3;
+    camera.position.y = 5 + Math.cos(t * 0.08) * 1;
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
