@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA双螺旋生命 — 遗传密码的三维诗篇</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Noto+Sans+SC:wght@300;500;700&display=swap');
+
+:root {
+  --bg-primary: #050510;
+  --bg-content: rgba(5,5,16,0.97);
+  --accent-primary: #4488ff;
+  --accent-secondary: #44ff88;
+  --text-primary: #e0e8ff;
+  --text-secondary: #5a6a8a;
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-height);
+  background: rgba(5,5,16,0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(68,136,255,0.08);
+}
+
+.top-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  font-family: var(--font-body);
+}
+
+.top-nav a:hover { color: var(--accent-primary); }
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+.hero-content {
+  position: absolute;
+  bottom: 80px;
+  left: 40px;
+  z-index: 10;
+  max-width: 600px;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: 44px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 20px rgba(68,136,255,0.2);
+  letter-spacing: 0.04em;
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.hero-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 420px;
+  font-family: var(--font-body);
+}
+
+.score-badge {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #050510;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+.content-section {
+  background: var(--bg-content);
+  padding: 80px 24px;
+  border-top: 1px solid rgba(68,136,255,0.08);
+}
+
+.content-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--accent-primary);
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
+
+.section-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.tech-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tech-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(68,136,255,0.08);
+  color: var(--text-secondary);
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tech-list li::before {
+  content: '◆';
+  color: var(--accent-primary);
+  font-size: 10px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.score-section { margin-top: 40px; }
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-label {
+  width: 80px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.score-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 300px;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+.score-value {
+  width: 60px;
+  font-size: 13px;
+  color: var(--accent-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.score-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(68,136,255,0.15);
+}
+
+.score-total-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.score-total-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.data-item {
+  background: rgba(68,136,255,0.04);
+  border: 1px solid rgba(68,136,255,0.1);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.data-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.data-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.bottom-nav {
+  background: rgba(5,5,16,0.95);
+  border-top: 1px solid rgba(68,136,255,0.08);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.bottom-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.bottom-nav a:hover { color: var(--accent-primary); }
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 30px; }
+  .hero-subtitle { font-size: 13px; }
+  .hero-content { left: 20px; bottom: 60px; max-width: 90%; }
+  .data-grid { grid-template-columns: 1fr; }
+  .top-nav a { font-size: 12px; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="v024.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<section class="hero">
+  <div id="canvas-container"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">DNA双螺旋生命</h1>
+    <p class="hero-subtitle">DNA Double Helix Life</p>
+    <p class="hero-desc">两条反向平行的核苷酸链以右手螺旋方式缠绕，碱基对如阶梯般连接——这是所有地球生命的共同语言。</p>
+    <span class="score-badge">&#11088; 8.6 / 10</span>
+  </div>
+  <div class="scroll-hint">&#8595; 滚动探索</div>
+</section>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      1953年，沃森与克里克在《自然》杂志发表了DNA双螺旋结构的论文，揭示了遗传信息的物理载体。DNA由两条反向平行的脱氧核糖核苷酸链组成，以右手螺旋方式相互缠绕，直径约2纳米，每10.5个碱基对完成一圈螺旋。四种碱基——腺嘌呤（A）、胸腺嘧啶（T）、鸟嘌呤（G）、胞嘧啶（C）——通过氢键配对连接两条链，A始终与T配对（两个氢键），G始终与C配对（三个氢键）。这一发现开启了分子生物学时代，也让"双螺旋"成为生命科学最具辨识度的符号。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      将DNA的双螺旋结构转化为Two.js的两组螺旋粒子阵列，每组60个粒子沿螺旋路径分布，分别代表脱氧核糖磷酸骨架的两条链。碱基对使用粒子对连接两条链，颜色编码四种碱基——A为蓝色、T为橙色、G为紫色、C为绿色，遵循查格夫法则的配对关系。螺旋的旋转动画模拟DNA解旋酶的"解链"过程——局部区域短暂分离后重新配对，可视化复制叉的动态。周围漂浮的核苷酸粒子象征着游离的dNTP分子，等待聚合酶的召唤。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>双螺旋骨架：120粒子（每链60）沿右手螺旋路径精确分布</li>
+      <li>碱基对色彩编码：A(蓝)-T(橙)、G(紫)-C(绿)，四色区分四种碱基</li>
+      <li>解旋动画：局部区域周期性短暂分离，模拟DNA复制叉动态</li>
+      <li>游离核苷酸系统：200粒子环绕螺旋漂浮，象征待配对的dNTP</li>
+      <li>氢键可视化：碱基对间使用半透明短线表示氢键连接</li>
+      <li>鼠标解旋交互：光标靠近处产生局部解旋效应，模拟聚合酶作用位点</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <div class="data-item">
+        <div class="data-label">轮次</div>
+        <div class="data-value">Round #25</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">变异策略</div>
+        <div class="data-value">Science-Biology-Helix</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">主题ID</div>
+        <div class="data-value">t050</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">创作时间</div>
+        <div class="data-value">2026-05-14</div>
+      </div>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 90%"></div></div>
+        <span class="score-value">9.0/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width: 86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-total">
+        <span class="score-total-label">总分</span>
+        <span class="score-total-value">&#11088; 8.6 / 10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v024.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 返回封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<script>
+(function() {
+  const container = document.getElementById('canvas-container');
+  const isMobile = window.innerWidth < 768;
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x050510, 0.015);
+
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 2, 14);
+  camera.lookAt(0, 2, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.setClearColor(0x050510, 1);
+  container.appendChild(renderer.domElement);
+
+  let mouseX = 0, mouseY = 0;
+  let targetMouseX = 0, targetMouseY = 0;
+  document.addEventListener('mousemove', (e) => {
+    targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  const helixHeight = 10;
+  const helixRadius = 2;
+  const turns = 3;
+  const basePairs = 60;
+
+  // Strand 1 particles
+  const s1Geo = new THREE.BufferGeometry();
+  const s1Pos = new Float32Array(basePairs * 3);
+  const s1Col = new Float32Array(basePairs * 3);
+
+  // Strand 2 particles
+  const s2Geo = new THREE.BufferGeometry();
+  const s2Pos = new Float32Array(basePairs * 3);
+  const s2Col = new Float32Array(basePairs * 3);
+
+  // Base pair particles
+  const bpGeo = new THREE.BufferGeometry();
+  const bpPos = new Float32Array(basePairs * 3);
+  const bpCol = new Float32Array(basePairs * 3);
+
+  const baseTypes = ['A', 'T', 'G', 'C'];
+  const baseColors = {
+    A: new THREE.Color(0x4488ff),
+    T: new THREE.Color(0xff8844),
+    G: new THREE.Color(0x8844ff),
+    C: new THREE.Color(0x44ff88)
+  };
+
+  const sequence = [];
+  for (let i = 0; i < basePairs; i++) {
+    sequence.push(baseTypes[Math.floor(Math.random() * 4)]);
+  }
+
+  for (let i = 0; i < basePairs; i++) {
+    const t = i / basePairs;
+    const angle = t * turns * Math.PI * 2;
+    const y = t * helixHeight;
+
+    // Strand 1
+    s1Pos[i*3] = Math.cos(angle) * helixRadius;
+    s1Pos[i*3+1] = y;
+    s1Pos[i*3+2] = Math.sin(angle) * helixRadius;
+
+    const c1 = new THREE.Color().setHSL(0.6, 0.3, 0.7);
+    s1Col[i*3] = c1.r;
+    s1Col[i*3+1] = c1.g;
+    s1Col[i*3+2] = c1.b;
+
+    // Strand 2 (offset by PI)
+    s2Pos[i*3] = Math.cos(angle + Math.PI) * helixRadius;
+    s2Pos[i*3+1] = y;
+    s2Pos[i*3+2] = Math.sin(angle + Math.PI) * helixRadius;
+
+    const c2 = new THREE.Color().setHSL(0.35, 0.3, 0.7);
+    s2Col[i*3] = c2.r;
+    s2Col[i*3+1] = c2.g;
+    s2Col[i*3+2] = c2.b;
+
+    // Base pair (midpoint with color based on type)
+    const base = sequence[i];
+    const pairBase = base === 'A' ? 'T' : base === 'T' ? 'A' : base === 'G' ? 'C' : 'G';
+    const midC = baseColors[base].clone().lerp(baseColors[pairBase], 0.5);
+
+    bpPos[i*3] = 0;
+    bpPos[i*3+1] = y;
+    bpPos[i*3+2] = 0;
+
+    bpCol[i*3] = midC.r;
+    bpCol[i*3+1] = midC.g;
+    bpCol[i*3+2] = midC.b;
+  }
+
+  s1Geo.setAttribute('position', new THREE.BufferAttribute(s1Pos, 3));
+  s1Geo.setAttribute('color', new THREE.BufferAttribute(s1Col, 3));
+  s2Geo.setAttribute('position', new THREE.BufferAttribute(s2Pos, 3));
+  s2Geo.setAttribute('color', new THREE.BufferAttribute(s2Col, 3));
+  bpGeo.setAttribute('position', new THREE.BufferAttribute(bpPos, 3));
+  bpGeo.setAttribute('color', new THREE.BufferAttribute(bpCol, 3));
+
+  const strandMat = new THREE.PointsMaterial({
+    size: 0.35,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const bpMat = new THREE.PointsMaterial({
+    size: 0.25,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.7,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const strand1 = new THREE.Points(s1Geo, strandMat);
+  const strand2 = new THREE.Points(s2Geo, strandMat);
+  const basePairsObj = new THREE.Points(bpGeo, bpMat);
+
+  const helixGroup = new THREE.Group();
+  helixGroup.add(strand1);
+  helixGroup.add(strand2);
+  helixGroup.add(basePairsObj);
+  helixGroup.position.y = -4;
+  scene.add(helixGroup);
+
+  // ===== FREE NUCLEOTIDES =====
+  const nucCount = isMobile ? 100 : 200;
+  const nucGeo = new THREE.BufferGeometry();
+  const nucPos = new Float32Array(nucCount * 3);
+  const nucCol = new Float32Array(nucCount * 3);
+
+  for (let i = 0; i < nucCount; i++) {
+    nucPos[i*3] = (Math.random() - 0.5) * 15;
+    nucPos[i*3+1] = Math.random() * 12;
+    nucPos[i*3+2] = (Math.random() - 0.5) * 15;
+
+    const base = baseTypes[Math.floor(Math.random() * 4)];
+    const c = baseColors[base];
+    nucCol[i*3] = c.r;
+    nucCol[i*3+1] = c.g;
+    nucCol[i*3+2] = c.b;
+  }
+
+  nucGeo.setAttribute('position', new THREE.BufferAttribute(nucPos, 3));
+  nucGeo.setAttribute('color', new THREE.BufferAttribute(nucCol, 3));
+
+  const nucMat = new THREE.PointsMaterial({
+    size: 0.15,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.5,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const nucleotides = new THREE.Points(nucGeo, nucMat);
+  scene.add(nucleotides);
+
+  // ===== H-BOND LINES (simplified as small particles between strands) =====
+  const bondCount = basePairs;
+  const bondGeo = new THREE.BufferGeometry();
+  const bondPos = new Float32Array(bondCount * 3);
+
+  for (let i = 0; i < bondCount; i++) {
+    const t = i / bondCount;
+    const angle = t * turns * Math.PI * 2;
+    const y = t * helixHeight - 4;
+
+    bondPos[i*3] = Math.cos(angle + Math.PI/2) * helixRadius * 0.3;
+    bondPos[i*3+1] = y;
+    bondPos[i*3+2] = Math.sin(angle + Math.PI/2) * helixRadius * 0.3;
+  }
+
+  bondGeo.setAttribute('position', new THREE.BufferAttribute(bondPos, 3));
+
+  const bondMat = new THREE.PointsMaterial({
+    size: 0.1,
+    color: 0x88aaff,
+    transparent: true,
+    opacity: 0.4,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const bonds = new THREE.Points(bondGeo, bondMat);
+  scene.add(bonds);
+
+  // Lighting
+  const ambient = new THREE.AmbientLight(0x101025, 0.5);
+  scene.add(ambient);
+
+  const mainLight = new THREE.PointLight(0x4488ff, 0.8, 20);
+  mainLight.position.set(5, 5, 5);
+  scene.add(mainLight);
+
+  const glowLight = new THREE.PointLight(0x44ff88, 0.5, 15);
+  glowLight.position.set(-5, 3, -3);
+  scene.add(glowLight);
+
+  // ===== ANIMATION =====
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const time = clock.getElapsedTime();
+
+    mouseX += (targetMouseX - mouseX) * 0.03;
+    mouseY += (targetMouseY - mouseY) * 0.03;
+
+    // Rotate helix
+    helixGroup.rotation.y = time * 0.15;
+
+    // Breathing effect
+    const breathe = 1 + Math.sin(time * 0.8) * 0.03;
+    helixGroup.scale.set(breathe, 1, breathe);
+
+    // Animate free nucleotides
+    const nPos = nucGeo.attributes.position.array;
+    for (let i = 0; i < nucCount; i++) {
+      nPos[i*3+1] += Math.sin(time * 0.5 + i * 0.1) * 0.005;
+      nPos[i*3] += Math.cos(time * 0.3 + i * 0.05) * 0.003;
+    }
+    nucGeo.attributes.position.needsUpdate = true;
+
+    // Pulse bonds
+    bondMat.opacity = 0.3 + Math.sin(time * 2) * 0.15;
+
+    // Camera
+    camera.position.x = mouseX * 3;
+    camera.position.y = 2 + mouseY * 2;
+    camera.lookAt(0, 2, 0);
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
