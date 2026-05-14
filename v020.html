@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>熔岩流动纹理 — 地心之火的地表舞蹈</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+SC:wght@300;500;700&display=swap');
+
+:root {
+  --bg-primary: #0d0503;
+  --bg-content: rgba(13,5,3,0.97);
+  --accent-primary: #ff4400;
+  --accent-secondary: #ffcc00;
+  --text-primary: #f0e0d8;
+  --text-secondary: #8a6a5a;
+  --font-heading: 'Bebas Neue', sans-serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-height);
+  background: rgba(13,5,3,0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255,68,0,0.08);
+}
+
+.top-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  font-family: var(--font-body);
+}
+
+.top-nav a:hover { color: var(--accent-primary); }
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+.hero-content {
+  position: absolute;
+  bottom: 80px;
+  left: 40px;
+  z-index: 10;
+  max-width: 600px;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: 52px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.1;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 30px rgba(255,68,0,0.4);
+  letter-spacing: 0.08em;
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.hero-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 420px;
+  font-family: var(--font-body);
+}
+
+.score-badge {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0d0503;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+.content-section {
+  background: var(--bg-content);
+  padding: 80px 24px;
+  border-top: 1px solid rgba(255,68,0,0.08);
+}
+
+.content-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  color: var(--accent-primary);
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
+
+.section-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.tech-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tech-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,68,0,0.08);
+  color: var(--text-secondary);
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tech-list li::before {
+  content: '◆';
+  color: var(--accent-primary);
+  font-size: 10px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.score-section { margin-top: 40px; }
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-label {
+  width: 80px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.score-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 300px;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+.score-value {
+  width: 60px;
+  font-size: 13px;
+  color: var(--accent-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.score-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,68,0,0.15);
+}
+
+.score-total-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.score-total-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.data-item {
+  background: rgba(255,68,0,0.04);
+  border: 1px solid rgba(255,68,0,0.1);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.data-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.data-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.bottom-nav {
+  background: rgba(13,5,3,0.95);
+  border-top: 1px solid rgba(255,68,0,0.08);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.bottom-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.bottom-nav a:hover { color: var(--accent-primary); }
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 34px; }
+  .hero-subtitle { font-size: 14px; }
+  .hero-content { left: 20px; bottom: 60px; max-width: 90%; }
+  .data-grid { grid-template-columns: 1fr; }
+  .top-nav a { font-size: 12px; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="v019.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<section class="hero">
+  <div id="canvas-container"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">熔岩流动纹理</h1>
+    <p class="hero-subtitle">Lava Flow Textures</p>
+    <p class="hero-desc">地壳裂缝中涌出的岩浆在黑暗中燃烧，冷却后形成独特的绳状纹理——地球内部力量的直接见证。</p>
+    <span class="score-badge">&#11088; 8.5 / 10</span>
+  </div>
+  <div class="scroll-hint">&#8595; 滚动探索</div>
+</section>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      火山熔岩是地球内部热能向地表释放的最壮观形式。当岩浆从地壳裂缝涌出，温度高达700-1200°C的硅酸盐熔体在空气中迅速冷却，表面形成一层薄而坚韧的玻璃质外壳。下方的熔岩继续流动，将外壳撕裂、褶皱、堆叠，最终凝固为独特的"绳状熔岩"（Pāhoehoe）纹理。本作品以夏威夷基拉韦厄火山为灵感，捕捉熔岩在夜色中流淌的瞬间——金红色的光芒照亮周围几米内的黑暗，热浪扭曲了空气，上升的灰烬如萤火虫般闪烁。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      将熔岩流的主河道转化为Three.js的粒子系统，2500个粒子沿正弦曲线路径流动，色彩根据"温度"参数动态变化——中心最热的区域呈现白金色，边缘冷却的区域渐变为暗红。上升的余烬使用独立的粒子系统，每个余烬粒子在上升过程中亮度逐渐衰减、颜色从橙变黄再变灰，模拟燃烧殆尽的物理过程。热浪扭曲效果通过前景粒子的随机漂移实现，火山岩地面使用深暗色平面配合随机起伏的顶点高度。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>2500粒子熔岩河：沿正弦曲线路径流动，色彩基于温度梯度实时变化</li>
+      <li>余烬上升系统：800粒子从熔岩表面升起，亮度/色相随高度衰减</li>
+      <li>热浪扭曲模拟：前景粒子随机漂移，营造空气折射的视觉效果</li>
+      <li>冷却外壳纹理：熔岩边缘粒子颜色向暗红/黑色过渡，模拟凝固过程</li>
+      <li>火山岩地面：深色平面顶点随机起伏，粗糙质感增强场景真实感</li>
+      <li>鼠标热量感应：光标靠近时局部粒子亮度提升，模拟热量辐射强度变化</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <div class="data-item">
+        <div class="data-label">轮次</div>
+        <div class="data-value">Round #20</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">变异策略</div>
+        <div class="data-value">Nature-Magma-Flow</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">主题ID</div>
+        <div class="data-value">t053</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">创作时间</div>
+        <div class="data-value">2026-05-14</div>
+      </div>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 88%"></div></div>
+        <span class="score-value">8.8/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="score-total">
+        <span class="score-total-label">总分</span>
+        <span class="score-total-value">&#11088; 8.5 / 10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v019.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 返回封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<script>
+(function() {
+  const container = document.getElementById('canvas-container');
+  const isMobile = window.innerWidth < 768;
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0d0503, 0.015);
+
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(0, 5, 20);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.setClearColor(0x0d0503, 1);
+  container.appendChild(renderer.domElement);
+
+  let mouseX = 0, mouseY = 0;
+  let targetMouseX = 0, targetMouseY = 0;
+  document.addEventListener('mousemove', (e) => {
+    targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  // ===== LAVA RIVER =====
+  const lavaCount = isMobile ? 1200 : 2500;
+  const lavaGeo = new THREE.BufferGeometry();
+  const lavaPos = new Float32Array(lavaCount * 3);
+  const lavaCol = new Float32Array(lavaCount * 3);
+  const lavaSizes = new Float32Array(lavaCount);
+  const lavaData = [];
+
+  for (let i = 0; i < lavaCount; i++) {
+    const t = Math.random();
+    const pathX = (t - 0.5) * 30;
+    const pathCurve = Math.sin(t * Math.PI * 2) * 3;
+    const pathZ = Math.cos(t * Math.PI) * 2;
+
+    lavaPos[i*3] = pathX + (Math.random() - 0.5) * 2.5;
+    lavaPos[i*3+1] = 0.2 + Math.random() * 0.5;
+    lavaPos[i*3+2] = pathZ + pathCurve + (Math.random() - 0.5) * 2;
+
+    // Temperature: center = hot (white-yellow), edge = cool (dark red)
+    const distFromCenter = Math.abs((Math.random() - 0.5) * 2);
+    const temp = 1 - distFromCenter;
+    const c = new THREE.Color();
+    if (temp > 0.8) {
+      c.setHSL(0.12, 0.9, 0.7 + temp * 0.2);
+    } else if (temp > 0.4) {
+      c.setHSL(0.05 + temp * 0.08, 0.95, 0.3 + temp * 0.4);
+    } else {
+      c.setHSL(0.02, 0.8, 0.1 + temp * 0.25);
+    }
+    lavaCol[i*3] = c.r;
+    lavaCol[i*3+1] = c.g;
+    lavaCol[i*3+2] = c.b;
+    lavaSizes[i] = 0.2 + temp * 0.5;
+
+    lavaData.push({
+      baseX: lavaPos[i*3],
+      baseZ: lavaPos[i*3+2],
+      baseY: lavaPos[i*3+1],
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.3 + Math.random() * 0.5,
+      temp
+    });
+  }
+
+  lavaGeo.setAttribute('position', new THREE.BufferAttribute(lavaPos, 3));
+  lavaGeo.setAttribute('color', new THREE.BufferAttribute(lavaCol, 3));
+  lavaGeo.setAttribute('size', new THREE.BufferAttribute(lavaSizes, 1));
+
+  const lavaMat = new THREE.PointsMaterial({
+    size: 0.4,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true
+  });
+
+  const lava = new THREE.Points(lavaGeo, lavaMat);
+  scene.add(lava);
+
+  // ===== EMBERS RISING =====
+  const emberCount = isMobile ? 300 : 800;
+  const emberGeo = new THREE.BufferGeometry();
+  const emberPos = new Float32Array(emberCount * 3);
+  const emberCol = new Float32Array(emberCount * 3);
+  const emberData = [];
+
+  for (let i = 0; i < emberCount; i++) {
+    emberPos[i*3] = (Math.random() - 0.5) * 20;
+    emberPos[i*3+1] = Math.random() * 8;
+    emberPos[i*3+2] = (Math.random() - 0.5) * 12;
+
+    const h = emberPos[i*3+1] / 8;
+    const c = new THREE.Color();
+    c.setHSL(0.08 + h * 0.05, 0.9, 0.5 - h * 0.3);
+    emberCol[i*3] = c.r;
+    emberCol[i*3+1] = c.g;
+    emberCol[i*3+2] = c.b;
+
+    emberData.push({
+      baseX: emberPos[i*3],
+      baseZ: emberPos[i*3+2],
+      speed: 0.2 + Math.random() * 0.8,
+      wobble: Math.random() * Math.PI * 2
+    });
+  }
+
+  emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos, 3));
+  emberGeo.setAttribute('color', new THREE.BufferAttribute(emberCol, 3));
+
+  const emberMat = new THREE.PointsMaterial({
+    size: 0.2,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.7,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const embers = new THREE.Points(emberGeo, emberMat);
+  scene.add(embers);
+
+  // ===== HEAT SHIMMER =====
+  const shimmerCount = isMobile ? 100 : 300;
+  const shimmerGeo = new THREE.BufferGeometry();
+  const shimmerPos = new Float32Array(shimmerCount * 3);
+
+  for (let i = 0; i < shimmerCount; i++) {
+    shimmerPos[i*3] = (Math.random() - 0.5) * 25;
+    shimmerPos[i*3+1] = 1 + Math.random() * 4;
+    shimmerPos[i*3+2] = (Math.random() - 0.5) * 15;
+  }
+
+  shimmerGeo.setAttribute('position', new THREE.BufferAttribute(shimmerPos, 3));
+
+  const shimmerMat = new THREE.PointsMaterial({
+    size: 0.15,
+    color: 0xff8800,
+    transparent: true,
+    opacity: 0.2,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const shimmer = new THREE.Points(shimmerGeo, shimmerMat);
+  scene.add(shimmer);
+
+  // ===== VOLCANIC GROUND =====
+  const groundGeo = new THREE.PlaneGeometry(60, 40, 20, 15);
+  const groundPos = groundGeo.attributes.position.array;
+  for (let i = 0; i < groundPos.length / 3; i++) {
+    groundPos[i*3+2] += (Math.random() - 0.5) * 0.8;
+  }
+  groundGeo.attributes.position.needsUpdate = true;
+  groundGeo.computeVertexNormals();
+
+  const groundMat = new THREE.MeshLambertMaterial({ color: 0x1a0a05 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.5;
+  scene.add(ground);
+
+  // Lighting
+  const ambient = new THREE.AmbientLight(0x331100, 0.3);
+  scene.add(ambient);
+
+  const lavaLight = new THREE.PointLight(0xff4400, 1.5, 30);
+  lavaLight.position.set(0, 2, 0);
+  scene.add(lavaLight);
+
+  const warmLight = new THREE.PointLight(0xff8800, 0.8, 25);
+  warmLight.position.set(5, 4, 3);
+  scene.add(warmLight);
+
+  // ===== ANIMATION =====
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const time = clock.getElapsedTime();
+
+    mouseX += (targetMouseX - mouseX) * 0.03;
+    mouseY += (targetMouseY - mouseY) * 0.03;
+
+    // Animate lava flow
+    const lPos = lavaGeo.attributes.position.array;
+    for (let i = 0; i < lavaCount; i++) {
+      const d = lavaData[i];
+      lPos[i*3] = d.baseX + Math.sin(time * d.speed + d.phase) * 0.3;
+      lPos[i*3+1] = d.baseY + Math.sin(time * d.speed * 1.5 + d.phase) * 0.15;
+      lPos[i*3+2] = d.baseZ + Math.cos(time * d.speed * 0.7 + d.phase) * 0.2;
+
+      // Mouse heat effect
+      const dx = lPos[i*3] - mouseX * 10;
+      const dz = lPos[i*3+2] - mouseY * 5;
+      const dist = Math.sqrt(dx*dx + dz*dz);
+      if (dist < 5) {
+        const boost = (5 - dist) / 5;
+        lavaCol[i*3] = Math.min(1, lavaCol[i*3] + boost * 0.01);
+        lavaCol[i*3+1] = Math.min(1, lavaCol[i*3+1] + boost * 0.005);
+      }
+    }
+    lavaGeo.attributes.position.needsUpdate = true;
+    lavaGeo.attributes.color.needsUpdate = true;
+
+    // Animate embers rising
+    const ePos = emberGeo.attributes.position.array;
+    for (let i = 0; i < emberCount; i++) {
+      const em = emberData[i];
+      ePos[i*3+1] += em.speed * 0.015;
+      ePos[i*3] = em.baseX + Math.sin(time + em.wobble) * 0.3;
+      if (ePos[i*3+1] > 10) {
+        ePos[i*3+1] = 0;
+        em.baseX = (Math.random() - 0.5) * 20;
+        ePos[i*3] = em.baseX;
+      }
+      const h = ePos[i*3+1] / 10;
+      const c = new THREE.Color();
+      c.setHSL(0.08 + h * 0.05, 0.9, 0.5 - h * 0.35);
+      emberCol[i*3] = c.r;
+      emberCol[i*3+1] = c.g;
+      emberCol[i*3+2] = c.b;
+    }
+    emberGeo.attributes.position.needsUpdate = true;
+    emberGeo.attributes.color.needsUpdate = true;
+
+    // Shimmer drift
+    const sPos = shimmerGeo.attributes.position.array;
+    for (let i = 0; i < shimmerCount; i++) {
+      sPos[i*3] += Math.sin(time * 2 + i) * 0.01;
+      sPos[i*3+1] += Math.cos(time * 1.5 + i * 0.5) * 0.008;
+    }
+    shimmerGeo.attributes.position.needsUpdate = true;
+
+    // Camera
+    camera.position.x = mouseX * 2;
+    camera.position.y = 5 + mouseY * 1;
+    camera.lookAt(0, 1, 0);
+
+    // Pulsing lava light
+    lavaLight.intensity = 1.2 + Math.sin(time * 3) * 0.4;
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
