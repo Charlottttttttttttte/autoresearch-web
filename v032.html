@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全息投影界面 — AutoResearch</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+:root {
+  --bg-primary: #020814;
+  --bg-content: rgba(2,8,20,0.94);
+  --accent-primary: #00f0ff;
+  --accent-secondary: #0088ff;
+  --text-primary: #ffffff;
+  --text-secondary: #6688aa;
+  --font-heading: 'Noto Serif SC', serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+#canvas-container {
+  position: fixed; top:0; left:0; width:100%; height:100vh; z-index:1;
+}
+.top-nav {
+  position: fixed; top:0; left:0; right:0; height: var(--nav-height);
+  background: rgba(2,8,20,0.75); backdrop-filter: blur(12px);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 24px; z-index: 1000;
+  border-bottom: 1px solid rgba(0,240,255,0.08);
+}
+.top-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 0.5px;
+}
+.top-nav a:hover { color: var(--accent-primary); }
+.hero-overlay {
+  position: relative; z-index: 10; height: 100vh;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 0 80px 60px; pointer-events: none;
+}
+.hero-title {
+  font-family: var(--font-heading); font-size: 64px; font-weight: 700;
+  color: var(--text-primary); text-shadow: 0 0 40px rgba(0,240,255,0.4);
+  margin-bottom: 12px; letter-spacing: 4px;
+}
+.hero-subtitle {
+  font-size: 18px; color: var(--accent-primary); font-weight: 300;
+  margin-bottom: 20px; letter-spacing: 2px;
+}
+.hero-score {
+  display: inline-block; background: rgba(0,240,255,0.15);
+  border: 1px solid rgba(0,240,255,0.3); border-radius: 20px;
+  padding: 6px 18px; font-size: 14px; color: var(--accent-primary);
+  backdrop-filter: blur(8px); pointer-events: auto;
+}
+.content-section {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 80px 24px;
+}
+.content-container {
+  max-width: var(--content-max-width); margin: 0 auto;
+}
+.section-title {
+  font-family: var(--font-heading); font-size: 28px;
+  color: var(--accent-primary); margin-bottom: 24px; letter-spacing: 2px;
+}
+.section-body {
+  font-size: 16px; line-height: 1.9; color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+.tech-list {
+  list-style: none; padding: 0;
+}
+.tech-list li {
+  padding: 12px 0; border-bottom: 1px solid rgba(0,240,255,0.1);
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 15px; color: var(--text-secondary); line-height: 1.7;
+}
+.tech-list li::before {
+  content: '◆'; color: var(--accent-primary); font-size: 10px;
+  margin-top: 6px; flex-shrink: 0;
+}
+.data-grid {
+  display: grid; grid-template-columns: 140px 1fr; gap: 12px 24px;
+  font-size: 15px; color: var(--text-secondary);
+}
+.data-grid .label { color: var(--text-primary); font-weight: 700; }
+.score-section { margin-top: 40px; }
+.score-item {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+}
+.score-label { width: 100px; font-size: 14px; color: var(--text-secondary); }
+.score-bar {
+  flex: 1; height: 8px; background: rgba(255,255,255,0.06);
+  border-radius: 4px; overflow: hidden; max-width: 280px;
+}
+.score-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+}
+.score-value { width: 60px; text-align: right; font-size: 14px; color: var(--accent-primary); font-weight: 700; }
+.total-score {
+  display: flex; align-items: center; gap: 16px; margin-top: 24px;
+  padding-top: 24px; border-top: 1px solid rgba(0,240,255,0.2);
+}
+.total-label { width: 100px; font-size: 16px; color: var(--text-primary); font-weight: 700; }
+.total-value { font-size: 24px; color: var(--accent-primary); font-weight: 700; }
+.bottom-nav {
+  position: relative; z-index: 20;
+  background: var(--bg-content); padding: 40px 24px;
+  border-top: 1px solid rgba(0,240,255,0.1);
+  display: flex; justify-content: center; gap: 40px;
+}
+.bottom-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  transition: color 0.3s; letter-spacing: 1px;
+}
+.bottom-nav a:hover { color: var(--accent-primary); }
+@media (max-width: 768px) {
+  .hero-overlay { padding: 0 0 60px 24px; }
+  .hero-title { font-size: 36px; }
+  .hero-subtitle { font-size: 14px; }
+  .score-item { flex-wrap: wrap; }
+  .score-bar { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="v031.html">← 上一作品</a>
+  <a href="index.html">🏠 封面</a>
+  <a href="v033.html">下一作品 →</a>
+</nav>
+
+<div id="canvas-container"></div>
+
+<div class="hero-overlay">
+  <h1 class="hero-title">全息投影界面</h1>
+  <p class="hero-subtitle">Holographic Projection Interface · 数据在虚空中凝结成形</p>
+  <span class="hero-score">⭐ 8.6/10</span>
+</div>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      全息投影是人类对"未来界面"最持久的想象之一。从《星球大战》中莉亚公主的求救影像到《钢铁侠》中托尼·斯塔克的空中工作台，蓝色发光的透明界面已成为科幻美学的通用语言。这种视觉语言的核心矛盾在于：它既要传达数据的精确与秩序，又要呈现技术的神奇与超越。本作品以纯代码方式构建一个全息工作站——发光的线框模型悬浮在黑暗中，数据流如瀑布般倾泻，环形菜单围绕中心缓慢旋转。青蓝色的冷光贯穿一切，这是数字世界的体温。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      將全息投影的核心視覺特徵轉化為網頁技術：透明藍色發光界面 → Three.js LineBasicMaterial 線框幾何體 + AdditiveBlending；數據瀑布 → 粒子流系統，從上而下以不同速率流動；懸浮圖表 → 動態縮放的平面幾何體，模擬實時數據變化；掃描線效果 → 週期性透明度脈衝與頂點位移；環形菜單 → 圓周排列的發光線段，隨時間緩慢旋轉；界面故障 → 隨機的線條閃爍與顏色跳變。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>Three.js 線框幾何體系統，Icosahedron/Octahedron/TorusKnot 的發光邊框渲染</li>
+      <li>數據瀑布粒子流：1500+ 粒子從頂部生成並以不同速率下落，模擬信息流</li>
+      <li>環形 HUD 菜單：圓周排列的發光線段與刻度，緩慢旋轉營造科技感</li>
+      <li>動態圖表面板：透明平面的週期性縮放動畫，模擬實時數據波動</li>
+      <li>掃描線與故障效果：定時觸發的全局透明度脈衝與隨機頂點偏移</li>
+      <li>鼠標控制視角旋轉，用戶可以環繞觀察全息工作站的各個角度</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <span class="label">轮次</span><span>Round #32</span>
+      <span class="label">策略</span><span>Hologram-Blue-Wireframe</span>
+      <span class="label">主题ID</span><span>t058</span>
+      <span class="label">创作时间</span><span>2026-05-14</span>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:90%"></div></div>
+        <span class="score-value">9.0/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:86%"></div></div>
+        <span class="score-value">8.6/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width:85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width:83%"></div></div>
+        <span class="score-value">8.3/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width:84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="total-score">
+        <span class="total-label">总分</span>
+        <span class="total-value">⭐ 8.6/10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v031.html">← 上一作品</a>
+  <a href="index.html">🏠 返回封面</a>
+  <a href="v033.html">下一作品 →</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x020814, 0.012);
+
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 200);
+  camera.position.set(0, 5, 25);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  container.appendChild(renderer.domElement);
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0x001133, 0.3);
+  scene.add(ambientLight);
+
+  const cyanLight = new THREE.PointLight(0x00f0ff, 1.5, 60);
+  cyanLight.position.set(10, 10, 10);
+  scene.add(cyanLight);
+
+  const blueLight = new THREE.PointLight(0x0088ff, 1.0, 50);
+  blueLight.position.set(-10, 5, -5);
+  scene.add(blueLight);
+
+  // Wireframe geometries
+  const wireframes = [];
+  const geoTypes = [
+    new THREE.IcosahedronGeometry(2, 1),
+    new THREE.OctahedronGeometry(1.5, 0),
+    new THREE.TorusKnotGeometry(1, 0.3, 64, 8),
+    new THREE.DodecahedronGeometry(1.2, 0),
+    new THREE.TorusGeometry(2, 0.1, 8, 32)
+  ];
+
+  geoTypes.forEach((geo, i) => {
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.4
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(
+      (Math.random() - 0.5) * 15,
+      Math.random() * 8 - 2,
+      (Math.random() - 0.5) * 10
+    );
+    mesh.userData = {
+      rotSpeed: { x: Math.random() * 0.01, y: Math.random() * 0.015, z: Math.random() * 0.008 },
+      floatSpeed: Math.random() * 0.005 + 0.002,
+      floatOffset: Math.random() * Math.PI * 2,
+      baseY: mesh.position.y
+    };
+    wireframes.push(mesh);
+    scene.add(mesh);
+
+    // Inner glow mesh
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.05,
+      side: THREE.DoubleSide
+    });
+    const glowMesh = new THREE.Mesh(geo, glowMat);
+    glowMesh.position.copy(mesh.position);
+    glowMesh.scale.setScalar(0.9);
+    wireframes.push(glowMesh);
+    scene.add(glowMesh);
+  });
+
+  // Ring HUD
+  const rings = [];
+  for (let i = 0; i < 3; i++) {
+    const radius = 4 + i * 2;
+    const segments = 60;
+    const points = [];
+    for (let j = 0; j <= segments; j++) {
+      const angle = (j / segments) * Math.PI * 2;
+      points.push(new THREE.Vector3(
+        Math.cos(angle) * radius,
+        0,
+        Math.sin(angle) * radius
+      ));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.2
+    });
+    const ring = new THREE.Line(geo, mat);
+    ring.position.y = -3;
+    ring.userData = { rotSpeed: 0.002 * (i % 2 === 0 ? 1 : -1) };
+    rings.push(ring);
+    scene.add(ring);
+
+    // Ticks
+    for (let j = 0; j < 12; j++) {
+      const angle = (j / 12) * Math.PI * 2;
+      const tickGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(Math.cos(angle) * (radius - 0.3), 0, Math.sin(angle) * (radius - 0.3)),
+        new THREE.Vector3(Math.cos(angle) * (radius + 0.3), 0, Math.sin(angle) * (radius + 0.3))
+      ]);
+      const tick = new THREE.Line(tickGeo, mat);
+      tick.position.y = -3;
+      rings.push(tick);
+      scene.add(tick);
+    }
+  }
+
+  // Data waterfall particles
+  const wfCount = 1500;
+  const wfGeo = new THREE.BufferGeometry();
+  const wfPos = new Float32Array(wfCount * 3);
+  const wfVel = [];
+  for (let i = 0; i < wfCount; i++) {
+    wfPos[i*3] = (Math.random() - 0.5) * 20;
+    wfPos[i*3+1] = Math.random() * 20;
+    wfPos[i*3+2] = (Math.random() - 0.5) * 10;
+    wfVel.push({ x: 0, y: -(Math.random() * 0.2 + 0.1), z: 0 });
+  }
+  wfGeo.setAttribute('position', new THREE.BufferAttribute(wfPos, 3));
+  const wfMat = new THREE.PointsMaterial({
+    color: 0x00f0ff,
+    size: 0.08,
+    transparent: true,
+    opacity: 0.5,
+    blending: THREE.AdditiveBlending
+  });
+  const waterfall = new THREE.Points(wfGeo, wfMat);
+  scene.add(waterfall);
+
+  // Data bars
+  const bars = [];
+  for (let i = 0; i < 20; i++) {
+    const h = Math.random() * 3 + 0.5;
+    const geo = new THREE.BoxGeometry(0.3, h, 0.3);
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x0088ff,
+      transparent: true,
+      opacity: 0.3,
+      wireframe: true
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set((i - 10) * 0.8, h / 2 - 5, -8);
+    mesh.userData = { baseH: h, speed: Math.random() * 2 + 1 };
+    bars.push(mesh);
+    scene.add(mesh);
+  }
+
+  // Mouse
+  const mouse = new THREE.Vector2();
+  let targetRotX = 0;
+  let targetRotY = 0;
+  document.addEventListener('mousemove', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = (e.clientY / window.innerHeight) * 2 - 1;
+    targetRotY = mouse.x * 0.5;
+    targetRotX = mouse.y * 0.3;
+  });
+
+  // Glitch
+  let glitchTime = 0;
+  let nextGlitch = Math.random() * 4 + 3;
+  let isGlitching = false;
+
+  // Animation
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    const dt = Math.min(clock.getDelta(), 0.05);
+
+    // Glitch
+    glitchTime += dt;
+    if (glitchTime > nextGlitch) {
+      isGlitching = true;
+      setTimeout(() => { isGlitching = false; }, 100 + Math.random() * 150);
+      glitchTime = 0;
+      nextGlitch = Math.random() * 5 + 3;
+    }
+
+    // Wireframes
+    wireframes.forEach(w => {
+      if (w.userData.rotSpeed) {
+        w.rotation.x += w.userData.rotSpeed.x;
+        w.rotation.y += w.userData.rotSpeed.y;
+        w.rotation.z += w.userData.rotSpeed.z;
+        w.position.y = w.userData.baseY + Math.sin(t * w.userData.floatSpeed + w.userData.floatOffset) * 0.5;
+      }
+      if (isGlitching && w.material) {
+        w.material.opacity = 0.1 + Math.random() * 0.5;
+        if (Math.random() > 0.5) w.position.x += (Math.random() - 0.5) * 0.5;
+      } else if (w.material) {
+        w.material.opacity = w.material.wireframe ? 0.4 : 0.05;
+      }
+    });
+
+    // Rings
+    rings.forEach(r => {
+      if (r.userData.rotSpeed) {
+        r.rotation.y += r.userData.rotSpeed;
+      }
+    });
+
+    // Waterfall
+    const positions = waterfall.geometry.attributes.position.array;
+    for (let i = 0; i < wfCount; i++) {
+      positions[i*3+1] += wfVel[i].y;
+      if (positions[i*3+1] < -8) {
+        positions[i*3+1] = 10 + Math.random() * 5;
+        positions[i*3] = (Math.random() - 0.5) * 20;
+      }
+    }
+    waterfall.geometry.attributes.position.needsUpdate = true;
+
+    // Bars
+    bars.forEach(b => {
+      const scale = 0.5 + Math.sin(t * b.userData.speed) * 0.5;
+      b.scale.y = scale;
+      b.position.y = b.userData.baseH * scale / 2 - 5;
+      if (isGlitching) {
+        b.material.color.setHex(Math.random() > 0.5 ? 0x00f0ff : 0xff0044);
+      } else {
+        b.material.color.setHex(0x0088ff);
+      }
+    });
+
+    // Camera orbit
+    camera.position.x = Math.sin(t * 0.1 + targetRotY) * 20;
+    camera.position.z = Math.cos(t * 0.1 + targetRotY) * 20;
+    camera.position.y = 5 + targetRotX * 5;
+    camera.lookAt(0, 0, 0);
+
+    // Lights orbit
+    cyanLight.position.x = Math.sin(t * 0.3) * 15;
+    cyanLight.position.z = Math.cos(t * 0.3) * 15;
+    blueLight.position.x = Math.sin(t * 0.2 + 2) * 12;
+    blueLight.position.z = Math.cos(t * 0.2 + 2) * 12;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
