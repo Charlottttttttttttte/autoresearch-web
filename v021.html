@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>樱花飘落瞬间 — 春日终章的粉色诗行</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;0,700;1,300&family=Noto+Sans+SC:wght@300;500;700&display=swap');
+
+:root {
+  --bg-primary: #1a1020;
+  --bg-content: rgba(26,16,32,0.97);
+  --accent-primary: #ffb7c5;
+  --accent-secondary: #c8a2c8;
+  --text-primary: #f5e6f0;
+  --text-secondary: #a080a0;
+  --font-heading: 'Cormorant Garamond', serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-height);
+  background: rgba(26,16,32,0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255,183,197,0.08);
+}
+
+.top-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  font-family: var(--font-body);
+}
+
+.top-nav a:hover { color: var(--accent-primary); }
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+.hero-content {
+  position: absolute;
+  bottom: 80px;
+  left: 40px;
+  z-index: 10;
+  max-width: 600px;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: 48px;
+  font-weight: 300;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 20px rgba(255,183,197,0.2);
+  letter-spacing: 0.06em;
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+  letter-spacing: 0.1em;
+}
+
+.hero-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 420px;
+  font-family: var(--font-body);
+}
+
+.score-badge {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1020;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+.content-section {
+  background: var(--bg-content);
+  padding: 80px 24px;
+  border-top: 1px solid rgba(255,183,197,0.08);
+}
+
+.content-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  color: var(--accent-primary);
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
+
+.section-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.tech-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tech-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,183,197,0.08);
+  color: var(--text-secondary);
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tech-list li::before {
+  content: '◆';
+  color: var(--accent-primary);
+  font-size: 10px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.score-section { margin-top: 40px; }
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-label {
+  width: 80px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.score-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 300px;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+.score-value {
+  width: 60px;
+  font-size: 13px;
+  color: var(--accent-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.score-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,183,197,0.15);
+}
+
+.score-total-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.score-total-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.data-item {
+  background: rgba(255,183,197,0.04);
+  border: 1px solid rgba(255,183,197,0.1);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.data-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.data-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.bottom-nav {
+  background: rgba(26,16,32,0.95);
+  border-top: 1px solid rgba(255,183,197,0.08);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.bottom-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.bottom-nav a:hover { color: var(--accent-primary); }
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 32px; }
+  .hero-subtitle { font-size: 15px; }
+  .hero-content { left: 20px; bottom: 60px; max-width: 90%; }
+  .data-grid { grid-template-columns: 1fr; }
+  .top-nav a { font-size: 12px; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="v020.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<section class="hero">
+  <div id="canvas-container"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">樱花飘落瞬间</h1>
+    <p class="hero-subtitle">Cherry Blossom Falling</p>
+    <p class="hero-desc">"樱花七日"——从盛开到凋零只需一周，而最美的时刻正是花瓣离开枝头、在春风中翩然起舞的瞬间。</p>
+    <span class="score-badge">&#11088; 8.3 / 10</span>
+  </div>
+  <div class="scroll-hint">&#8595; 滚动探索</div>
+</section>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      樱花在日本文化中代表着"物哀"美学的极致——美好事物的短暂与无常。每年春季，染井吉野樱在全日本由南向北依次盛开，形成一条"樱花前线"。但盛开仅持续约一周，随后花瓣如雪花般纷纷飘落。这种"散り際"（凋零之际）被视为樱花最美的瞬间：不是盛开时的满树繁华，而是花瓣离开枝头后在风中最后一次舞蹈。本作品捕捉这一转瞬即逝的诗意，让粉色花瓣在暮春的黄昏中缓缓飘落，地面渐渐积起薄薄一层花毯。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      将樱花花瓣的形态简化为扁长的椭圆粒子，每片花瓣具有独立的旋转轴与转速，模拟在空中翻滚的物理效果。花瓣颜色从盛开的粉白到将凋零的淡紫渐变，尺寸也有细微差异以体现自然多样性。风力系统使用多层正弦波叠加，模拟真实春风的阵性特征——时而轻柔徐来，让花瓣优雅旋转下落；时而一阵疾风，将花瓣横向吹卷。背景的树枝轮廓使用深色圆柱体构建，作为视觉锚点强化"从树上飘落"的叙事感。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>2000花瓣粒子系统：每片独立旋转轴与转速，模拟空中翻滚</li>
+      <li>风力阵性模拟：多层正弦波叠加， gust 强度周期性变化</li>
+      <li>花瓣生命周期：颜色从粉白渐变为淡紫，尺寸微缩，模拟枯萎</li>
+      <li>树枝锚点系统：深色圆柱体轮廓强化"从树飘落"的空间叙事</li>
+      <li>地面花毯累积：飘落至地面的花瓣静态保留，形成渐变粉色地毯</li>
+      <li>鼠标唤风交互：光标移动产生局部气流扰动，影响附近花瓣轨迹</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <div class="data-item">
+        <div class="data-label">轮次</div>
+        <div class="data-value">Round #21</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">变异策略</div>
+        <div class="data-value">Nature-Petal-Physics</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">主题ID</div>
+        <div class="data-value">t034</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">创作时间</div>
+        <div class="data-value">2026-05-14</div>
+      </div>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="score-total">
+        <span class="score-total-label">总分</span>
+        <span class="score-total-value">&#11088; 8.3 / 10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v020.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 返回封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<script>
+(function() {
+  const container = document.getElementById('canvas-container');
+  const isMobile = window.innerWidth < 768;
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x1a1020, 0.012);
+
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(0, 5, 18);
+  camera.lookAt(0, 3, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.setClearColor(0x1a1020, 1);
+  container.appendChild(renderer.domElement);
+
+  let mouseX = 0, mouseY = 0;
+  let targetMouseX = 0, targetMouseY = 0;
+  document.addEventListener('mousemove', (e) => {
+    targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  // ===== TREE BRANCHES =====
+  const branchGroup = new THREE.Group();
+  scene.add(branchGroup);
+
+  const branchMat = new THREE.MeshLambertMaterial({ color: 0x2d1f2d });
+
+  // Main trunk
+  const trunkGeo = new THREE.CylinderGeometry(0.3, 0.5, 10, 8);
+  const trunk = new THREE.Mesh(trunkGeo, branchMat);
+  trunk.position.set(-6, 4, -4);
+  trunk.rotation.z = 0.15;
+  branchGroup.add(trunk);
+
+  // Branches
+  const branches = [
+    { x: -5, y: 7, z: -3, rx: 0.3, rz: 0.4, len: 5, r: 0.12 },
+    { x: -4.5, y: 8.5, z: -3.5, rx: -0.2, rz: 0.6, len: 4, r: 0.08 },
+    { x: -3, y: 6, z: -3, rx: 0.1, rz: -0.3, len: 4.5, r: 0.1 },
+    { x: -6.5, y: 8, z: -2, rx: 0.5, rz: 0.1, len: 3.5, r: 0.09 },
+    { x: -5.5, y: 9, z: -4, rx: -0.3, rz: 0.5, len: 3, r: 0.07 },
+    { x: -4, y: 9.5, z: -2.5, rx: 0.2, rz: 0.3, len: 2.5, r: 0.06 },
+  ];
+
+  branches.forEach((b) => {
+    const geo = new THREE.CylinderGeometry(b.r * 0.6, b.r, b.len, 6);
+    const mesh = new THREE.Mesh(geo, branchMat);
+    mesh.position.set(b.x, b.y, b.z);
+    mesh.rotation.x = b.rx;
+    mesh.rotation.z = b.rz;
+    branchGroup.add(mesh);
+  });
+
+  // ===== FALLING PETALS =====
+  const petalCount = isMobile ? 800 : 2000;
+  const petalGeo = new THREE.BufferGeometry();
+  const petalPos = new Float32Array(petalCount * 3);
+  const petalCol = new Float32Array(petalCount * 3);
+  const petalSizes = new Float32Array(petalCount);
+  const petalData = [];
+
+  for (let i = 0; i < petalCount; i++) {
+    petalPos[i*3] = (Math.random() - 0.5) * 25;
+    petalPos[i*3+1] = Math.random() * 20;
+    petalPos[i*3+2] = (Math.random() - 0.5) * 15;
+
+    const life = Math.random();
+    const c = new THREE.Color();
+    if (life > 0.6) {
+      c.setHSL(0.95 + Math.random() * 0.05, 0.5, 0.85 + Math.random() * 0.1);
+    } else if (life > 0.3) {
+      c.setHSL(0.93, 0.6, 0.7 + Math.random() * 0.15);
+    } else {
+      c.setHSL(0.88 + Math.random() * 0.05, 0.4, 0.55 + Math.random() * 0.15);
+    }
+    petalCol[i*3] = c.r;
+    petalCol[i*3+1] = c.g;
+    petalCol[i*3+2] = c.b;
+    petalSizes[i] = 0.2 + Math.random() * 0.4;
+
+    petalData.push({
+      baseX: petalPos[i*3],
+      baseZ: petalPos[i*3+2],
+      rotPhase: Math.random() * Math.PI * 2,
+      rotSpeed: 0.5 + Math.random() * 1.5,
+      fallSpeed: 0.3 + Math.random() * 0.7,
+      swayPhase: Math.random() * Math.PI * 2,
+      swayAmp: 0.5 + Math.random() * 1.5
+    });
+  }
+
+  petalGeo.setAttribute('position', new THREE.BufferAttribute(petalPos, 3));
+  petalGeo.setAttribute('color', new THREE.BufferAttribute(petalCol, 3));
+  petalGeo.setAttribute('size', new THREE.BufferAttribute(petalSizes, 1));
+
+  const petalMat = new THREE.PointsMaterial({
+    size: 0.35,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.8,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true
+  });
+
+  const petals = new THREE.Points(petalGeo, petalMat);
+  scene.add(petals);
+
+  // ===== GROUND PETALS =====
+  const groundPetalCount = isMobile ? 300 : 800;
+  const gPetalGeo = new THREE.BufferGeometry();
+  const gPetalPos = new Float32Array(groundPetalCount * 3);
+  const gPetalCol = new Float32Array(groundPetalCount * 3);
+
+  for (let i = 0; i < groundPetalCount; i++) {
+    gPetalPos[i*3] = (Math.random() - 0.5) * 20;
+    gPetalPos[i*3+1] = 0.05 + Math.random() * 0.1;
+    gPetalPos[i*3+2] = (Math.random() - 0.5) * 12;
+
+    const c = new THREE.Color().setHSL(0.93 + Math.random() * 0.04, 0.5, 0.5 + Math.random() * 0.25);
+    gPetalCol[i*3] = c.r;
+    gPetalCol[i*3+1] = c.g;
+    gPetalCol[i*3+2] = c.b;
+  }
+
+  gPetalGeo.setAttribute('position', new THREE.BufferAttribute(gPetalPos, 3));
+  gPetalGeo.setAttribute('color', new THREE.BufferAttribute(gPetalCol, 3));
+
+  const gPetalMat = new THREE.PointsMaterial({
+    size: 0.3,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.5,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const groundPetals = new THREE.Points(gPetalGeo, gPetalMat);
+  scene.add(groundPetals);
+
+  // ===== GROUND =====
+  const groundGeo = new THREE.PlaneGeometry(50, 30, 1, 1);
+  const groundMat = new THREE.MeshLambertMaterial({ color: 0x140d1a });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  scene.add(ground);
+
+  // Lighting
+  const ambient = new THREE.AmbientLight(0x403040, 0.5);
+  scene.add(ambient);
+
+  const moonLight = new THREE.DirectionalLight(0xc8a2c8, 0.4);
+  moonLight.position.set(5, 15, 8);
+  scene.add(moonLight);
+
+  const warmLight = new THREE.PointLight(0xffb7c5, 0.6, 20);
+  warmLight.position.set(-3, 6, 2);
+  scene.add(warmLight);
+
+  // ===== ANIMATION =====
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const time = clock.getElapsedTime();
+
+    mouseX += (targetMouseX - mouseX) * 0.03;
+    mouseY += (targetMouseY - mouseY) * 0.03;
+
+    // Wind gust
+    const windStrength = 0.5 + Math.sin(time * 0.3) * 0.3 + Math.sin(time * 0.7) * 0.2;
+
+    // Animate falling petals
+    const pPos = petalGeo.attributes.position.array;
+    for (let i = 0; i < petalCount; i++) {
+      const pd = petalData[i];
+      pPos[i*3+1] -= pd.fallSpeed * 0.02;
+
+      // Sway
+      const sway = Math.sin(time * pd.rotSpeed + pd.swayPhase) * pd.swayAmp * windStrength;
+      pPos[i*3] = pd.baseX + sway + Math.sin(time * 0.5 + i) * 0.2 * windStrength;
+      pPos[i*3+2] = pd.baseZ + Math.cos(time * pd.rotSpeed * 0.7 + pd.swayPhase) * pd.swayAmp * 0.5;
+
+      // Mouse wind effect
+      const dx = pPos[i*3] - mouseX * 12;
+      const dy = pPos[i*3+1] - mouseY * 8;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 4) {
+        pPos[i*3] += (mouseX * 12 - pPos[i*3]) * 0.02;
+        pPos[i*3+1] -= 0.02;
+      }
+
+      // Reset if below ground
+      if (pPos[i*3+1] < 0) {
+        pPos[i*3+1] = 18 + Math.random() * 5;
+        pd.baseX = (Math.random() - 0.5) * 25;
+        pd.baseZ = (Math.random() - 0.5) * 15;
+        pPos[i*3] = pd.baseX;
+        pPos[i*3+2] = pd.baseZ;
+      }
+    }
+    petalGeo.attributes.position.needsUpdate = true;
+
+    // Camera
+    camera.position.x = mouseX * 2;
+    camera.position.y = 5 + mouseY * 1;
+    camera.lookAt(0, 3, 0);
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
