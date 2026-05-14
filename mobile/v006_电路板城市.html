@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>电路板城市 — 微观秩序</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #020408;
+  overflow: hidden;
+  overflow-x: hidden;
+  font-family: 'Share Tech Mono', monospace;
+  color: #33ff66;
+  touch-action: none;
+}
+#canvas-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+.overlay {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+}
+.title {
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  width: 90%;
+}
+.title h1 {
+  font-size: 1.8rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  color: #33ff66;
+  text-shadow: 0 0 20px rgba(51,255,102,0.3);
+  opacity: 0;
+  animation: bootUp 1s ease 0.5s forwards;
+}
+.title .subtitle {
+  font-size: 12px;
+  color: rgba(51,255,102,0.3);
+  margin-top: 8px;
+  letter-spacing: 0.2em;
+  opacity: 0;
+  animation: bootUp 1s ease 1s forwards;
+}
+@keyframes bootUp {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.data-panel {
+  position: fixed;
+  top: 10%;
+  right: 6%;
+  z-index: 10;
+  pointer-events: none;
+  text-align: right;
+}
+.data-line {
+  font-size: 10px;
+  color: rgba(51,255,102,0.25);
+  margin-bottom: 2px;
+}
+.data-line span {
+  color: rgba(212,175,55,0.5);
+}
+.info {
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.info span {
+  display: block;
+  font-size: 11px;
+  color: rgba(51,255,102,0.15);
+  letter-spacing: 0.1em;
+  margin-bottom: 3px;
+}
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+<div class="overlay title">
+  <h1>PCB_CITY.exe</h1>
+  <div class="subtitle">电路板城市 · 微观视角</div>
+</div>
+<div class="data-panel">
+  <div class="data-line">NODES: <span id="node-count">0</span></div>
+  <div class="data-line">PACKETS: <span id="packet-count">0</span></div>
+  <div class="data-line">FREQ: <span id="freq">0</span> MHz</div>
+</div>
+<div class="overlay info">
+  <span>触摸探索电路板</span>
+  <span>点击节点传输数据</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x020408, 0.008);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 40, 30);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x020408, 1);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+const ambientLight = new THREE.AmbientLight(0x002211, 0.45);
+scene.add(ambientLight);
+
+const mainLight = new THREE.DirectionalLight(0x33ff66, 0.25);
+mainLight.position.set(10, 20, 10);
+scene.add(mainLight);
+
+const boardGeo = new THREE.PlaneGeometry(50, 50, 1, 1);
+const boardMat = new THREE.MeshStandardMaterial({ color: 0x0a1a0a, metalness: 0.1, roughness: 0.9 });
+const board = new THREE.Mesh(boardGeo, boardMat);
+board.rotation.x = -Math.PI / 2;
+board.position.y = -0.5;
+scene.add(board);
+
+const gridHelper = new THREE.GridHelper(50, 25, 0x1a3a1a, 0x0f2a0f);
+gridHelper.position.y = -0.4;
+scene.add(gridHelper);
+
+const nodes = [];
+const nodeGroup = new THREE.Group();
+scene.add(nodeGroup);
+
+const nodePositions = [
+  [-18,-18], [-10,-18], [-2,-18], [6,-18], [14,-18],
+  [-18,-10], [-10,-10], [-2,-10], [6,-10], [14,-10],
+  [-18,-2], [-10,-2], [-2,-2], [6,-2], [14,-2],
+  [-18,6], [-10,6], [-2,6], [6,6], [14,6],
+  [-18,14], [-10,14], [-2,14], [6,14], [14,14]
+];
+
+const nodeGeo = new THREE.SphereGeometry(0.55, 12, 12);
+const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.1, emissive: 0xd4af37, emissiveIntensity: 0.25 });
+const activeGoldMat = new THREE.MeshStandardMaterial({ color: 0xffee44, metalness: 0.9, roughness: 0.1, emissive: 0xffee44, emissiveIntensity: 0.7 });
+
+nodePositions.forEach((pos, i) => {
+  const node = new THREE.Mesh(nodeGeo, goldMat.clone());
+  node.position.set(pos[0], 0, pos[1]);
+  node.userData = { id: i, active: false, connections: [] };
+  nodeGroup.add(node);
+  nodes.push(node);
+});
+
+const connections = [];
+const lineGroup = new THREE.Group();
+scene.add(lineGroup);
+
+const connectionPairs = [
+  [0,1], [1,2], [2,3], [3,4],
+  [5,6], [6,7], [7,8], [8,9],
+  [10,11], [11,12], [12,13], [13,14],
+  [15,16], [16,17], [17,18], [18,19],
+  [20,21], [21,22], [22,23], [23,24],
+  [0,5], [5,10], [10,15], [15,20],
+  [1,6], [6,11], [11,16], [16,21],
+  [2,7], [7,12], [12,17], [17,22],
+  [3,8], [8,13], [13,18], [18,23],
+  [4,9], [9,14], [14,19], [19,24]
+];
+
+connectionPairs.forEach(pair => {
+  const n1 = nodes[pair[0]];
+  const n2 = nodes[pair[1]];
+  n1.userData.connections.push(pair[1]);
+  n2.userData.connections.push(pair[0]);
+  const points = [n1.position.clone(), n2.position.clone()];
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x1a5a2a, transparent: true, opacity: 0.35 });
+  const line = new THREE.Line(lineGeo, lineMat);
+  line.userData = { n1: pair[0], n2: pair[1], active: false };
+  lineGroup.add(line);
+  connections.push(line);
+});
+
+const packets = [];
+const packetGroup = new THREE.Group();
+scene.add(packetGroup);
+
+function createPacket(startNode, endNode) {
+  const packetGeo = new THREE.SphereGeometry(0.2, 6, 6);
+  const packetMat = new THREE.MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.85 });
+  const packet = new THREE.Mesh(packetGeo, packetMat);
+  packet.position.copy(nodes[startNode].position);
+  packet.userData = { start: startNode, end: endNode, progress: 0, speed: 0.015 + Math.random() * 0.02 };
+  packetGroup.add(packet);
+  packets.push(packet);
+}
+
+const chips = [];
+const chipGroup = new THREE.Group();
+scene.add(chipGroup);
+
+const chipPositions = [
+  { x: -14, z: -14, w: 6, h: 6 },
+  { x: 10, z: -14, w: 5, h: 5 },
+  { x: -14, z: 10, w: 7, h: 5 },
+  { x: 10, z: 10, w: 5, h: 7 }
+];
+
+chipPositions.forEach((cp) => {
+  const chipGeo = new THREE.BoxGeometry(cp.w, 0.8, cp.h);
+  const chipMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.5, roughness: 0.4 });
+  const chip = new THREE.Mesh(chipGeo, chipMat);
+  chip.position.set(cp.x, 0, cp.z);
+  chipGroup.add(chip);
+  for (let j = 0; j < 6; j++) {
+    const pinGeo = new THREE.BoxGeometry(0.2, 0.3, 0.8);
+    const pinMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.1 });
+    const pin = new THREE.Mesh(pinGeo, pinMat);
+    pin.position.set(cp.x - cp.w/2 + (j + 0.5) * cp.w/6, 0.2, cp.z - cp.h/2 - 0.4);
+    chipGroup.add(pin);
+  }
+});
+
+const dustCount = 100;
+const dustGeo = new THREE.BufferGeometry();
+const dustPos = new Float32Array(dustCount * 3);
+for (let i = 0; i < dustCount; i++) {
+  dustPos[i*3] = (Math.random() - 0.5) * 45;
+  dustPos[i*3+1] = Math.random() * 4;
+  dustPos[i*3+2] = (Math.random() - 0.5) * 45;
+}
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+const dustMat = new THREE.PointsMaterial({ color: 0x33ff66, size: 0.1, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending });
+const dust = new THREE.Points(dustGeo, dustMat);
+scene.add(dust);
+
+const touch = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+
+window.addEventListener('touchstart', (e) => {
+  const t = e.touches[0];
+  touch.x = (t.clientX / window.innerWidth) * 2 - 1;
+  touch.y = -(t.clientY / window.innerHeight) * 2 + 1;
+  
+  raycaster.setFromCamera(touch, camera);
+  const intersects = raycaster.intersectObjects(nodes);
+  
+  if (intersects.length > 0) {
+    const node = intersects[0].object;
+    node.userData.active = !node.userData.active;
+    node.material = node.userData.active ? activeGoldMat.clone() : goldMat.clone();
+    
+    node.userData.connections.forEach(connId => {
+      if (Math.random() > 0.4) createPacket(node.userData.id, connId);
+    });
+    
+    connections.forEach(line => {
+      if (line.userData.n1 === node.userData.id || line.userData.n2 === node.userData.id) {
+        line.material.color.setHex(0x33ff66);
+        line.material.opacity = 0.7;
+        setTimeout(() => {
+          line.material.color.setHex(0x1a5a2a);
+          line.material.opacity = 0.35;
+        }, 800);
+      }
+    });
+  }
+}, { passive: true });
+
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const time = clock.getElapsedTime();
+
+  nodes.forEach((node, i) => {
+    const scale = 1 + Math.sin(time * 2 + i * 0.5) * 0.08;
+    node.scale.setScalar(scale);
+    if (node.userData.active) {
+      node.material.emissiveIntensity = 0.4 + Math.sin(time * 5) * 0.25;
+    }
+  });
+
+  for (let i = packets.length - 1; i >= 0; i--) {
+    const packet = packets[i];
+    packet.userData.progress += packet.userData.speed;
+    const start = nodes[packet.userData.start].position;
+    const end = nodes[packet.userData.end].position;
+    packet.position.lerpVectors(start, end, packet.userData.progress);
+    if (packet.userData.progress >= 1) {
+      packetGroup.remove(packet);
+      packets.splice(i, 1);
+      const targetNode = nodes[packet.userData.end];
+      if (targetNode.userData.connections.length > 0 && Math.random() > 0.5) {
+        const nextNode = targetNode.userData.connections[Math.floor(Math.random() * targetNode.userData.connections.length)];
+        createPacket(packet.userData.end, nextNode);
+      }
+    }
+  }
+
+  const dPos = dust.geometry.attributes.position.array;
+  for (let i = 0; i < dustCount; i++) {
+    dPos[i*3+1] += Math.sin(time + i) * 0.008;
+    if (dPos[i*3+1] > 4) dPos[i*3+1] = 0;
+  }
+  dust.geometry.attributes.position.needsUpdate = true;
+
+  camera.position.x = Math.sin(time * 0.1) * 4;
+  camera.position.z = 30 + Math.cos(time * 0.1) * 4;
+  camera.lookAt(0, 0, 0);
+
+  document.getElementById('node-count').textContent = nodes.length;
+  document.getElementById('packet-count').textContent = packets.length;
+  document.getElementById('freq').textContent = (2.4 + Math.sin(time) * 0.2).toFixed(2);
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

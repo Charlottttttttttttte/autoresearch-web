@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>解构主义破碎 — 受控混乱</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a0a;
+  overflow: hidden;
+  font-family: 'Space Grotesk', sans-serif;
+  color: #fff;
+}
+#canvas-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+.overlay {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+}
+.title {
+  top: 50%;
+  left: 8%;
+  transform: translateY(-50%);
+}
+.title h1 {
+  font-size: 5rem;
+  font-weight: 700;
+  line-height: 0.9;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+.title h1 span {
+  display: block;
+}
+.title h1 span:nth-child(2) {
+  color: #ff2244;
+  transform: translateX(20px);
+}
+.title h1 span:nth-child(3) {
+  transform: translateX(-10px);
+  color: rgba(255,255,255,0.3);
+}
+.title .subtitle {
+  font-size: 1rem;
+  font-weight: 300;
+  color: rgba(255,255,255,0.3);
+  margin-top: 24px;
+  letter-spacing: 0.3em;
+  transform: rotate(-2deg);
+}
+.glitch-line {
+  position: fixed;
+  width: 100%;
+  height: 2px;
+  background: #ff2244;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0.3;
+}
+.info {
+  bottom: 8%;
+  right: 8%;
+  text-align: right;
+}
+.info span {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.15em;
+  margin-bottom: 4px;
+}
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+<div class="glitch-line" style="top: 30%;"></div>
+<div class="glitch-line" style="bottom: 25%;"></div>
+<div class="overlay title">
+  <h1>
+    <span>DECON</span>
+    <span>STRUCT</span>
+    <span>URE</span>
+  </h1>
+  <div class="subtitle">受控混乱 · 破碎美学</div>
+</div>
+<div class="overlay info">
+  <span>移动鼠标驱散碎片</span>
+  <span>点击触发爆炸重组</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// === 解构主义破碎 Three.js 场景 ===
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0a0a, 0.01);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 35);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0a0a0a, 1);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+// === 光源 ===
+const ambientLight = new THREE.AmbientLight(0x222222, 0.5);
+scene.add(ambientLight);
+
+const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
+mainLight.position.set(10, 10, 10);
+scene.add(mainLight);
+
+const redLight = new THREE.PointLight(0xff2244, 0.6, 50);
+redLight.position.set(-10, -5, 10);
+scene.add(redLight);
+
+const blueLight = new THREE.PointLight(0x2244ff, 0.4, 40);
+blueLight.position.set(10, 5, -10);
+scene.add(blueLight);
+
+// === 碎片系统 ===
+const fragmentGroup = new THREE.Group();
+scene.add(fragmentGroup);
+
+const fragmentCount = 60;
+const fragments = [];
+
+const geometries = [
+  new THREE.BoxGeometry(1, 1, 1),
+  new THREE.TetrahedronGeometry(0.8),
+  new THREE.OctahedronGeometry(0.7),
+  new THREE.ConeGeometry(0.5, 1.2, 4),
+  new THREE.CylinderGeometry(0.3, 0.5, 1, 5)
+];
+
+const materials = [
+  new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8, roughness: 0.2 }),
+  new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.6, roughness: 0.4 }),
+  new THREE.MeshStandardMaterial({ color: 0xff2244, metalness: 0.5, roughness: 0.3, emissive: 0xff2244, emissiveIntensity: 0.2 }),
+  new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.1 }),
+  new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.3, roughness: 0.8 })
+];
+
+for (let i = 0; i < fragmentCount; i++) {
+  const geo = geometries[Math.floor(Math.random() * geometries.length)];
+  const mat = materials[Math.floor(Math.random() * materials.length)].clone();
+  const mesh = new THREE.Mesh(geo, mat);
+  
+  // 随机初始位置
+  mesh.position.set(
+    (Math.random() - 0.5) * 30,
+    (Math.random() - 0.5) * 20,
+    (Math.random() - 0.5) * 15
+  );
+  
+  mesh.rotation.set(
+    Math.random() * Math.PI,
+    Math.random() * Math.PI,
+    Math.random() * Math.PI
+  );
+  
+  const scale = 0.5 + Math.random() * 1.5;
+  mesh.scale.setScalar(scale);
+  
+  mesh.userData = {
+    originalPos: mesh.position.clone(),
+    originalRot: mesh.rotation.clone(),
+    velocity: new THREE.Vector3(
+      (Math.random() - 0.5) * 0.02,
+      (Math.random() - 0.5) * 0.02,
+      (Math.random() - 0.5) * 0.02
+    ),
+    rotationSpeed: new THREE.Vector3(
+      (Math.random() - 0.5) * 0.02,
+      (Math.random() - 0.5) * 0.02,
+      (Math.random() - 0.5) * 0.02
+    ),
+    isExploded: false,
+    explodeForce: new THREE.Vector3(),
+    phase: Math.random() * Math.PI * 2
+  };
+  
+  fragmentGroup.add(mesh);
+  fragments.push(mesh);
+}
+
+// === 连接线系统 ===
+const lineCount = 30;
+const lines = [];
+
+for (let i = 0; i < lineCount; i++) {
+  const points = [
+    new THREE.Vector3((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 25, (Math.random() - 0.5) * 10),
+    new THREE.Vector3((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 25, (Math.random() - 0.5) * 10)
+  ];
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+  const lineMat = new THREE.LineBasicMaterial({
+    color: i % 3 === 0 ? 0xff2244 : 0x444444,
+    transparent: true,
+    opacity: 0.2 + Math.random() * 0.3
+  });
+  const line = new THREE.Line(lineGeo, lineMat);
+  line.userData = {
+    originalPoints: points.map(p => p.clone()),
+    phase: Math.random() * Math.PI * 2
+  };
+  scene.add(line);
+  lines.push(line);
+}
+
+// === 粒子系统 ===
+const particleCount = 250;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+  pPos[i*3] = (Math.random() - 0.5) * 40;
+  pPos[i*3+1] = (Math.random() - 0.5) * 25;
+  pPos[i*3+2] = (Math.random() - 0.5) * 15;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({
+  color: 0xff2244,
+  size: 0.2,
+  transparent: true,
+  opacity: 0.4,
+  blending: THREE.AdditiveBlending
+});
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
+// === 交互 ===
+const mouse = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+let isExploded = false;
+
+window.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
+window.addEventListener('click', () => {
+  isExploded = !isExploded;
+  
+  fragments.forEach(fragment => {
+    fragment.userData.isExploded = isExploded;
+    if (isExploded) {
+      fragment.userData.explodeForce.set(
+        (Math.random() - 0.5) * 0.5,
+        (Math.random() - 0.5) * 0.5,
+        (Math.random() - 0.5) * 0.5
+      );
+    }
+  });
+});
+
+// === 动画 ===
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const time = clock.getElapsedTime();
+
+  // 碎片动画
+  fragments.forEach(fragment => {
+    const data = fragment.userData;
+    
+    if (data.isExploded) {
+      // 爆炸状态：高速旋转和移动
+      fragment.position.add(data.explodeForce);
+      fragment.rotation.x += data.rotationSpeed.x * 5;
+      fragment.rotation.y += data.rotationSpeed.y * 5;
+      fragment.rotation.z += data.rotationSpeed.z * 5;
+      
+      // 减速
+      data.explodeForce.multiplyScalar(0.98);
+    } else {
+      // 正常状态：缓慢漂移回原始位置
+      const drift = new THREE.Vector3(
+        Math.sin(time * 0.5 + data.phase) * 0.5,
+        Math.cos(time * 0.3 + data.phase) * 0.3,
+        Math.sin(time * 0.4 + data.phase) * 0.2
+      );
+      
+      const target = data.originalPos.clone().add(drift);
+      fragment.position.lerp(target, 0.02);
+      
+      fragment.rotation.x += data.rotationSpeed.x;
+      fragment.rotation.y += data.rotationSpeed.y;
+      fragment.rotation.z += data.rotationSpeed.z;
+    }
+    
+    // 鼠标排斥效果
+    raycaster.setFromCamera(mouse, camera);
+    const mouseWorld = raycaster.ray.direction.clone().multiplyScalar(20).add(camera.position);
+    const dist = fragment.position.distanceTo(mouseWorld);
+    if (dist < 8) {
+      const repel = fragment.position.clone().sub(mouseWorld).normalize().multiplyScalar(0.05 * (8 - dist));
+      fragment.position.add(repel);
+    }
+  });
+
+  // 连接线动画
+  lines.forEach((line, i) => {
+    const positions = line.geometry.attributes.position.array;
+    const orig = line.userData.originalPoints;
+    
+    for (let j = 0; j < 2; j++) {
+      positions[j*3] = orig[j].x + Math.sin(time + line.userData.phase + j) * 2;
+      positions[j*3+1] = orig[j].y + Math.cos(time * 0.8 + line.userData.phase + j) * 2;
+      positions[j*3+2] = orig[j].z + Math.sin(time * 0.6 + line.userData.phase + j) * 1;
+    }
+    line.geometry.attributes.position.needsUpdate = true;
+    
+    line.material.opacity = 0.2 + Math.sin(time + i) * 0.15;
+  });
+
+  // 粒子动画
+  const positions = particles.geometry.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    positions[i*3+1] += Math.sin(time * 2 + i * 0.1) * 0.02;
+    if (isExploded) {
+      positions[i*3] += (Math.random() - 0.5) * 0.1;
+      positions[i*3+2] += (Math.random() - 0.5) * 0.1;
+    }
+  }
+  particles.geometry.attributes.position.needsUpdate = true;
+
+  // 光源变化
+  redLight.intensity = 0.6 + Math.sin(time * 2) * 0.3;
+  blueLight.intensity = 0.4 + Math.cos(time * 1.5) * 0.2;
+  
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

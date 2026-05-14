@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>水墨动态书法 — 气韵生动</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a0a;
+  overflow: hidden;
+  overflow-x: hidden;
+  font-family: 'Noto Serif SC', serif;
+  color: #e8e8e8;
+  touch-action: none;
+}
+#canvas-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+.overlay {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+}
+.title {
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: 90%;
+}
+.title h1 {
+  font-size: 3rem;
+  font-weight: 300;
+  letter-spacing: 0.4em;
+  color: rgba(255,255,255,0.85);
+  text-shadow: 0 0 60px rgba(255,255,255,0.1);
+  opacity: 0;
+  animation: inkReveal 3s ease 1s forwards;
+}
+.title .subtitle {
+  font-size: 14px;
+  color: rgba(255,255,255,0.25);
+  margin-top: 16px;
+  letter-spacing: 0.5em;
+  opacity: 0;
+  animation: inkReveal 3s ease 2s forwards;
+}
+@keyframes inkReveal {
+  0% { opacity: 0; filter: blur(15px); }
+  100% { opacity: 1; filter: blur(0px); }
+}
+.info {
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.info span {
+  display: block;
+  font-size: 12px;
+  color: rgba(255,255,255,0.15);
+  letter-spacing: 0.15em;
+  margin-bottom: 4px;
+}
+.seal {
+  position: fixed;
+  bottom: 10%;
+  right: 8%;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid rgba(180,40,40,0.5);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: rgba(180,40,40,0.6);
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  animation: inkReveal 2s ease 3s forwards;
+}
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+<div class="overlay title">
+  <h1>气韵</h1>
+  <div class="subtitle">墨舞云端</div>
+</div>
+<div class="overlay info">
+  <span>触摸书写墨迹</span>
+  <span>点击晕染扩散</span>
+</div>
+<div class="seal">墨</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 55;
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x0a0a0a, 1);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+const maxStrokes = 400;
+const strokeGeometry = new THREE.BufferGeometry();
+const strokePositions = new Float32Array(maxStrokes * 3);
+const strokeAlphas = new Float32Array(maxStrokes);
+const strokeSizes = new Float32Array(maxStrokes);
+const strokeAges = new Float32Array(maxStrokes);
+
+for (let i = 0; i < maxStrokes; i++) {
+  strokePositions[i*3] = 0; strokePositions[i*3+1] = 0; strokePositions[i*3+2] = 0;
+  strokeAlphas[i] = 0; strokeSizes[i] = 0; strokeAges[i] = 0;
+}
+
+strokeGeometry.setAttribute('position', new THREE.BufferAttribute(strokePositions, 3));
+strokeGeometry.setAttribute('alpha', new THREE.BufferAttribute(strokeAlphas, 1));
+strokeGeometry.setAttribute('size', new THREE.BufferAttribute(strokeSizes, 1));
+
+const inkVertexShader = `
+  varying vec2 vUv;
+  varying float vAlpha;
+  attribute float alpha;
+  attribute float size;
+  void main() {
+    vUv = uv;
+    vAlpha = alpha;
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_PointSize = size * (300.0 / -mvPosition.z);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`;
+
+const inkFragmentShader = `
+  varying vec2 vUv;
+  varying float vAlpha;
+  uniform float uTime;
+  uniform float uSpread;
+  float noise(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  }
+  void main() {
+    float dist = length(vUv - vec2(0.5));
+    float inkEdge = smoothstep(0.5, 0.2, dist);
+    float noiseVal = noise(vUv * 10.0 + uTime * 0.1) * 0.3;
+    float spreadFactor = 1.0 - uSpread * 0.3;
+    float alpha = inkEdge * vAlpha * (0.7 + noiseVal) * spreadFactor;
+    float gray = 0.1 + noiseVal * 0.4;
+    gl_FragColor = vec4(vec3(gray), alpha);
+  }
+`;
+
+const inkMaterial = new THREE.ShaderMaterial({
+  vertexShader: inkVertexShader,
+  fragmentShader: inkFragmentShader,
+  uniforms: { uTime: { value: 0 }, uSpread: { value: 0 } },
+  transparent: true, blending: THREE.NormalBlending, depthWrite: false
+});
+
+const strokePoints = new THREE.Points(strokeGeometry, inkMaterial);
+scene.add(strokePoints);
+
+let strokeIndex = 0;
+function addInkPoint(x, y, size, alpha) {
+  strokePositions[strokeIndex*3] = x;
+  strokePositions[strokeIndex*3+1] = y;
+  strokePositions[strokeIndex*3+2] = 0;
+  strokeAlphas[strokeIndex] = alpha;
+  strokeSizes[strokeIndex] = size;
+  strokeAges[strokeIndex] = 0;
+  strokeIndex = (strokeIndex + 1) % maxStrokes;
+}
+
+const bgGeometry = new THREE.PlaneGeometry(100, 80, 16, 16);
+const bgMaterial = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uMouse: { value: new THREE.Vector2(0, 0) } },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    uniform vec2 uMouse;
+    varying vec2 vUv;
+    float fbm(vec2 p) {
+      float sum = 0.0, amp = 1.0, freq = 1.0;
+      for(int i = 0; i < 4; i++) {
+        sum += amp * sin(p.x * freq + uTime * 0.1) * cos(p.y * freq + uTime * 0.15);
+        amp *= 0.5; freq *= 2.0;
+      }
+      return sum;
+    }
+    void main() {
+      vec2 uv = vUv;
+      float n = fbm(uv * 3.0 + uTime * 0.05);
+      float n2 = fbm(uv * 5.0 - uTime * 0.03);
+      float ink = smoothstep(-0.3, 0.5, n) * 0.12;
+      float ink2 = smoothstep(-0.2, 0.6, n2) * 0.06;
+      float mouseDist = length(uv - uMouse);
+      float mouseInk = smoothstep(0.5, 0.0, mouseDist) * 0.08;
+      float gray = 0.04 + ink + ink2 + mouseInk;
+      gl_FragColor = vec4(vec3(gray), 1.0);
+    }
+  `,
+  transparent: false
+});
+
+const bgPlane = new THREE.Mesh(bgGeometry, bgMaterial);
+bgPlane.position.z = -10;
+scene.add(bgPlane);
+
+const decorGroup = new THREE.Group();
+scene.add(decorGroup);
+
+for (let i = 0; i < 3; i++) {
+  const points = [];
+  const startX = -25 + Math.random() * 50;
+  const startY = -15 + Math.random() * 30;
+  for (let j = 0; j < 8; j++) {
+    points.push(new THREE.Vector3(
+      startX + j * 2 + Math.sin(j * 0.5) * 4,
+      startY + j * 3 + Math.cos(j * 0.3) * 3,
+      (Math.random() - 0.5) * 2
+    ));
+  }
+  const curve = new THREE.CatmullRomCurve3(points);
+  const geometry = new THREE.TubeGeometry(curve, 20, 0.1 + Math.random() * 0.2, 4, false);
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x1a1a1a, transparent: true, opacity: 0.1 + Math.random() * 0.15
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.userData = { phase: Math.random() * Math.PI * 2, speed: 0.2 + Math.random() * 0.3 };
+  decorGroup.add(mesh);
+}
+
+const touch = new THREE.Vector3();
+let lastTouch = null;
+let isTouching = false;
+
+window.addEventListener('touchstart', (e) => {
+  const t = e.touches[0];
+  touch.x = (t.clientX / window.innerWidth) * 2 - 1;
+  touch.y = -(t.clientY / window.innerHeight) * 2 + 1;
+  touch.z = 0;
+  isTouching = true;
+  lastTouch = null;
+  
+  // 点击晕染
+  for (let i = 0; i < 15; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = Math.random() * 6;
+    addInkPoint(touch.x * 40 + Math.cos(angle) * dist, touch.y * 30 + Math.sin(angle) * dist, 2 + Math.random() * 5, 0.2 + Math.random() * 0.3);
+  }
+  inkMaterial.uniforms.uSpread.value = 1.0;
+  setTimeout(() => { inkMaterial.uniforms.uSpread.value = 0; }, 800);
+  
+  bgMaterial.uniforms.uMouse.value.set(t.clientX / window.innerWidth, 1 - t.clientY / window.innerHeight);
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+  const t = e.touches[0];
+  touch.x = (t.clientX / window.innerWidth) * 2 - 1;
+  touch.y = -(t.clientY / window.innerHeight) * 2 + 1;
+  
+  if (isTouching) {
+    const worldX = touch.x * 40;
+    const worldY = touch.y * 30;
+    const dist = lastTouch ? Math.sqrt(Math.pow(worldX - lastTouch.x, 2) + Math.pow(worldY - lastTouch.y, 2)) : 100;
+    if (dist > 1) {
+      const pressure = Math.max(0.3, Math.min(1.0, 15 / (dist + 1)));
+      addInkPoint(worldX, worldY, 2 + pressure * 4, pressure * 0.7);
+      lastTouch = { x: worldX, y: worldY };
+    }
+  }
+  
+  bgMaterial.uniforms.uMouse.value.set(t.clientX / window.innerWidth, 1 - t.clientY / window.innerHeight);
+}, { passive: true });
+
+window.addEventListener('touchend', () => {
+  isTouching = false;
+  lastTouch = null;
+}, { passive: true });
+
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const time = clock.getElapsedTime();
+  
+  inkMaterial.uniforms.uTime.value = time;
+  bgMaterial.uniforms.uTime.value = time;
+  
+  for (let i = 0; i < maxStrokes; i++) {
+    if (strokeAlphas[i] > 0) {
+      strokeAges[i] += 0.016;
+      const age = strokeAges[i];
+      if (age < 2.0) {
+        strokeAlphas[i] = Math.min(0.7, strokeAlphas[i] + 0.015);
+      } else if (age > 4.0) {
+        strokeAlphas[i] *= 0.995;
+      }
+    }
+  }
+  strokeGeometry.attributes.alpha.needsUpdate = true;
+  
+  decorGroup.children.forEach(child => {
+    child.material.opacity = 0.08 + Math.sin(time * child.userData.speed + child.userData.phase) * 0.06;
+    child.rotation.z = Math.sin(time * 0.1 + child.userData.phase) * 0.02;
+  });
+  
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

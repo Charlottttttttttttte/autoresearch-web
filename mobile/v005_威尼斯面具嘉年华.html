@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>威尼斯面具嘉年华 — 金色伪装</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #080510;
+  overflow: hidden;
+  overflow-x: hidden;
+  font-family: 'Cinzel', serif;
+  color: #e8d5a0;
+  touch-action: none;
+}
+#canvas-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+.overlay {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+}
+.title {
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  width: 90%;
+}
+.title h1 {
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: #d4af37;
+  text-shadow: 0 0 40px rgba(212,175,55,0.2);
+  opacity: 0;
+  animation: maskReveal 2s ease 0.8s forwards;
+}
+.title .subtitle {
+  font-size: 14px;
+  color: rgba(212,175,55,0.35);
+  margin-top: 8px;
+  letter-spacing: 0.2em;
+  opacity: 0;
+  animation: maskReveal 2s ease 1.5s forwards;
+}
+@keyframes maskReveal {
+  from { opacity: 0; transform: translateY(15px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.mask-indicator {
+  position: fixed;
+  bottom: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
+}
+.mask-indicator span {
+  display: block;
+  font-size: 12px;
+  color: rgba(212,175,55,0.25);
+  letter-spacing: 0.15em;
+  margin-bottom: 6px;
+}
+.mask-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.mask-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(212,175,55,0.2);
+  transition: all 0.5s ease;
+}
+.mask-dot.active {
+  background: #d4af37;
+  box-shadow: 0 0 8px rgba(212,175,55,0.4);
+  transform: scale(1.3);
+}
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+<div class="overlay title">
+  <h1>CARNEVALE</h1>
+  <div class="subtitle">面具之下，谁是你</div>
+</div>
+<div class="mask-indicator">
+  <span>点击切换面具</span>
+  <div class="mask-dots">
+    <div class="mask-dot active" data-mask="0"></div>
+    <div class="mask-dot" data-mask="1"></div>
+    <div class="mask-dot" data-mask="2"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x080510, 0.015);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 32);
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setClearColor(0x080510, 1);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+const ambientLight = new THREE.AmbientLight(0x1a1020, 0.35);
+scene.add(ambientLight);
+
+const goldSpot = new THREE.SpotLight(0xd4af37, 1.2, 55, Math.PI * 0.3, 0.5, 1);
+goldSpot.position.set(8, 15, 10);
+goldSpot.target.position.set(0, 0, 0);
+scene.add(goldSpot);
+scene.add(goldSpot.target);
+
+const purpleSpot = new THREE.SpotLight(0x6633aa, 0.6, 45, Math.PI * 0.4, 0.5, 1);
+purpleSpot.position.set(-10, 10, 8);
+purpleSpot.target.position.set(0, 0, 0);
+scene.add(purpleSpot);
+scene.add(purpleSpot.target);
+
+const rimLight = new THREE.PointLight(0xff8844, 0.4, 25);
+rimLight.position.set(0, -5, 15);
+scene.add(rimLight);
+
+const maskGroup = new THREE.Group();
+scene.add(maskGroup);
+
+const masks = [];
+let currentMask = 0;
+
+function createMaskTypeA() {
+  const group = new THREE.Group();
+  const faceGeo = new THREE.SphereGeometry(4, 16, 12);
+  const faceMat = new THREE.MeshStandardMaterial({ color: 0xf5e6c8, metalness: 0.3, roughness: 0.5 });
+  const face = new THREE.Mesh(faceGeo, faceMat);
+  face.scale.set(1, 1.3, 0.6);
+  group.add(face);
+  
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.1, emissive: 0xd4af37, emissiveIntensity: 0.1 });
+  const borderGeo = new THREE.TorusGeometry(4.2, 0.15, 6, 20);
+  const border = new THREE.Mesh(borderGeo, goldMat);
+  border.scale.set(1, 1.3, 1);
+  group.add(border);
+  
+  const eyeGeo = new THREE.SphereGeometry(0.8, 12, 12);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0a0a0a });
+  const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+  leftEye.position.set(-1.5, 0.5, 2);
+  leftEye.scale.set(1, 0.8, 0.5);
+  group.add(leftEye);
+  const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+  rightEye.position.set(1.5, 0.5, 2);
+  rightEye.scale.set(1, 0.8, 0.5);
+  group.add(rightEye);
+  
+  const crownGeo = new THREE.ConeGeometry(1.5, 2, 6);
+  const crown = new THREE.Mesh(crownGeo, goldMat);
+  crown.position.set(0, 5.5, 0);
+  group.add(crown);
+  
+  for (let i = 0; i < 3; i++) {
+    const featherGeo = new THREE.PlaneGeometry(0.3, 3, 2, 4);
+    const featherMat = new THREE.MeshStandardMaterial({ color: i % 2 === 0 ? 0xd4af37 : 0xffffff, metalness: 0.5, roughness: 0.3, side: THREE.DoubleSide });
+    const feather = new THREE.Mesh(featherGeo, featherMat);
+    feather.position.set(-1.5 + i * 1.5, 5, -1);
+    feather.rotation.z = (i - 1) * 0.3;
+    feather.rotation.x = -0.3;
+    group.add(feather);
+  }
+  return group;
+}
+
+function createMaskTypeB() {
+  const group = new THREE.Group();
+  const faceGeo = new THREE.ConeGeometry(4, 10, 6);
+  const faceMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.4, roughness: 0.4 });
+  const face = new THREE.Mesh(faceGeo, faceMat);
+  face.rotation.z = Math.PI;
+  face.scale.set(1, 1, 0.4);
+  group.add(face);
+  
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.1, emissive: 0xd4af37, emissiveIntensity: 0.15 });
+  for (let i = 0; i < 3; i++) {
+    const diamondGeo = new THREE.OctahedronGeometry(0.5, 0);
+    const diamond = new THREE.Mesh(diamondGeo, goldMat);
+    diamond.position.set(0, -2 + i * 2, 1.5);
+    group.add(diamond);
+  }
+  const eyeRingGeo = new THREE.TorusGeometry(1, 0.1, 6, 12);
+  const leftEye = new THREE.Mesh(eyeRingGeo, goldMat);
+  leftEye.position.set(-1.2, 1, 1.2);
+  group.add(leftEye);
+  const rightEye = new THREE.Mesh(eyeRingGeo, goldMat);
+  rightEye.position.set(1.2, 1, 1.2);
+  group.add(rightEye);
+  const spikeGeo = new THREE.ConeGeometry(0.3, 3, 4);
+  const spike = new THREE.Mesh(spikeGeo, goldMat);
+  spike.position.set(0, 5.5, 0);
+  group.add(spike);
+  return group;
+}
+
+function createMaskTypeC() {
+  const group = new THREE.Group();
+  const faceGeo = new THREE.CylinderGeometry(4, 4, 1, 20);
+  const faceMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, metalness: 0.6, roughness: 0.3 });
+  const face = new THREE.Mesh(faceGeo, faceMat);
+  face.rotation.x = Math.PI / 2;
+  group.add(face);
+  
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.95, roughness: 0.05, emissive: 0xd4af37, emissiveIntensity: 0.2 });
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2;
+    const starGeo = new THREE.OctahedronGeometry(0.3, 0);
+    const star = new THREE.Mesh(starGeo, goldMat);
+    star.position.set(Math.cos(angle) * 3, Math.sin(angle) * 3, 0.6);
+    group.add(star);
+  }
+  const moonGeo = new THREE.SphereGeometry(1.5, 12, 12);
+  const moonMat = new THREE.MeshStandardMaterial({ color: 0xffdd88, metalness: 0.5, roughness: 0.2, emissive: 0xffdd88, emissiveIntensity: 0.3 });
+  const moon = new THREE.Mesh(moonGeo, moonMat);
+  moon.position.set(0, 0, 0.6);
+  group.add(moon);
+  return group;
+}
+
+masks.push(createMaskTypeA());
+masks.push(createMaskTypeB());
+masks.push(createMaskTypeC());
+
+masks.forEach((mask, i) => {
+  mask.visible = i === 0;
+  maskGroup.add(mask);
+});
+
+const particleCount = 150;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(particleCount * 3);
+const pColor = new Float32Array(particleCount * 3);
+const palette = [new THREE.Color(0xd4af37), new THREE.Color(0xffdd88), new THREE.Color(0x6633aa), new THREE.Color(0xffffff)];
+for (let i = 0; i < particleCount; i++) {
+  pPos[i*3] = (Math.random() - 0.5) * 25;
+  pPos[i*3+1] = (Math.random() - 0.5) * 20;
+  pPos[i*3+2] = (Math.random() - 0.5) * 12;
+  const c = palette[Math.floor(Math.random() * palette.length)];
+  pColor[i*3] = c.r; pColor[i*3+1] = c.g; pColor[i*3+2] = c.b;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pColor, 3));
+const pMat = new THREE.PointsMaterial({ size: 0.35, vertexColors: true, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, sizeAttenuation: true });
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
+const archGroup = new THREE.Group();
+scene.add(archGroup);
+for (let i = -1; i <= 1; i++) {
+  const archCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-3, 0, 0), new THREE.Vector3(-2, 6, 0),
+    new THREE.Vector3(0, 9, 0), new THREE.Vector3(2, 6, 0), new THREE.Vector3(3, 0, 0)
+  ]);
+  const archGeo = new THREE.TubeGeometry(archCurve, 16, 0.2, 4, false);
+  const archMat = new THREE.MeshBasicMaterial({ color: 0x1a1020, transparent: true, opacity: 0.25 });
+  const arch = new THREE.Mesh(archGeo, archMat);
+  arch.position.set(i * 10, -8, -15);
+  archGroup.add(arch);
+}
+
+const touch = new THREE.Vector2();
+
+window.addEventListener('touchstart', (e) => {
+  const t = e.touches[0];
+  touch.x = (t.clientX / window.innerWidth) * 2 - 1;
+  touch.y = -(t.clientY / window.innerHeight) * 2 + 1;
+  
+  masks[currentMask].visible = false;
+  currentMask = (currentMask + 1) % masks.length;
+  masks[currentMask].visible = true;
+  
+  document.querySelectorAll('.mask-dot').forEach((dot, i) => {
+    dot.classList.toggle('active', i === currentMask);
+  });
+  
+  const newColors = [
+    [new THREE.Color(0xd4af37), new THREE.Color(0xffdd88), new THREE.Color(0x6633aa)],
+    [new THREE.Color(0xffffff), new THREE.Color(0xd4af37), new THREE.Color(0xff4444)],
+    [new THREE.Color(0x4444ff), new THREE.Color(0xd4af37), new THREE.Color(0xffffff)]
+  ][currentMask];
+  
+  const colors = particles.geometry.attributes.color.array;
+  for (let i = 0; i < particleCount; i++) {
+    const c = newColors[Math.floor(Math.random() * newColors.length)];
+    colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+  }
+  particles.geometry.attributes.color.needsUpdate = true;
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+  const t = e.touches[0];
+  touch.x = (t.clientX / window.innerWidth) * 2 - 1;
+  touch.y = -(t.clientY / window.innerHeight) * 2 + 1;
+}, { passive: true });
+
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const time = clock.getElapsedTime();
+
+  maskGroup.position.y = Math.sin(time * 0.5) * 0.5;
+  maskGroup.rotation.y = touch.x * 0.4 + Math.sin(time * 0.2) * 0.1;
+  maskGroup.rotation.x = -touch.y * 0.2;
+
+  const positions = particles.geometry.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    positions[i*3+1] += Math.sin(time * 0.8 + i * 0.1) * 0.008;
+    positions[i*3] += Math.cos(time * 0.5 + i * 0.05) * 0.004;
+    positions[i*3+2] += Math.sin(time * 0.3 + i * 0.08) * 0.002;
+  }
+  particles.geometry.attributes.position.needsUpdate = true;
+  particles.rotation.y = time * 0.05;
+
+  goldSpot.intensity = 1.2 + Math.sin(time * 0.7) * 0.25;
+  purpleSpot.intensity = 0.6 + Math.cos(time * 0.5) * 0.15;
+  rimLight.intensity = 0.4 + Math.sin(time * 0.3) * 0.15;
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

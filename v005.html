@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>威尼斯面具嘉年华 — 金色伪装</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@1&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #080510;
+  overflow: hidden;
+  font-family: 'Cinzel', serif;
+  color: #e8d5a0;
+}
+#canvas-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+.overlay {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+}
+.title {
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.title h1 {
+  font-size: 3.2rem;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  color: #d4af37;
+  text-shadow: 0 0 50px rgba(212,175,55,0.25);
+  opacity: 0;
+  animation: maskReveal 2s ease 0.8s forwards;
+}
+.title .subtitle {
+  font-size: 1rem;
+  color: rgba(212,175,55,0.4);
+  margin-top: 12px;
+  letter-spacing: 0.4em;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  opacity: 0;
+  animation: maskReveal 2s ease 1.5s forwards;
+}
+@keyframes maskReveal {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.mask-indicator {
+  position: fixed;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
+}
+.mask-indicator span {
+  display: block;
+  font-size: 0.8rem;
+  color: rgba(212,175,55,0.3);
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+.mask-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.mask-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(212,175,55,0.2);
+  transition: all 0.5s ease;
+}
+.mask-dot.active {
+  background: #d4af37;
+  box-shadow: 0 0 10px rgba(212,175,55,0.5);
+  transform: scale(1.3);
+}
+.info {
+  bottom: 8%;
+  right: 8%;
+  text-align: right;
+}
+.info span {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(212,175,55,0.2);
+  letter-spacing: 0.15em;
+}
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+<div class="overlay title">
+  <h1>CARNEVALE</h1>
+  <div class="subtitle">面具之下，谁是你</div>
+</div>
+<div class="mask-indicator">
+  <span>点击切换面具</span>
+  <div class="mask-dots">
+    <div class="mask-dot active" data-mask="0"></div>
+    <div class="mask-dot" data-mask="1"></div>
+    <div class="mask-dot" data-mask="2"></div>
+  </div>
+</div>
+<div class="overlay info">
+  <span>移动鼠标旋转面具</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// === 威尼斯面具嘉年华 Three.js 场景 ===
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x080510, 0.012);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 28);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x080510, 1);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+// === 光源系统 ===
+const ambientLight = new THREE.AmbientLight(0x1a1020, 0.4);
+scene.add(ambientLight);
+
+const goldSpot = new THREE.SpotLight(0xd4af37, 1.5, 60, Math.PI * 0.3, 0.5, 1);
+goldSpot.position.set(8, 15, 10);
+goldSpot.target.position.set(0, 0, 0);
+scene.add(goldSpot);
+scene.add(goldSpot.target);
+
+const purpleSpot = new THREE.SpotLight(0x6633aa, 0.8, 50, Math.PI * 0.4, 0.5, 1);
+purpleSpot.position.set(-10, 10, 8);
+purpleSpot.target.position.set(0, 0, 0);
+scene.add(purpleSpot);
+purpleSpot.target.position.set(0, 0, 0);
+scene.add(purpleSpot.target);
+
+const rimLight = new THREE.PointLight(0xff8844, 0.5, 30);
+rimLight.position.set(0, -5, 15);
+scene.add(rimLight);
+
+// === 面具系统 ===
+const maskGroup = new THREE.Group();
+scene.add(maskGroup);
+
+const masks = [];
+let currentMask = 0;
+
+function createMaskTypeA() {
+  const group = new THREE.Group();
+  
+  // 面具主体（椭圆）
+  const faceGeo = new THREE.SphereGeometry(4, 32, 24);
+  const faceMat = new THREE.MeshStandardMaterial({
+    color: 0xf5e6c8,
+    metalness: 0.3,
+    roughness: 0.5
+  });
+  const face = new THREE.Mesh(faceGeo, faceMat);
+  face.scale.set(1, 1.3, 0.6);
+  group.add(face);
+  
+  // 金色装饰边框
+  const borderGeo = new THREE.TorusGeometry(4.2, 0.15, 8, 32);
+  const goldMat = new THREE.MeshStandardMaterial({
+    color: 0xd4af37,
+    metalness: 0.9,
+    roughness: 0.1,
+    emissive: 0xd4af37,
+    emissiveIntensity: 0.1
+  });
+  const border = new THREE.Mesh(borderGeo, goldMat);
+  border.scale.set(1, 1.3, 1);
+  group.add(border);
+  
+  // 眼睛（空洞）
+  const eyeGeo = new THREE.SphereGeometry(0.8, 16, 16);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0a0a0a });
+  const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+  leftEye.position.set(-1.5, 0.5, 2);
+  leftEye.scale.set(1, 0.8, 0.5);
+  group.add(leftEye);
+  
+  const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+  rightEye.position.set(1.5, 0.5, 2);
+  rightEye.scale.set(1, 0.8, 0.5);
+  group.add(rightEye);
+  
+  // 额头装饰
+  const crownGeo = new THREE.ConeGeometry(1.5, 2, 6);
+  const crown = new THREE.Mesh(crownGeo, goldMat);
+  crown.position.set(0, 5.5, 0);
+  group.add(crown);
+  
+  // 羽毛装饰
+  for (let i = 0; i < 5; i++) {
+    const featherGeo = new THREE.PlaneGeometry(0.3, 3, 4, 8);
+    const featherMat = new THREE.MeshStandardMaterial({
+      color: i % 2 === 0 ? 0xd4af37 : 0xffffff,
+      metalness: 0.5,
+      roughness: 0.3,
+      side: THREE.DoubleSide
+    });
+    const feather = new THREE.Mesh(featherGeo, featherMat);
+    feather.position.set(-3 + i * 1.5, 5, -1);
+    feather.rotation.z = (i - 2) * 0.3;
+    feather.rotation.x = -0.3;
+    group.add(feather);
+  }
+  
+  return group;
+}
+
+function createMaskTypeB() {
+  const group = new THREE.Group();
+  
+  // 面具主体（更尖）
+  const faceGeo = new THREE.ConeGeometry(4, 10, 6);
+  const faceMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    metalness: 0.4,
+    roughness: 0.4
+  });
+  const face = new THREE.Mesh(faceGeo, faceMat);
+  face.rotation.z = Math.PI;
+  face.scale.set(1, 1, 0.4);
+  group.add(face);
+  
+  // 金色花纹
+  const goldMat = new THREE.MeshStandardMaterial({
+    color: 0xd4af37,
+    metalness: 0.9,
+    roughness: 0.1,
+    emissive: 0xd4af37,
+    emissiveIntensity: 0.15
+  });
+  
+  // 菱形装饰
+  for (let i = 0; i < 3; i++) {
+    const diamondGeo = new THREE.OctahedronGeometry(0.5, 0);
+    const diamond = new THREE.Mesh(diamondGeo, goldMat);
+    diamond.position.set(0, -2 + i * 2, 1.5);
+    group.add(diamond);
+  }
+  
+  // 眼部装饰
+  const eyeRingGeo = new THREE.TorusGeometry(1, 0.1, 8, 16);
+  const leftEye = new THREE.Mesh(eyeRingGeo, goldMat);
+  leftEye.position.set(-1.2, 1, 1.2);
+  group.add(leftEye);
+  
+  const rightEye = new THREE.Mesh(eyeRingGeo, goldMat);
+  rightEye.position.set(1.2, 1, 1.2);
+  group.add(rightEye);
+  
+  // 顶部尖刺
+  const spikeGeo = new THREE.ConeGeometry(0.3, 3, 4);
+  const spike = new THREE.Mesh(spikeGeo, goldMat);
+  spike.position.set(0, 5.5, 0);
+  group.add(spike);
+  
+  return group;
+}
+
+function createMaskTypeC() {
+  const group = new THREE.Group();
+  
+  // 圆形月亮面具
+  const faceGeo = new THREE.CylinderGeometry(4, 4, 1, 32);
+  const faceMat = new THREE.MeshStandardMaterial({
+    color: 0x1a1a2e,
+    metalness: 0.6,
+    roughness: 0.3
+  });
+  const face = new THREE.Mesh(faceGeo, faceMat);
+  face.rotation.x = Math.PI / 2;
+  group.add(face);
+  
+  // 金色星星装饰
+  const goldMat = new THREE.MeshStandardMaterial({
+    color: 0xd4af37,
+    metalness: 0.95,
+    roughness: 0.05,
+    emissive: 0xd4af37,
+    emissiveIntensity: 0.2
+  });
+  
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const starGeo = new THREE.OctahedronGeometry(0.3, 0);
+    const star = new THREE.Mesh(starGeo, goldMat);
+    star.position.set(Math.cos(angle) * 3, Math.sin(angle) * 3, 0.6);
+    group.add(star);
+  }
+  
+  // 中心月亮
+  const moonGeo = new THREE.SphereGeometry(1.5, 16, 16);
+  const moonMat = new THREE.MeshStandardMaterial({
+    color: 0xffdd88,
+    metalness: 0.5,
+    roughness: 0.2,
+    emissive: 0xffdd88,
+    emissiveIntensity: 0.3
+  });
+  const moon = new THREE.Mesh(moonGeo, moonMat);
+  moon.position.set(0, 0, 0.6);
+  group.add(moon);
+  
+  // 眼睛
+  const eyeGeo = new THREE.SphereGeometry(0.6, 16, 16);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+  leftEye.position.set(-1.2, 0, 0.8);
+  group.add(leftEye);
+  
+  const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+  rightEye.position.set(1.2, 0, 0.8);
+  group.add(rightEye);
+  
+  return group;
+}
+
+masks.push(createMaskTypeA());
+masks.push(createMaskTypeB());
+masks.push(createMaskTypeC());
+
+masks.forEach((mask, i) => {
+  mask.visible = i === 0;
+  maskGroup.add(mask);
+});
+
+// === 金色粒子系统 ===
+const particleCount = 350;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(particleCount * 3);
+const pColor = new Float32Array(particleCount * 3);
+
+const palette = [
+  new THREE.Color(0xd4af37),
+  new THREE.Color(0xffdd88),
+  new THREE.Color(0x6633aa),
+  new THREE.Color(0xffffff)
+];
+
+for (let i = 0; i < particleCount; i++) {
+  pPos[i*3] = (Math.random() - 0.5) * 30;
+  pPos[i*3+1] = (Math.random() - 0.5) * 25;
+  pPos[i*3+2] = (Math.random() - 0.5) * 15;
+  const c = palette[Math.floor(Math.random() * palette.length)];
+  pColor[i*3] = c.r; pColor[i*3+1] = c.g; pColor[i*3+2] = c.b;
+}
+
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pColor, 3));
+
+const pMat = new THREE.PointsMaterial({
+  size: 0.4,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.6,
+  blending: THREE.AdditiveBlending,
+  sizeAttenuation: true
+});
+
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
+// === 背景装饰（哥特式拱门剪影）===
+const archGroup = new THREE.Group();
+scene.add(archGroup);
+
+for (let i = -2; i <= 2; i++) {
+  const archCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-3, 0, 0),
+    new THREE.Vector3(-2, 6, 0),
+    new THREE.Vector3(0, 9, 0),
+    new THREE.Vector3(2, 6, 0),
+    new THREE.Vector3(3, 0, 0)
+  ]);
+  const archGeo = new THREE.TubeGeometry(archCurve, 20, 0.2, 6, false);
+  const archMat = new THREE.MeshBasicMaterial({
+    color: 0x1a1020,
+    transparent: true,
+    opacity: 0.3
+  });
+  const arch = new THREE.Mesh(archGeo, archMat);
+  arch.position.set(i * 10, -8, -15);
+  archGroup.add(arch);
+}
+
+// === 交互 ===
+const mouse = new THREE.Vector2();
+
+window.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
+window.addEventListener('click', () => {
+  masks[currentMask].visible = false;
+  currentMask = (currentMask + 1) % masks.length;
+  masks[currentMask].visible = true;
+  
+  // 更新指示器
+  document.querySelectorAll('.mask-dot').forEach((dot, i) => {
+    dot.classList.toggle('active', i === currentMask);
+  });
+  
+  // 切换粒子颜色
+  const newColors = [
+    [new THREE.Color(0xd4af37), new THREE.Color(0xffdd88), new THREE.Color(0x6633aa)],
+    [new THREE.Color(0xffffff), new THREE.Color(0xd4af37), new THREE.Color(0xff4444)],
+    [new THREE.Color(0x4444ff), new THREE.Color(0xd4af37), new THREE.Color(0xffffff)]
+  ][currentMask];
+  
+  const colors = particles.geometry.attributes.color.array;
+  for (let i = 0; i < particleCount; i++) {
+    const c = newColors[Math.floor(Math.random() * newColors.length)];
+    colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+  }
+  particles.geometry.attributes.color.needsUpdate = true;
+});
+
+// === 动画 ===
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const time = clock.getElapsedTime();
+
+  // 面具漂浮
+  maskGroup.position.y = Math.sin(time * 0.5) * 0.5;
+  maskGroup.rotation.y = mouse.x * 0.4 + Math.sin(time * 0.2) * 0.1;
+  maskGroup.rotation.x = -mouse.y * 0.2;
+
+  // 粒子舞动
+  const positions = particles.geometry.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    positions[i*3+1] += Math.sin(time * 0.8 + i * 0.1) * 0.01;
+    positions[i*3] += Math.cos(time * 0.5 + i * 0.05) * 0.005;
+    positions[i*3+2] += Math.sin(time * 0.3 + i * 0.08) * 0.003;
+  }
+  particles.geometry.attributes.position.needsUpdate = true;
+  particles.rotation.y = time * 0.05;
+
+  // 光源变化
+  goldSpot.intensity = 1.5 + Math.sin(time * 0.7) * 0.3;
+  purpleSpot.intensity = 0.8 + Math.cos(time * 0.5) * 0.2;
+  rimLight.intensity = 0.5 + Math.sin(time * 0.3) * 0.2;
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

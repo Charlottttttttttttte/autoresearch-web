@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🏆 AutoResearch TOP5</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a0a;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 20px 16px;
+  min-height: 100vh;
+}
+.header { text-align: center; margin-bottom: 28px; padding-top: 10px; }
+.header h1 { font-size: 22px; margin-bottom: 6px; }
+.header p { color: #888; font-size: 13px; }
+.stats {
+  display: flex; justify-content: center; gap: 28px;
+  margin-bottom: 28px;
+}
+.stat { text-align: center; }
+.stat .num { font-size: 26px; font-weight: bold; color: #ffd700; }
+.stat .label { font-size: 11px; color: #666; margin-top: 4px; }
+.card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 16px; margin-bottom: 16px;
+  border: 1px solid #2a2a4e; overflow: hidden;
+}
+.card-header {
+  padding: 16px 16px 10px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.rank-area { text-align: right; }
+.rank-num {
+  font-size: 32px; font-weight: bold;
+  color: rgba(255,255,255,0.08); line-height: 1;
+}
+.score {
+  font-size: 22px; font-weight: bold;
+  background: linear-gradient(90deg, #ff006e, #8338ec);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.theme-name { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+.meta { color: #888; font-size: 12px; padding: 0 16px 14px; }
+.actions {
+  display: flex; gap: 8px; padding: 0 16px 16px;
+}
+.btn {
+  flex: 1; padding: 14px;
+  border-radius: 12px; text-align: center;
+  text-decoration: none; font-size: 14px; font-weight: 600;
+  border: none; cursor: pointer;
+}
+.btn-primary {
+  background: linear-gradient(90deg, #ff006e, #8338ec);
+  color: #fff;
+}
+.btn-secondary {
+  background: #2a2a4e; color: #ccc;
+}
+.gold { border-color: #ffd700; }
+.silver { border-color: #c0c0c0; }
+.bronze { border-color: #cd7f32; }
+.footer {
+  text-align: center; color: #444;
+  font-size: 11px; padding: 20px 0 10px;
+}
+.hint {
+  text-align: center; color: #555;
+  font-size: 12px; margin-bottom: 20px;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🏆 网站 AutoResearch</h1>
+  <p>实时互动作品展示 · 点击体验</p>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="num">11</div><div class="label">总轮次</div></div>
+  <div class="stat"><div class="num">6</div><div class="label">通过</div></div>
+  <div class="stat"><div class="num">8.5</div><div class="label">最高分</div></div>
+</div>
+
+<div class="hint">👇 点击下方按钮体验实时互动效果（含3D/动画/触摸交互）</div>
+
+<!-- #1 -->
+<div class="card gold">
+  <div class="card-header">
+    <div>
+      <div class="theme-name">解构主义破碎</div>
+      <div class="score">⭐ 8.5分</div>
+    </div>
+    <div class="rank-area"><div class="rank-num">#1</div></div>
+  </div>
+  <div class="meta">Round 8 · Mutation-Interact · 鼠标移动驱散碎片 · 点击触发爆炸重组</div>
+  <div class="actions">
+    <a href="v008.html" class="btn btn-primary">🖥️ PC版</a>
+    <a href="mobile/v008_解构主义破碎.html" class="btn btn-secondary">📱 手机版</a>
+  </div>
+</div>
+
+<!-- #2 -->
+<div class="card silver">
+  <div class="card-header">
+    <div>
+      <div class="theme-name">威尼斯面具嘉年华</div>
+      <div class="score">⭐ 8.4分</div>
+    </div>
+    <div class="rank-area"><div class="rank-num">#2</div></div>
+  </div>
+  <div class="meta">Round 5 · Mutation-Fusion · 金色面具悬浮 · 粒子环绕 · 触摸旋转</div>
+  <div class="actions">
+    <a href="v005.html" class="btn btn-primary">🖥️ PC版</a>
+    <a href="mobile/v005_威尼斯面具嘉年华.html" class="btn btn-secondary">📱 手机版</a>
+  </div>
+</div>
+
+<!-- #3 -->
+<div class="card bronze">
+  <div class="card-header">
+    <div>
+      <div class="theme-name">哥特式光影教堂</div>
+      <div class="score">⭐ 8.3分</div>
+    </div>
+    <div class="rank-area"><div class="rank-num">#3</div></div>
+  </div>
+  <div class="meta">Round 4 · Mutation-Motion · 彩色玫瑰窗 · 光束穿透 · 视差滚动</div>
+  <div class="actions">
+    <a href="v004.html" class="btn btn-primary">🖥️ PC版</a>
+    <a href="mobile/v004_哥特式光影教堂.html" class="btn btn-secondary">📱 手机版</a>
+  </div>
+</div>
+
+<!-- #4 -->
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="theme-name">维也纳分离派</div>
+      <div class="score">⭐ 8.2分</div>
+    </div>
+    <div class="rank-area"><div class="rank-num">#4</div></div>
+  </div>
+  <div class="meta">Round 2 · Mutation-Reset · 金色藤蔓绽放 · 粒子飘散 · 鼠标跟随</div>
+  <div class="actions">
+    <a href="v002.html" class="btn btn-primary">🖥️ PC版</a>
+    <a href="mobile/v002_维也纳分离派.html" class="btn btn-secondary">📱 手机版</a>
+  </div>
+</div>
+
+<!-- #5 -->
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="theme-name">电路板城市</div>
+      <div class="score">⭐ 8.1分</div>
+    </div>
+    <div class="rank-area"><div class="rank-num">#5</div></div>
+  </div>
+  <div class="meta">Round 6 · Mutation-3D · 绿色电路节点 · 数据包流动 · 点击触发脉冲</div>
+  <div class="actions">
+    <a href="v006.html" class="btn btn-primary">🖥️ PC版</a>
+    <a href="mobile/v006_电路板城市.html" class="btn btn-secondary">📱 手机版</a>
+  </div>
+</div>
+
+<div class="footer">生成时间：2026-05-14 · 点击📱手机版体验触摸交互 · PC版效果更丰富</div>
+</body>
+</html>
