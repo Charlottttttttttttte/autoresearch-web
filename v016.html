@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>极光冰川粒子 — 北极光的数字诗篇</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+SC:wght@300;500;700&display=swap');
+
+:root {
+  --bg-primary: #040d14;
+  --bg-content: rgba(4,13,20,0.96);
+  --accent-primary: #00e5a0;
+  --accent-secondary: #00a8e8;
+  --text-primary: #e0f2f1;
+  --text-secondary: #6b9fa3;
+  --font-heading: 'Orbitron', sans-serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --nav-height: 60px;
+  --content-max-width: 800px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-height);
+  background: rgba(4,13,20,0.8);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(0,229,160,0.1);
+}
+
+.top-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  font-family: var(--font-body);
+}
+
+.top-nav a:hover { color: var(--accent-primary); }
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+.hero-content {
+  position: absolute;
+  bottom: 80px;
+  left: 40px;
+  z-index: 10;
+  max-width: 600px;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 30px rgba(0,229,160,0.3);
+  letter-spacing: 0.08em;
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.hero-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 420px;
+  font-family: var(--font-body);
+}
+
+.score-badge {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #040d14;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+.content-section {
+  background: var(--bg-content);
+  padding: 80px 24px;
+  border-top: 1px solid rgba(0,229,160,0.08);
+}
+
+.content-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  color: var(--accent-primary);
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
+
+.section-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.tech-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tech-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0,229,160,0.08);
+  color: var(--text-secondary);
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tech-list li::before {
+  content: '◆';
+  color: var(--accent-primary);
+  font-size: 10px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.score-section {
+  margin-top: 40px;
+}
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-label {
+  width: 80px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.score-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 300px;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+.score-value {
+  width: 60px;
+  font-size: 13px;
+  color: var(--accent-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.score-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0,229,160,0.15);
+}
+
+.score-total-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.score-total-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.data-item {
+  background: rgba(0,229,160,0.04);
+  border: 1px solid rgba(0,229,160,0.1);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.data-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.data-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.bottom-nav {
+  background: rgba(4,13,20,0.95);
+  border-top: 1px solid rgba(0,229,160,0.08);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.bottom-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.bottom-nav a:hover { color: var(--accent-primary); }
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 28px; }
+  .hero-subtitle { font-size: 13px; }
+  .hero-content { left: 20px; bottom: 60px; max-width: 90%; }
+  .data-grid { grid-template-columns: 1fr; }
+  .top-nav a { font-size: 12px; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="v014.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<section class="hero">
+  <div id="canvas-container"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">极光冰川粒子</h1>
+    <p class="hero-subtitle">Aurora Glacier Particles</p>
+    <p class="hero-desc">捕捉北极光在冰川夜空中的舞蹈，将电离粒子与大气碰撞的物理现象转化为流动的数字诗篇。</p>
+    <span class="score-badge">&#11088; 8.6 / 10</span>
+  </div>
+  <div class="scroll-hint">&#8595; 滚动探索</div>
+</section>
+
+<section class="content-section">
+  <div class="content-container">
+    <h2 class="section-title">设计灵感</h2>
+    <p class="section-body">
+      极光（Aurora Borealis）是太阳风与地球磁场相互作用产生的最壮丽自然奇观之一。当高能带电粒子沿磁力线沉降至极区高层大气，与氧原子碰撞时激发出波长557.7纳米的绿色光芒，与氮分子碰撞则产生紫红色光带。本作品以冰岛冰川为舞台，将这一宇宙尺度的物理现象转译为数字粒子系统——绿色光带如丝绸般在夜空中飘动，冰晶粒子折射着微弱星光，深蓝与墨黑的背景强化了极地的孤独与浩瀚。
+    </p>
+
+    <h2 class="section-title">视觉转译</h2>
+    <p class="section-body">
+      将极光的光带结构转化为Three.js的Ribbon几何体，使用正弦波叠加算法模拟带电粒子沿磁力线的螺旋运动轨迹。冰川的冰蓝色调映射为粒子系统的色彩空间——青色粒子代表散射的星光，绿色光带对应氧原子激发光谱。背景的星空使用点精灵粒子阵列，配合缓慢旋转模拟地球自转视角。鼠标移动产生微弱的视差偏移，模拟观测者站在冰原上仰望星空时的体感。
+    </p>
+
+    <h2 class="section-title">技术亮点</h2>
+    <ul class="tech-list">
+      <li>多层正弦波叠加算法生成极光光带的有机流动形态</li>
+      <li>自定义BufferGeometry构建2000+冰晶粒子，支持GPU加速渲染</li>
+      <li>HSL色彩空间动态插值，实现绿色→青色→深蓝的平滑渐变</li>
+      <li>Points材质配合AdditiveBlending，模拟大气辉光的自发光效果</li>
+      <li>鼠标视差交互：光带随光标产生微妙的相位偏移与亮度变化</li>
+      <li>响应式粒子密度控制：移动端自动降至800粒子保证流畅度</li>
+    </ul>
+
+    <h2 class="section-title">实验数据</h2>
+    <div class="data-grid">
+      <div class="data-item">
+        <div class="data-label">轮次</div>
+        <div class="data-value">Round #16</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">变异策略</div>
+        <div class="data-value">Nature-Particle-Flow</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">主题ID</div>
+        <div class="data-value">t030</div>
+      </div>
+      <div class="data-item">
+        <div class="data-label">创作时间</div>
+        <div class="data-value">2026-05-14</div>
+      </div>
+    </div>
+
+    <div class="score-section">
+      <h2 class="section-title">评审得分</h2>
+      <div class="score-item">
+        <span class="score-label">视觉设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 88%"></div></div>
+        <span class="score-value">8.8/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">3D效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 90%"></div></div>
+        <span class="score-value">9.0/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">动态效果</span>
+        <div class="score-bar"><div class="score-fill" style="width: 85%"></div></div>
+        <span class="score-value">8.5/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">内容质量</span>
+        <div class="score-bar"><div class="score-fill" style="width: 84%"></div></div>
+        <span class="score-value">8.4/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">交互设计</span>
+        <div class="score-bar"><div class="score-fill" style="width: 82%"></div></div>
+        <span class="score-value">8.2/10</span>
+      </div>
+      <div class="score-total">
+        <span class="score-total-label">总分</span>
+        <span class="score-total-value">&#11088; 8.6 / 10</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="bottom-nav">
+  <a href="v014.html">&#8592; 上一作品</a>
+  <a href="index.html">&#127968; 返回封面</a>
+  <a href="v001.html">下一作品 &#8594;</a>
+</nav>
+
+<script>
+(function() {
+  const container = document.getElementById('canvas-container');
+  const isMobile = window.innerWidth < 768;
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x040d14, 0.0015);
+
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 5, 25);
+  camera.lookAt(0, 2, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.setClearColor(0x040d14, 1);
+  container.appendChild(renderer.domElement);
+
+  // Mouse tracking
+  let mouseX = 0, mouseY = 0;
+  let targetMouseX = 0, targetMouseY = 0;
+  document.addEventListener('mousemove', (e) => {
+    targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  // ===== AURORA RIBBONS =====
+  const ribbonCount = isMobile ? 3 : 5;
+  const ribbonSegments = 120;
+  const ribbons = [];
+
+  for (let r = 0; r < ribbonCount; r++) {
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(ribbonSegments * 3);
+    const colors = new Float32Array(ribbonSegments * 3);
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const hueBase = 0.42 + r * 0.04;
+    const material = new THREE.PointsMaterial({
+      size: isMobile ? 1.2 : 2.0,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
+    ribbons.push({
+      points,
+      geometry,
+      positions,
+      colors,
+      hueBase,
+      offset: r * 2.5,
+      speed: 0.3 + r * 0.1,
+      phase: r * 1.2
+    });
+  }
+
+  // ===== ICE CRYSTAL PARTICLES =====
+  const iceCount = isMobile ? 800 : 2000;
+  const iceGeometry = new THREE.BufferGeometry();
+  const icePositions = new Float32Array(iceCount * 3);
+  const iceColors = new Float32Array(iceCount * 3);
+  const iceSizes = new Float32Array(iceCount);
+
+  for (let i = 0; i < iceCount; i++) {
+    icePositions[i * 3] = (Math.random() - 0.5) * 80;
+    icePositions[i * 3 + 1] = Math.random() * 30 - 5;
+    icePositions[i * 3 + 2] = (Math.random() - 0.5) * 60 - 10;
+
+    const t = Math.random();
+    const c = new THREE.Color();
+    c.setHSL(0.48 + t * 0.08, 0.6, 0.5 + t * 0.3);
+    iceColors[i * 3] = c.r;
+    iceColors[i * 3 + 1] = c.g;
+    iceColors[i * 3 + 2] = c.b;
+    iceSizes[i] = Math.random() * 1.5 + 0.3;
+  }
+
+  iceGeometry.setAttribute('position', new THREE.BufferAttribute(icePositions, 3));
+  iceGeometry.setAttribute('color', new THREE.BufferAttribute(iceColors, 3));
+  iceGeometry.setAttribute('size', new THREE.BufferAttribute(iceSizes, 1));
+
+  const iceMaterial = new THREE.PointsMaterial({
+    size: 0.8,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const iceParticles = new THREE.Points(iceGeometry, iceMaterial);
+  scene.add(iceParticles);
+
+  // ===== STAR FIELD =====
+  const starCount = isMobile ? 500 : 1500;
+  const starGeometry = new THREE.BufferGeometry();
+  const starPositions = new Float32Array(starCount * 3);
+  const starColors = new Float32Array(starCount * 3);
+
+  for (let i = 0; i < starCount; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const r = 80 + Math.random() * 40;
+    starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+    starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+    starPositions[i * 3 + 2] = r * Math.cos(phi);
+
+    const brightness = 0.6 + Math.random() * 0.4;
+    const temp = 0.5 + Math.random() * 0.2;
+    starColors[i * 3] = brightness * (0.9 + temp * 0.1);
+    starColors[i * 3 + 1] = brightness * (0.9 + temp * 0.05);
+    starColors[i * 3 + 2] = brightness;
+  }
+
+  starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+  starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+
+  const starMaterial = new THREE.PointsMaterial({
+    size: 0.5,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const stars = new THREE.Points(starGeometry, starMaterial);
+  scene.add(stars);
+
+  // ===== GROUND FOG =====
+  const fogGeometry = new THREE.PlaneGeometry(120, 40, 1, 1);
+  const fogMaterial = new THREE.MeshBasicMaterial({
+    color: 0x071520,
+    transparent: true,
+    opacity: 0.4,
+    side: THREE.DoubleSide
+  });
+  const groundFog = new THREE.Mesh(fogGeometry, fogMaterial);
+  groundFog.rotation.x = -Math.PI / 2;
+  groundFog.position.y = -3;
+  scene.add(groundFog);
+
+  // ===== ANIMATION =====
+  const clock = new THREE.Clock();
+
+  function updateAurora(time) {
+    ribbons.forEach((ribbon) => {
+      const pos = ribbon.positions;
+      const col = ribbon.colors;
+
+      for (let i = 0; i < ribbonSegments; i++) {
+        const t = i / ribbonSegments;
+        const x = (t - 0.5) * 50;
+
+        const wave1 = Math.sin(t * Math.PI * 3 + time * ribbon.speed + ribbon.phase) * 3;
+        const wave2 = Math.sin(t * Math.PI * 7 + time * ribbon.speed * 1.3 + ribbon.phase * 1.5) * 1.5;
+        const wave3 = Math.sin(t * Math.PI * 11 + time * ribbon.speed * 0.7) * 0.8;
+        const y = 8 + ribbon.offset + wave1 + wave2 + wave3;
+
+        const z = Math.sin(t * Math.PI * 2 + time * 0.2 + ribbon.phase) * 4;
+
+        pos[i * 3] = x;
+        pos[i * 3 + 1] = y;
+        pos[i * 3 + 2] = z;
+
+        const hue = ribbon.hueBase + Math.sin(t * Math.PI + time * 0.15) * 0.06;
+        const lightness = 0.45 + Math.sin(t * Math.PI * 2 + time * 0.3) * 0.15;
+        const c = new THREE.Color().setHSL(hue, 0.85, lightness);
+        col[i * 3] = c.r;
+        col[i * 3 + 1] = c.g;
+        col[i * 3 + 2] = c.b;
+      }
+
+      ribbon.geometry.attributes.position.needsUpdate = true;
+      ribbon.geometry.attributes.color.needsUpdate = true;
+    });
+  }
+
+  function updateIce(time) {
+    const pos = iceGeometry.attributes.position.array;
+    for (let i = 0; i < iceCount; i++) {
+      pos[i * 3 + 1] += Math.sin(time * 0.5 + i * 0.01) * 0.008;
+      pos[i * 3] += Math.sin(time * 0.3 + i * 0.02) * 0.003;
+    }
+    iceGeometry.attributes.position.needsUpdate = true;
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const time = clock.getElapsedTime();
+
+    mouseX += (targetMouseX - mouseX) * 0.03;
+    mouseY += (targetMouseY - mouseY) * 0.03;
+
+    updateAurora(time);
+    updateIce(time);
+
+    camera.position.x = mouseX * 2;
+    camera.position.y = 5 + mouseY * 1.5;
+    camera.lookAt(mouseX * 1.5, 2 + mouseY * 0.5, 0);
+
+    stars.rotation.y = time * 0.005;
+    iceParticles.rotation.y = time * 0.01;
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
